@@ -55,6 +55,7 @@ go.work.sum
 !docs/MOTIVATION3.md
 !docs/ARCHITECTURE.md
 !docs/TEMPLATE.md
+!docs/PROFILE_NITPICKS.md
 !docs/CONN_NITPICKS.md
 docs/QR_NITPICKS.md
 
