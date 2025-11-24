@@ -7,6 +7,8 @@ import (
 	"log"
 
 	"golang.org/x/image/draw"
+
+	"github.com/adcondev/pos-printer/pkg/commands/common"
 )
 
 // DitherMode defines how images are converted to monochrome
@@ -107,9 +109,9 @@ func (p *Pipeline) resize(img image.Image) image.Image {
 	srcW, srcH := bounds.Dx(), bounds.Dy()
 
 	// TODO: Look where to define constant for max width
-	if p.opts.PixelWidth > 576 {
-		// Limit maximum width to 576 pixels for thermal printers
-		p.opts.PixelWidth = 576
+	if p.opts.PixelWidth > common.Dpl80mm203dpi {
+		// Limit maximum width to 576 pixels for thermal printers (80mm at 203 DPI))
+		p.opts.PixelWidth = common.Dpl80mm203dpi
 		log.Printf("resize: limiting target width to %d pixels", p.opts.PixelWidth)
 	}
 

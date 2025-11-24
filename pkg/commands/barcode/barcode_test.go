@@ -937,6 +937,32 @@ func TestCommands_PrintBarcodeWithCodeSet(t *testing.T) {
 				[]byte{'{', 'A'}...),
 			wantErr: nil,
 		},
+		{
+			name:      "CODE128 Set B with escaping {",
+			symbology: barcode.CODE128,
+			codeSet:   barcode.Code128SetB,
+			data:      []byte("USER{ID}"),
+			// Length: 2 (prefijo) + 4 (USER) + 2 ({{) + 2 (ID) + 1 (}) = 11 bytes
+			want:    append([]byte{common.GS, 'k', 73, 11}, []byte{'{', 'B', 'U', 'S', 'E', 'R', '{', '{', 'I', 'D', '}'}...),
+			wantErr: nil,
+		},
+		{
+			name:      "CODE128 Set B multiple braces",
+			symbology: barcode.CODE128,
+			codeSet:   barcode.Code128SetB,
+			data:      []byte("A{{B"),
+			// Length: 2 (prefijo) + 1 (A) + 2 ({{) + 2 ({{) + 1 (B) = 8 bytes
+			want:    append([]byte{common.GS, 'k', 73, 8}, []byte{'{', 'B', 'A', '{', '{', '{', '{', 'B'}...),
+			wantErr: nil,
+		},
+		{
+			name:      "CODE128 Set A no escaping",
+			symbology: barcode.CODE128,
+			codeSet:   barcode.Code128SetA,
+			data:      []byte("TEST{"),
+			want:      append([]byte{common.GS, 'k', 73, 7}, []byte{'{', 'A', 'T', 'E', 'S', 'T', '{'}...),
+			wantErr:   nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -981,6 +1007,21 @@ func TestCommands_EdgeCases(t *testing.T) {
 			dataWithNull,
 		)
 		testutils.AssertError(t, err, nil)
+	})
+
+	t.Run("CODE128 Set B escaping exceeds max length", func(t *testing.T) {
+		// Creamos datos de 253 bytes (límite teórico: 255 - 2 prefijo = 253)
+		// Si uno de ellos es '{', se duplicará y excederá el límite.
+		data := testutils.RepeatByte(252, 'A')
+		data = append(data, '{') // El byte 253 es una llave
+
+		_, err := cmd.PrintBarcodeWithCodeSet(
+			barcode.CODE128,
+			barcode.Code128SetB,
+			data,
+		)
+		// Esperamos error porque 252 + 2('{') + 2(prefijo) = 256 bytes total
+		testutils.AssertError(t, err, barcode.ErrDataTooLong)
 	})
 }
 

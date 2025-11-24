@@ -290,10 +290,26 @@ func (c *Commands) PrintBarcodeWithCodeSet(symbology Symbology, codeSet Code128S
 		return nil, ErrCode128Set
 	}
 
+	if codeSet == Code128SetB {
+		data = escCode128Data(data)
+	}
+
 	// Build data with code set prefix
 	prefixedData := make([]byte, 0, len(data)+2)
 	prefixedData = append(prefixedData, '{', byte(codeSet))
 	prefixedData = append(prefixedData, data...)
 
 	return c.buildFunctionB(symbology, prefixedData)
+}
+
+// Si usas CODE128 manual, considera sanitizar el input
+func escCode128Data(data []byte) []byte {
+	result := make([]byte, 0, len(data)*2)
+	for _, b := range data {
+		result = append(result, b)
+		if b == '{' { // 0x7B
+			result = append(result, '{') // EPSON requiere duplicarlo para imprimirlo como literal
+		}
+	}
+	return result
 }

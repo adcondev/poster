@@ -17,49 +17,49 @@ type PrintJob struct {
 
 // Document representa un documento de impresión completo
 type Document struct {
-	Version  string        `json:"version"`
-	Profile  ProfileConfig `json:"profile"`
-	DebugLog bool          `json:"debug_log,omitempty"`
-	Commands []Command     `json:"commands"`
+	Version  string        `json:"version"`             // Requerido: >1.0
+	Profile  ProfileConfig `json:"profile"`             // Requerido: profile.model
+	DebugLog bool          `json:"debug_log,omitempty"` // Default: false
+	Commands []Command     `json:"commands"`            // Requerido: len > 0
 }
 
 // ProfileConfig configuración del perfil de impresora
 type ProfileConfig struct {
-	Model      string `json:"model"`
-	PaperWidth int    `json:"paper_width"`
-	CodeTable  string `json:"code_table"`
-	DPI        int    `json:"dpi,omitempty"`
-	HasQR      bool   `json:"has_qr"` // Indica si soporta QR nativo
+	Model      string `json:"model"`                 // Requerido
+	PaperWidth int    `json:"paper_width,omitempty"` // Default: 80
+	CodeTable  string `json:"code_table,omitempty"`  // Default: WPC1252
+	DPI        int    `json:"dpi,omitempty"`         // Default: 203
+	HasQR      bool   `json:"has_qr,omitempty"`      // Default: false
 }
 
 // TODO: Define an order field for reordering or grouping commands. Check if it's worth it.
 
 // Command represents a single command in the document
 type Command struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
+	Type string          `json:"type"` // Tipo de comando
+	Data json.RawMessage `json:"data"` // Datos específicos del comando
 }
 
 // ImageCommand represents an image command
 type ImageCommand struct {
-	Code       string `json:"code"`                  // Base64
+	Code       string `json:"code"`                  // Base64 - Requerido
 	Format     string `json:"format,omitempty"`      // png, jpg, bmp
-	PixelWidth int    `json:"pixel_width,omitempty"` // Ancho deseado en píxeles
-	Align      string `json:"align,omitempty"`       // Alineación
-	Threshold  byte   `json:"threshold,omitempty"`   // Umbral B/N (0-255)
-	Dithering  string `json:"dithering,omitempty"`   // threshold, atkinson
-	Scaling    string `json:"scaling,omitempty"`     // bilinear, nns
+	PixelWidth int    `json:"pixel_width,omitempty"` // Default: 128
+	Align      string `json:"align,omitempty"`       // Default: center
+	Threshold  byte   `json:"threshold,omitempty"`   // Default: 128
+	Dithering  string `json:"dithering,omitempty"`   // Default: atkinson
+	Scaling    string `json:"scaling,omitempty"`     // Default: bilinear
 }
 
 // SeparatorCommand represents a separator command
 type SeparatorCommand struct {
-	Char   string `json:"char,omitempty"`   // Carácter a usar
-	Length int    `json:"length,omitempty"` // Longitud en caracteres
+	Char   string `json:"char,omitempty"`   // Default: "- "
+	Length int    `json:"length,omitempty"` // Default: 48
 }
 
 // FeedCommand represents a feed command
 type FeedCommand struct {
-	Lines int `json:"lines"` // Líneas a avanzar
+	Lines int `json:"lines"` // Requerido (1-255)
 }
 
 // CutCommand represents a cut command
@@ -68,7 +68,7 @@ type CutCommand struct {
 	Feed int    `json:"feed,omitempty"` // Líneas antes del corte
 }
 
-// QRCommand actualizado para soportar todas las opciones
+// QRCommand represents a QR code command
 type QRCommand struct {
 	Data      string `json:"data"`                 // Datos del QR (URL, texto, etc.)
 	HumanText string `json:"human_text,omitempty"` // Texto a mostrar debajo del QR
@@ -79,7 +79,7 @@ type QRCommand struct {
 	Align      string `json:"align,omitempty"`       // left, center, right
 
 	// Opciones avanzadas (solo imagen)
-	Logo        string `json:"logo,omitempty"`         // Ruta relativa al logo
+	Logo        string `json:"logo,omitempty"`         // Base64 del logo
 	CircleShape bool   `json:"circle_shape,omitempty"` // Usar bloques circulares
 }
 

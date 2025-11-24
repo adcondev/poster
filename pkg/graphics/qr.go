@@ -11,6 +11,7 @@ import (
 	"golang.org/x/image/draw"
 
 	"github.com/adcondev/pos-printer/internal/load"
+	"github.com/adcondev/pos-printer/pkg/commands/common"
 	posqr "github.com/adcondev/pos-printer/pkg/commands/qrcode"
 )
 
@@ -19,7 +20,8 @@ const (
 	minBorderWidth = 4
 
 	// maxPixelWidth es el ancho máximo soportado para impresoras térmicas de 80mm a 203 DPI
-	maxPixelWidth = 576
+	// (80mm = 3.15in * 203 DPI = 639px, menos márgenes)
+	maxPixelWidth = common.Dpl80mm203dpi
 	// minPixelWidth es el mínimo para QR Version 1 (21x21) con módulos de 3px + borders
 	minPixelWidth = 87
 
@@ -116,7 +118,7 @@ func DefaultQROptions() *QROptions {
 	return &QROptions{
 		Model:           posqr.Model2,
 		ErrorCorrection: posqr.LevelQ,
-		PixelWidth:      288,
+		PixelWidth:      128,
 		LogoData:        "",
 		CircleShape:     false,
 		// Post-calculated fields

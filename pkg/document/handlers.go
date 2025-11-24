@@ -32,6 +32,7 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		return fmt.Errorf("failed to load image: %w", err)
 	}
 
+	cmd.Format = format
 	log.Printf("Loaded image with format: %s", format)
 
 	// Configurar opciones de procesamiento
@@ -170,7 +171,7 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 		return fmt.Errorf("failed to parse QR command: %w", err)
 	}
 
-	// Validación de datos
+	// Validación de datos requeridos
 	if cmd.Data == "" {
 		return fmt.Errorf("QR data cannot be empty")
 	}
@@ -178,76 +179,93 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 		return fmt.Errorf("QR data too long: %d bytes (maximum %d)", len(cmd.Data), posqr.MaxDataLength)
 	}
 
-	// Construir opciones
+	// Construir opciones con defaults
 	opts := graphics.DefaultQROptions()
 
+	// Configurar tamaño del QR
 	if cmd.PixelWidth > 0 {
+		if cmd.PixelWidth < 87 { // Mínimo según schema
+			cmd.PixelWidth = 87
+			log.Printf("Warning: pixel_width too small, setting to minimum 87")
+		}
 		opts.PixelWidth = cmd.PixelWidth
-	} else {
-		// Usar 50% del ancho del papel por defecto
-		opts.PixelWidth = e.printer.Profile.DotsPerLine / 2
 	}
 
-	// Mapear corrección de errores
-	switch strings.ToUpper(cmd.Correction) {
+	// Mapear corrección de errores (default: Q según schema)
+	correction := "Q"
+	if cmd.Correction != "" {
+		correction = strings.ToUpper(cmd.Correction)
+	}
+
+	switch correction {
 	case "L":
 		opts.ErrorCorrection = posqr.LevelL
+	case "M":
+		opts.ErrorCorrection = posqr.LevelM
 	case "Q":
 		opts.ErrorCorrection = posqr.LevelQ
 	case "H":
 		opts.ErrorCorrection = posqr.LevelH
 	default:
-		opts.ErrorCorrection = posqr.LevelM
+		return fmt.Errorf("invalid QR correction level: %s (valid: L, M, Q, H)", cmd.Correction)
 	}
 
+	// Configurar logo si se proporciona
 	if cmd.Logo != "" {
 		opts.LogoData = cmd.Logo
+		log.Printf("QR with logo enabled")
 	}
 
-	// Solo aplicar circle shape si no hay halftone
-	opts.CircleShape = cmd.CircleShape
+	// Configurar forma circular (solo para QR grandes)
+	if cmd.CircleShape {
+		if opts.PixelWidth > 256 {
+			opts.CircleShape = true
+			log.Printf("QR with circular blocks enabled")
+		} else {
+			log.Printf("Warning: circle_shape ignored (requires pixel_width > 256)")
+		}
+	}
 
-	// Aplicar alineación
-	switch strings.ToLower(cmd.Align) {
+	// Aplicar alineación (default: center según schema)
+	align := "center"
+	if cmd.Align != "" {
+		align = strings.ToLower(cmd.Align)
+	}
+
+	switch align {
 	case center:
-		err := printer.AlignCenter()
-		if err != nil {
+		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
 	case right:
-		err := printer.AlignRight()
-		if err != nil {
+		if err := printer.AlignRight(); err != nil {
+			return err
+		}
+	case left:
+		if err := printer.AlignLeft(); err != nil {
 			return err
 		}
 	default:
-		err := printer.AlignLeft()
-		if err != nil {
+		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
 	}
 
-	// Imprimir QR
-	err := printer.PrintQR(cmd.Data, opts)
-	if err != nil {
-		return err
+	// Imprimir QR (automáticamente intenta nativo y fallback a imagen)
+	if err := printer.PrintQR(cmd.Data, opts); err != nil {
+		return fmt.Errorf("failed to print QR: %w", err)
 	}
 
 	// Imprimir texto humano si existe
 	if cmd.HumanText != "" {
-		// Centrar el texto debajo del QR si el QR está centrado
-		if strings.ToLower(cmd.Align) == "center" {
-			if err := printer.AlignCenter(); err != nil {
-				return err
-			}
-		}
+		// Mantener la alineación del QR para el texto
 		if err := printer.PrintLine(cmd.HumanText); err != nil {
-			return err
+			return fmt.Errorf("failed to print QR human text: %w", err)
 		}
 	}
 
-	// Restaurar alineación
-	err = printer.AlignLeft()
-	if err != nil {
+	// Restaurar alineación a la izquierda
+	if err := printer.AlignLeft(); err != nil {
 		return err
 	}
 

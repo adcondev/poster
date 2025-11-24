@@ -2,6 +2,7 @@ package profile
 
 import (
 	"github.com/adcondev/pos-printer/pkg/commands/character"
+	"github.com/adcondev/pos-printer/pkg/commands/common"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 )
 
@@ -24,7 +25,8 @@ type Escpos struct {
 	SupportsCutter   bool // Tiene cortador automático
 	SupportsDrawer   bool // Soporta cajón de dinero
 
-	QRMaxSize byte // Máxima versión soportada
+	// Máxima versión soportada
+	QRMaxSize byte
 
 	// Code table and encoding configuration
 	CodeTable character.CodeTable
@@ -32,6 +34,9 @@ type Escpos struct {
 	// Configuración avanzada (opcional)
 	ImageThreshold int                 // Umbral para conversión B/N (0-255)
 	Dithering      graphics.DitherMode // Tipo de dithering por defecto
+
+	// Debug info
+	DebugLog bool // Habilitar logs de depuración
 }
 
 // CreatePt210 crea un perfil para impresora térmica de 58mm PT-58N
@@ -88,7 +93,7 @@ func CreateProfile80mm() *Escpos {
 
 		PaperWidth:  80,
 		DPI:         203,
-		DotsPerLine: 576, // Típico para 80mm (72mm) a 203 DPI
+		DotsPerLine: common.Dpl80mm203dpi, // Típico para 80mm (72mm) a 203 DPI
 
 		SupportsGraphics: true,
 		SupportsBarcode:  true,
