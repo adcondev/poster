@@ -4,8 +4,6 @@ package document
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/adcondev/pos-printer/pkg/tables"
 )
 
 // PrintJob representa los datos de un documento de impresión
@@ -66,45 +64,6 @@ type FeedCommand struct {
 type CutCommand struct {
 	Mode string `json:"mode,omitempty"` // full, partial
 	Feed int    `json:"feed,omitempty"` // Líneas antes del corte
-}
-
-// QRCommand represents a QR code command
-type QRCommand struct {
-	Data      string `json:"data"`                 // Datos del QR (URL, texto, etc.)
-	HumanText string `json:"human_text,omitempty"` // Texto a mostrar debajo del QR
-
-	// Opciones básicas
-	PixelWidth int    `json:"pixel_width,omitempty"` // Pixel size
-	Correction string `json:"correction,omitempty"`  // L, M, Q, H
-	Align      string `json:"align,omitempty"`       // left, center, right
-
-	// Opciones avanzadas (solo imagen)
-	Logo        string `json:"logo,omitempty"`         // Base64 del logo
-	CircleShape bool   `json:"circle_shape,omitempty"` // Usar bloques circulares
-}
-
-// TODO: Consider upper_separator y lower_separator for tables
-
-// TableCommand represents a table command in the document
-type TableCommand struct {
-	Definition  tables.Definition `json:"definition"`
-	ShowHeaders bool              `json:"show_headers,omitempty"`
-	Rows        [][]string        `json:"rows"`
-	Options     *TableOptions     `json:"options,omitempty"`
-}
-
-// TODO: Implementar Header con TextStyle sin alineación
-
-// TableOptions configures table rendering options
-type TableOptions struct {
-	// HeaderBold enables bold styling for table headers
-	HeaderBold bool `json:"header_bold,omitempty"`
-	// WordWrap enables automatic text wrapping in cells
-	WordWrap bool `json:"word_wrap,omitempty"`
-	// ColumnSpacing sets the number of spaces between columns (default: 1)
-	ColumnSpacing int `json:"column_spacing,omitempty"`
-	// Align sets the default alignment for table content (left, center, right)
-	Align string `json:"align,omitempty"`
 }
 
 // ParseDocument parsea un documento JSON
