@@ -51,7 +51,7 @@ type ImageCommand struct {
 
 // SeparatorCommand represents a separator command
 type SeparatorCommand struct {
-	Char   string `json:"char,omitempty"`   // Default: "- "
+	Char   string `json:"char,omitempty"`   // Default: "-"
 	Length int    `json:"length,omitempty"` // Default: 48
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/adcondev/pos-printer/internal/calculate"
 	"github.com/adcondev/pos-printer/pkg/commands/character"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
@@ -20,6 +21,10 @@ type CommandHandler func(printer *service.Printer, data json.RawMessage) error
 
 // NewExecutor crea un nuevo ejecutor
 func NewExecutor(printer *service.Printer) *Executor {
+	if printer == nil {
+		log.Panicf("printer cannot be nil")
+	}
+
 	e := &Executor{
 		printer:  printer,
 		handlers: make(map[string]CommandHandler),
@@ -109,48 +114,70 @@ func (e *Executor) ExecuteJSON(data []byte) error {
 
 // applyProfileFromDocument aplica la configuración del profile desde el documento JSON
 func (e *Executor) applyProfileFromDocument(doc *Document) error {
+	profile := e.printer.Profile
+
 	if doc == nil {
 		return fmt.Errorf("document is nil")
 	}
-	if doc.Profile.Model == "" && doc.Profile.PaperWidth == 0 && doc.Profile.CodeTable == "" && !doc.Profile.HasQR {
-		// No hay configuración de profile para aplicar
-		return nil
+
+	if doc.Profile.Model == "" {
+		return fmt.Errorf("profile model is required")
+	}
+	profile.Model = doc.Profile.Model
+	log.Printf("Profile: Model set to %s from JSON", doc.Profile.Model)
+
+	if err := e.applyProfileOrDefaults(doc.Profile); err != nil {
+		return fmt.Errorf("failed to apply profile settings: %w", err)
 	}
 
-	// Aplicar Model si se especifica
-	if doc.Profile.Model != "" {
-		e.printer.Profile.Model = doc.Profile.Model
-		log.Printf("Profile: Model set to %s from JSON", doc.Profile.Model)
+	profile.DotsPerLine = calculate.DotsPerLine(profile.PaperWidth, profile.DPI)
+	log.Printf("Profile: DotsPerLine calculated as %d", profile.DotsPerLine)
+
+	return nil
+}
+
+// applyProfileOrDefaults aplica configuraciones por defecto al profile
+func (e *Executor) applyProfileOrDefaults(config ProfileConfig) error {
+	profile := e.printer.Profile
+	if config.PaperWidth == 0 {
+		// Default paper width 80mm
+		profile.PaperWidth = 80
+		log.Printf("Profile: PaperWidth set to default 80mm")
+	} else {
+		profile.PaperWidth = float64(config.PaperWidth)
+		log.Printf("Profile: PaperWidth set to %dmm from JSON", config.PaperWidth)
 	}
 
-	// Aplicar HasQR
-	e.printer.Profile.HasQR = doc.Profile.HasQR
-	log.Printf("Profile: HasQR set to %v from JSON", doc.Profile.HasQR)
-
-	// Aplicar CodeTable si se especifica
-	if doc.Profile.CodeTable != "" {
-		if err := e.setCodeTable(doc.Profile.CodeTable); err != nil {
-			log.Printf("Warning: failed to set code table %s: %v", doc.Profile.CodeTable, err)
+	if config.CodeTable == "" {
+		// Default code table WPC1252
+		err := e.setCodeTable("WPC1252")
+		if err != nil {
+			log.Printf("failed to set default code table WPC1252: %v", err)
 		}
-	}
-
-	// Aplicar otros campos si vienen en el JSON
-	if doc.Profile.PaperWidth > 0 {
-		// Calcular DotsPerLine basado en PaperWidth y DPI
-		if doc.Profile.DPI > 0 {
-			e.printer.Profile.DPI = doc.Profile.DPI
+		log.Printf("Profile: CodeTable set to default WPC1252")
+	} else {
+		err := e.setCodeTable(config.CodeTable)
+		if err != nil {
+			return fmt.Errorf("failed to set code table %s: %w", config.CodeTable, err)
 		}
-		e.printer.Profile.PaperWidth = float64(doc.Profile.PaperWidth)
-		// Recalcular DotsPerLine: (PaperWidth_mm * DPI) / 25.4
-		e.printer.Profile.DotsPerLine = int(float64(doc.Profile.PaperWidth) * float64(e.printer.Profile.DPI) / 25.4)
-		log.Printf("Profile: Updated PaperWidth=%dmm, DotsPerLine=%d",
-			doc.Profile.PaperWidth, e.printer.Profile.DotsPerLine)
+		log.Printf("Profile: CodeTable set to %s from JSON", config.CodeTable)
 	}
 
-	// Model name (útil para debugging)
-	if doc.Profile.Model != "" {
-		e.printer.Profile.Model = doc.Profile.Model
-		log.Printf("Profile: Model set to '%s'", doc.Profile.Model)
+	if config.DPI == 0 {
+		// Default DPI 203
+		profile.DPI = 203
+		log.Printf("Profile: DPI set to default 203")
+	} else {
+		profile.DPI = config.DPI
+		log.Printf("Profile: DPI set to %d from JSON", config.DPI)
+	}
+
+	if config.HasQR {
+		profile.HasQR = true
+		log.Printf("Profile: HasQR set to true from JSON")
+	} else {
+		profile.HasQR = false
+		log.Printf("Profile: HasQR set to false from JSON")
 	}
 
 	return nil

@@ -225,7 +225,7 @@
             {
               "header": "PRODUCTO",
               "width": 18,
-              "align": "center"
+              "align": "left"
             },
             {
               "header": "PRECIO/U",
@@ -247,6 +247,84 @@
             "MALETINAÁÉÍÓÚÜáéíóúüÑñ¿?¡!#$%&@",
             "$10,160.00",
             "$100,160.00"
+          ],
+          [
+            "3",
+            "Producto con Series 2",
+            "$234.00",
+            "$702.00"
+          ],
+          [
+            "",
+            "  -> Serie: 155548830",
+            "",
+            ""
+          ],
+          [
+            "",
+            "  -> Serie: 155548834",
+            "",
+            ""
+          ],
+          [
+            "",
+            "  -> Serie: 155548835",
+            "",
+            ""
+          ],
+          [
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "1",
+            "ESTUCO ACRILICO UV RD",
+            "$96.77",
+            "$96.77"
+          ],
+          [
+            "",
+            "  Impuestos:",
+            "",
+            ""
+          ],
+          [
+            "",
+            "    + IVA 16%",
+            "",
+            "$15.48"
+          ],
+          [
+            "",
+            "    + IEPS 8%",
+            "",
+            "$7.74"
+          ],
+          [
+            "",
+            "    - Ret IVA 10.67%",
+            "",
+            "-$10.32"
+          ],
+          [
+            "",
+            "    - Ret ISR 10%",
+            "",
+            "-$9.68"
+          ],
+          [
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "",
+            "Total con impuestos",
+            "",
+            "$99.99"
           ]
         ],
         "options": {
@@ -561,6 +639,17 @@
           "size": "2x2"
         },
         "new_line": true
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "THISISAVERYLONGCODE128",
+        "width": 2,
+        "height": 50,
+        "hri_position": "below",
+        "align": "center"
       }
     },
     {

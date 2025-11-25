@@ -108,18 +108,32 @@ func (e *Executor) handleSeparator(printer *service.Printer, data json.RawMessag
 
 	// Valores por defecto
 	if cmd.Char == "" {
-		cmd.Char = "- "
+		cmd.Char = "-"
 	}
 	if cmd.Length == 0 {
 		// Usar ancho del papel en caracteres (aproximado)
-		// TODO: Verify the following line for different fonts
+		// TODO: Verify the following line for different fonts, constrained to Font A
 		cmd.Length = e.printer.Profile.DotsPerLine / 12 // Aproximación para Font A
+	}
+
+	err := printer.AlignCenter()
+	if err != nil {
+		return err
 	}
 
 	// Construir línea separadora
 	line := strings.Repeat(cmd.Char, cmd.Length)
+	err = printer.PrintLine(line[:cmd.Length-1]) // Trim to exact length
+	if err != nil {
+		return err
+	}
 
-	return printer.PrintLine(line)
+	err = printer.AlignLeft()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // handleFeed manages feed commands

@@ -116,8 +116,15 @@ func (c *WindowsPrintConnector) Close() error {
 				log.Printf("Falló AbortDocPrinter: %v", abortErr)
 				finalErr = fmt.Errorf("falló EndDoc y AbortDoc: %v", abortErr)
 			}
+		} else if r := recover(); r != nil {
+			// En caso de pánico, intentar abortar el trabajo
+			log.Printf("Pánico detectado: %v, intentando AbortDocPrinter...", r)
+			if abortErr := abortDocPrinter(c.printerHandle); abortErr != nil {
+				log.Printf("Falló AbortDocPrinter: %v", abortErr)
+				finalErr = fmt.Errorf("pánico: %v, falló AbortDoc: %w", r, abortErr)
+			}
 		} else {
-			log.Println("Trabajo de impresión finalizado correctamente.")
+			log.Printf("Trabajo de impresión finalizado correctamente")
 		}
 	}
 
