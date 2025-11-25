@@ -55,6 +55,7 @@ go.work.sum
 !docs/MOTIVATION3.md
 !docs/ARCHITECTURE.md
 !docs/TEMPLATE.md
+docs/QR_NITPICKS.md
 
 
 !*.php
@@ -160,4 +161,3 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
-
