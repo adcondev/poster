@@ -2,6 +2,13 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+### [3.3.2](https://github.com/adcondev/pos-printer/compare/v3.3.1...v3.3.2) (2025-11-25)
+
+
+### 📦 Dependencies
+
+* **gh-actions:** bump actions/checkout from 5 to 6 ([#77](https://github.com/adcondev/pos-printer/issues/77)) ([3a232ce](https://github.com/adcondev/pos-printer/commit/3a232ceb69c1cb132f8381b750b3d66260020fc4))
+
 ### [3.3.1](https://github.com/adcondev/pos-printer/compare/v3.3.0...v3.3.1) (2025-11-25)
 
 
