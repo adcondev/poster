@@ -84,19 +84,24 @@ func (c *WindowsPrintConnector) Close() error {
 	var finalErr error
 
 	if c.jobStarted {
-		err := c.service.EndDoc(c.handle)
-		if err != nil {
-			log.Printf("Falló EndDocPrinter: %v, intentando AbortDocPrinter...", err)
-			if abortErr := c.service.AbortDoc(c.handle); abortErr != nil {
-				log.Printf("Falló AbortDocPrinter: %v", abortErr)
-				finalErr = fmt.Errorf("falló EndDoc y AbortDoc: %v", abortErr)
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Pánico durante EndDocPrinter: %v", r)
+					finalErr = fmt.Errorf("pánico durante EndDocPrinter: %v", r)
+				}
+			}()
+			err := c.service.EndDoc(c.handle)
+			if err != nil {
+				log.Printf("Falló EndDocPrinter: %v, intentando AbortDocPrinter...", err)
+				if abortErr := c.service.AbortDoc(c.handle); abortErr != nil {
+					log.Printf("Falló AbortDocPrinter: %v", abortErr)
+					finalErr = fmt.Errorf("falló EndDoc y AbortDoc: %v", abortErr)
+				}
+			} else {
+				log.Println("Trabajo de impresión finalizado correctamente.")
 			}
-		} else if r := recover(); r != nil {
-			log.Printf("Pánico durante EndDocPrinter: %v", r)
-			finalErr = fmt.Errorf("pánico durante EndDocPrinter: %v", r)
-		} else {
-			log.Println("Trabajo de impresión finalizado correctamente.")
-		}
+		}()
 	}
 
 	if c.handle != 0 {
