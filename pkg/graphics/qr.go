@@ -211,8 +211,8 @@ func (qro *QROptions) validateGridSize() error {
 func (qro *QROptions) calculateModuleSize(data string) error {
 	totalModules := qro.Qr.gridSize + (2 * minBorderWidth)
 	if totalModules <= 0 {
-		// This case should be unreachable given minGridSize validation, but kept for safety
-		return fmt.Errorf("invalid total modules calculation: %d", totalModules)
+		// This case should be unreachable given minGridSize validation.
+		panic(fmt.Sprintf("bug: invalid total modules after validation: %d", totalModules))
 	}
 	qro.Qr.moduleSize = posqr.ModuleSize(qro.Qr.requestedWidth / totalModules)
 
