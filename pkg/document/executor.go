@@ -130,7 +130,7 @@ func (e *Executor) applyProfileFromDocument(doc *Document) error {
 		return fmt.Errorf("failed to apply profile settings: %w", err)
 	}
 
-	profile.DotsPerLine = calculate.DotsPerLine(profile.PaperWidth, profile.DPI)
+	profile.DotsPerLine = calculate.DotsPerLine(profile.PaperWidth-8, profile.DPI)
 	log.Printf("Profile: DotsPerLine calculated as %d", profile.DotsPerLine)
 
 	return nil

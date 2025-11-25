@@ -83,7 +83,7 @@ tasks:
       - lint
     cmds:
       - echo "Building the project..."
-      - go build -v ./...
+      - go build -o poster.exe cmd/poster/main.go
   lint:
     cmds:
       - echo "Running linters..."
