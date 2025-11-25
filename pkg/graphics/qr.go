@@ -169,9 +169,7 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 	}
 
 	// Calculate module size
-	if err := qro.calculateModuleSize(data); err != nil {
-		return nil, err
-	}
+	qro.calculateModuleSize(data)
 
 	// Calcular y reportar tamaño final real
 	qro.calculateFinalDimensions()
@@ -208,7 +206,7 @@ func (qro *QROptions) validateGridSize() error {
 	return nil
 }
 
-func (qro *QROptions) calculateModuleSize(data string) error {
+func (qro *QROptions) calculateModuleSize(data string) {
 	totalModules := qro.Qr.gridSize + (2 * minBorderWidth)
 	if totalModules <= 0 {
 		// This case should be unreachable given minGridSize validation.
@@ -233,7 +231,6 @@ func (qro *QROptions) calculateModuleSize(data string) error {
 	default:
 		log.Printf("QR: using calculated module size %d", qro.Qr.moduleSize)
 	}
-	return nil
 }
 
 func (qro *QROptions) calculateFinalDimensions() {
