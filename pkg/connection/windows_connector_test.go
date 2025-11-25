@@ -43,11 +43,7 @@ func (m *MockPrinterService) Write(handle uintptr, data []byte) (uint32, error) 
 	return args.Get(0).(uint32), args.Error(1)
 }
 
-// newTestWindowsPrintConnector allows injecting a mock service for testing.
-// This function is internal to the package (or exposed for testing if necessary).
-// Since we are in the same package, we can just create the struct directly or modify NewWindowsPrintConnector to accept options.
-// But NewWindowsPrintConnector uses getPlatformPrinterService().
-// For testing, we want to bypass that.
+// newTestWindowsPrintConnector creates a WindowsPrintConnector with an injected mock service for testing purposes.
 func newTestWindowsPrintConnector(name string, service PrinterService) (*WindowsPrintConnector, error) {
 	if name == "" {
 		return nil, errors.New("el nombre de la impresora no puede estar vacío")
