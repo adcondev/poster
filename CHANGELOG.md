@@ -2,6 +2,13 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+### [3.3.3](https://github.com/adcondev/pos-printer/compare/v3.3.2...v3.3.3) (2025-11-25)
+
+
+### 🐛 Bug Fixes
+
+* **security:** fix workflow does not contain permissions alert ([#79](https://github.com/adcondev/pos-printer/issues/79)) ([ad945d3](https://github.com/adcondev/pos-printer/commit/ad945d37cd3f764c4b9877d2727c3a38bde3b31a))
+
 ### [3.3.2](https://github.com/adcondev/pos-printer/compare/v3.3.1...v3.3.2) (2025-11-25)
 
 
