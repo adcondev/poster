@@ -189,9 +189,9 @@ func TestWindowsPrintConnector_Close_EndDocFail_AbortSucceeds(t *testing.T) {
 
 	err := connector.Close()
 
-	assert.NoError(t, err) // Should be nil as abort succeeded?
-	// Code says: if abortErr != nil { finalErr = ... }
-	// So if abort succeeds, finalErr is nil (unless close fails)
+	// If EndDoc fails but AbortDoc succeeds, Close() should return no error.
+	// This matches the implementation: if abortErr == nil, finalErr is nil (unless close fails).
+	assert.NoError(t, err)
 	mockService.AssertExpectations(t)
 }
 
