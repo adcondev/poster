@@ -76,6 +76,11 @@ go.work.sum
 !*/
 !assets/
 !assets/images/pos-printer.jpeg
+!assets/images/imagen.txt
+!assets/images/logo.txt
+
+!api/v1/*.json
+!api/v1/*.md
 
 ### GoLand template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider

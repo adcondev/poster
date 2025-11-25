@@ -11,6 +11,7 @@ import (
 	"github.com/adcondev/pos-printer/pkg/connection"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/pos-printer/pkg/twodimensional"
 )
 
 // Printer represents a POS printer device
@@ -110,19 +111,22 @@ func (p *Printer) FeedLines(lines byte) error {
 
 // FontA sets the font to Font A
 func (p *Printer) FontA() error {
-	cmd, _ := p.Protocol.Character.SelectCharacterFont(character.FontA)
-	return p.Write(cmd)
+	return p.Write(p.Protocol.SetFontA())
 }
 
 // FontB sets the font to Font B
 func (p *Printer) FontB() error {
-	cmd, _ := p.Protocol.Character.SelectCharacterFont(character.FontB)
-	return p.Write(cmd)
+	return p.Write(p.Protocol.SetFontB())
 }
 
-// Bold enables or disables bold text
-func (p *Printer) Bold() error {
+// EnableBold enables or disables bold text
+func (p *Printer) EnableBold() error {
 	return p.Write(p.Protocol.Character.SetEmphasizedMode(character.OnEm))
+}
+
+// DisableBold disables bold text
+func (p *Printer) DisableBold() error {
+	return p.Write(p.Protocol.Character.SetEmphasizedMode(character.OffEm))
 }
 
 // AlignLeft sets left alignment
@@ -151,6 +155,66 @@ func (p *Printer) SingleSize() error {
 // DoubleSize enables or disables double width
 func (p *Printer) DoubleSize() error {
 	return p.Write(p.Protocol.DoubleSizeText())
+}
+
+// TripleSize enables or disables triple width
+func (p *Printer) TripleSize() error {
+	return p.Write(p.Protocol.TripleSizeText())
+}
+
+// QuadraSize enables or disables quadruple width
+func (p *Printer) QuadraSize() error {
+	return p.Write(p.Protocol.QuadraSizeText())
+}
+
+// PentaSize enables or disables pentuple width
+func (p *Printer) PentaSize() error {
+	return p.Write(p.Protocol.PentaSizeText())
+}
+
+// HexaSize enables or disables hexaple width
+func (p *Printer) HexaSize() error {
+	return p.Write(p.Protocol.HexaSizeText())
+}
+
+// HeptaSize enables or disables heptuple width
+func (p *Printer) HeptaSize() error {
+	return p.Write(p.Protocol.HeptaSizeText())
+}
+
+// OctaSize enables or disables octuple width
+func (p *Printer) OctaSize() error {
+	return p.Write(p.Protocol.OctaSizeText())
+}
+
+// CustomSize sets a custom text size
+func (p *Printer) CustomSize(width, height byte) error {
+	return p.Write(p.Protocol.CustomSizeText(width, height))
+}
+
+// OneDot enables single underline
+func (p *Printer) OneDot() error {
+	return p.Write(p.Protocol.OneDotUnderline())
+}
+
+// TwoDot enables double underline
+func (p *Printer) TwoDot() error {
+	return p.Write(p.Protocol.TwoDotUnderline())
+}
+
+// NoDot disables underline
+func (p *Printer) NoDot() error {
+	return p.Write(p.Protocol.DisableUnderline())
+}
+
+// InverseOn enables reverse mode
+func (p *Printer) InverseOn() error {
+	return p.Write(p.Protocol.EnableReverseMode())
+}
+
+// InverseOff disables reverse mode
+func (p *Printer) InverseOff() error {
+	return p.Write(p.Protocol.DisableReverseMode())
 }
 
 // ============================================================================
@@ -328,4 +392,25 @@ func (p *Printer) printQRAsImage(data string, opts *graphics.QROptions) error {
 	}
 
 	return p.PrintBitmap(bitmap)
+}
+
+// ============================================================================
+// Barcode Printing Methods
+// ============================================================================
+
+// PrintBarcode imprime un código de barras configurando todos sus parámetros
+// en una sola transmisión para asegurar consistencia (stateless).
+func (p *Printer) PrintBarcode(cfg twodimensional.BarcodeConfig, data []byte) error {
+	if len(data) == 0 {
+		return fmt.Errorf("barcode data cannot be empty")
+	}
+
+	// Delegamos la construcción completa al Composer
+	fullCommand, err := p.Protocol.GenerateBarcode(cfg, data)
+	if err != nil {
+		return fmt.Errorf("compose barcode: %w", err)
+	}
+
+	// Enviamos el bloque atómico a la impresora
+	return p.Write(fullCommand)
 }

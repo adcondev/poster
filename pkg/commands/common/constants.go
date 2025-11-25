@@ -1,5 +1,7 @@
 package common //nolint:revive
 
+// ESCPOS and Dots Per Line constants
+
 const (
 	// SP represent the byte de "Space" en ESC/POS.
 	SP byte = 0x20 // Espacio (carácter de espacio en blanco)
@@ -13,4 +15,9 @@ const (
 	GS byte = 0x1D
 	// HT represents the byte de "Horizontal Tab" en ESC/POS.
 	HT byte = 0x09
+
+	// Dpl80mm203dpi represents the dots per line for 80mm paper at 203 dpi.
+	Dpl80mm203dpi = 576
+	// Dpl58mm203dpi represents the dots per line for 58mm paper at 203 dpi.
+	Dpl58mm203dpi = 384
 )

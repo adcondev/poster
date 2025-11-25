@@ -12,9 +12,8 @@ import (
 
 // Paper width constants (in characters)
 const (
-	PaperWidth58mm = 32 // Conservative for 58mm
-	PaperWidth80mm = 48 // Conservative for 80mm
-	DefaultPadding = 1  // Space between columns
+	Width58mm203dpi = 32 // Conservative for 58mm
+	Width80mm203dpi = 48 // Conservative for 80mm
 )
 
 // Style represents text styling options
@@ -36,7 +35,7 @@ type Options struct {
 // DefaultOptions returns sensible defaults for 80mm printers
 func DefaultOptions() *Options {
 	return &Options{
-		PaperWidth:    PaperWidth80mm,
+		PaperWidth:    Width80mm203dpi,
 		ShowHeaders:   true,
 		HeaderStyle:   Style{Bold: true},
 		WordWrap:      true,
@@ -44,14 +43,14 @@ func DefaultOptions() *Options {
 	}
 }
 
-// Engine handles table rendering
-type Engine struct {
+// TabEngine handles table rendering
+type TabEngine struct {
 	definition *Definition
 	options    *Options
 }
 
 // NewEngine creates a new table engine
-func NewEngine(def *Definition, opts *Options) *Engine {
+func NewEngine(def *Definition, opts *Options) *TabEngine {
 	if opts == nil {
 		opts = DefaultOptions()
 	}
@@ -62,14 +61,14 @@ func NewEngine(def *Definition, opts *Options) *Engine {
 		opts.PaperWidth = def.PaperWidth
 	}
 
-	return &Engine{
+	return &TabEngine{
 		definition: def,
 		options:    opts,
 	}
 }
 
 // Render renders the table data to the writer
-func (e *Engine) Render(w io.Writer, data *Data) error {
+func (te *TabEngine) Render(w io.Writer, data *Data) error {
 	if data == nil {
 		return fmt.Errorf("table data cannot be nil")
 	}
@@ -77,14 +76,14 @@ func (e *Engine) Render(w io.Writer, data *Data) error {
 		return fmt.Errorf("invalid table data: %w", err)
 	}
 
-	def := e.definition
+	def := te.definition
 	if len(data.Definition.Columns) > 0 {
 		def = &data.Definition
 	}
 
 	// Headers
-	if e.options.ShowHeaders || data.ShowHeaders {
-		headerLine := e.formatHeaderRow(e.makeHeaderRow(def), def)
+	if te.options.ShowHeaders || data.ShowHeaders {
+		headerLine := te.formatHeaderRow(te.makeHeaderRow(def), def)
 		if _, err := w.Write([]byte(headerLine + string(print.LF))); err != nil {
 			return err
 		}
@@ -93,16 +92,16 @@ func (e *Engine) Render(w io.Writer, data *Data) error {
 
 	// Data rows (without blank lines between them)
 	for _, row := range data.Rows {
-		if e.options.WordWrap {
-			wrapped := e.wrapRow(row, def)
+		if te.options.WordWrap {
+			wrapped := te.wrapRow(row, def)
 			for _, wr := range wrapped {
-				line := e.formatRow(wr, def)
+				line := te.formatRow(wr, def)
 				if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
 					return err
 				}
 			}
 		} else {
-			line := e.formatRow(row, def)
+			line := te.formatRow(row, def)
 			if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
 				return err
 			}
@@ -113,31 +112,21 @@ func (e *Engine) Render(w io.Writer, data *Data) error {
 }
 
 // formatHeaderRow formats a header row with bold styling
-func (e *Engine) formatHeaderRow(cells []string, def *Definition) string {
+func (te *TabEngine) formatHeaderRow(cells []string, def *Definition) string {
 	var result strings.Builder
 
 	cmds := composer.NewEscpos()
 
 	// Apply bold command at the beginning if enabled
-	if e.options.HeaderStyle.Bold {
+	if te.options.HeaderStyle.Bold {
 		result.WriteString(string(cmds.EnableBold())) // ESC E 1 (Bold ON)
 	}
 
-	// Format cells
-	for i, cell := range cells {
-		if i < len(def.Columns) {
-			padded := padString(cell, def.Columns[i].Width, def.Columns[i].Align)
-			result.WriteString(padded)
-
-			// Add spacing between columns
-			if i < len(cells)-1 {
-				result.WriteString(strings.Repeat(" ", e.options.ColumnSpacing))
-			}
-		}
-	}
+	// Format header cells
+	result.WriteString(te.formatRow(cells, def))
 
 	// Reset bold at the end if it was enabled
-	if e.options.HeaderStyle.Bold {
+	if te.options.HeaderStyle.Bold {
 		result.WriteString(string(cmds.DisableBold())) // ESC E 0 (Bold OFF)
 	}
 
@@ -147,7 +136,7 @@ func (e *Engine) formatHeaderRow(cells []string, def *Definition) string {
 // TODO: Consider row styles in the future
 
 // formatRow formats a regular data row without styling
-func (e *Engine) formatRow(cells []string, def *Definition) string {
+func (te *TabEngine) formatRow(cells []string, def *Definition) string {
 	var result strings.Builder
 
 	for i, cell := range cells {
@@ -157,7 +146,7 @@ func (e *Engine) formatRow(cells []string, def *Definition) string {
 
 			// Add spacing between columns
 			if i < len(cells)-1 {
-				result.WriteString(strings.Repeat(" ", e.options.ColumnSpacing))
+				result.WriteString(strings.Repeat(" ", te.options.ColumnSpacing))
 			}
 		}
 	}
@@ -166,7 +155,7 @@ func (e *Engine) formatRow(cells []string, def *Definition) string {
 }
 
 // wrapRow handles word wrapping for a single row
-func (e *Engine) wrapRow(row Row, def *Definition) [][]string {
+func (te *TabEngine) wrapRow(row Row, def *Definition) [][]string {
 	wrappedCells := make([][]string, len(row))
 	maxLines := 0
 
@@ -197,7 +186,7 @@ func (e *Engine) wrapRow(row Row, def *Definition) [][]string {
 }
 
 // makeHeaderRow creates header row from column definitions
-func (e *Engine) makeHeaderRow(def *Definition) []string {
+func (te *TabEngine) makeHeaderRow(def *Definition) []string {
 	headers := make([]string, len(def.Columns))
 	for i, col := range def.Columns {
 		headers[i] = col.Header

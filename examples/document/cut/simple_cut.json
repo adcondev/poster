@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "80mm EC-PM-80250",
+    "paper_width": 80,
+    "code_table": "PC850",
+    "dpi": 203,
+    "has_qr": false
+  },
+  "debug_log": true,
+  "commands": [
+    {
+      "type": "cut",
+      "data": {
+        "mode": "full",
+        "feed": 3
+      }
+    }
+  ]
+}

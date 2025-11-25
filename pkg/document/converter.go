@@ -36,13 +36,19 @@ func (b *Builder) SetProfile(model string, width int, codeTable string) *Builder
 }
 
 // AddText generates a text command
-func (b *Builder) AddText(content string, style *TextStyle) *Builder {
+func (b *Builder) AddText(content string, style *TextStyle, label *Label) *Builder {
+	newLine := true
 	cmd := TextCommand{
-		Content: content,
-		NewLine: true,
+		Content: Content{
+			Text: content,
+		},
+		NewLine: &newLine,
 	}
 	if style != nil {
-		cmd.Style = *style
+		cmd.Content.Style = style
+	}
+	if label != nil {
+		cmd.Label = label
 	}
 
 	data, err := json.Marshal(cmd)
@@ -177,6 +183,43 @@ func (b *Builder) AddTable(definition tables.Definition, rows [][]string, showHe
 
 	b.doc.Commands = append(b.doc.Commands, Command{
 		Type: "table",
+		Data: data,
+	})
+	return b
+}
+
+// AddBarcode agrega un comando de código de barras
+func (b *Builder) AddBarcode(symbology, bcData string, width, height int, hriPos, hriFont, align string) *Builder {
+	cmd := BarcodeCommand{
+		Symbology: symbology,
+		Data:      bcData,
+	}
+
+	// Solo establecer valores opcionales si son diferentes a los defaults
+	if width > 0 {
+		cmd.Width = &width
+	}
+	if height > 0 {
+		cmd.Height = &height
+	}
+	if hriPos != "" {
+		cmd.HRIPosition = &hriPos
+	}
+	if hriFont != "" {
+		cmd.HRIFont = &hriFont
+	}
+	if align != "" {
+		cmd.Align = &align
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		log.Printf("Error marshaling barcode command: %v", err)
+		return b
+	}
+
+	b.doc.Commands = append(b.doc.Commands, Command{
+		Type: "barcode",
 		Data: data,
 	})
 	return b

@@ -3,6 +3,7 @@
 package composer
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/adcondev/pos-printer/pkg/commands/barcode"
@@ -14,6 +15,7 @@ import (
 	"github.com/adcondev/pos-printer/pkg/commands/print"
 	"github.com/adcondev/pos-printer/pkg/commands/printposition"
 	"github.com/adcondev/pos-printer/pkg/commands/qrcode"
+	"github.com/adcondev/pos-printer/pkg/twodimensional"
 )
 
 // EscposProtocol implements the ESCPOS Commands
@@ -171,7 +173,156 @@ func (c *EscposProtocol) DoubleSizeText() []byte {
 	return c.Character.SelectCharacterSize(size)
 }
 
+// TripleSizeText sets triple size text.
+func (c *EscposProtocol) TripleSizeText() []byte {
+	size, _ := character.NewSize(3, 3)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// QuadraSizeText sets quadruple size text.
+func (c *EscposProtocol) QuadraSizeText() []byte {
+	size, _ := character.NewSize(4, 4)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// PentaSizeText sets pentuple size text.
+func (c *EscposProtocol) PentaSizeText() []byte {
+	size, _ := character.NewSize(5, 5)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// HexaSizeText sets hexuple size text.
+func (c *EscposProtocol) HexaSizeText() []byte {
+	size, _ := character.NewSize(6, 6)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// HeptaSizeText sets heptuple size text.
+func (c *EscposProtocol) HeptaSizeText() []byte {
+	size, _ := character.NewSize(7, 7)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// OctaSizeText sets octuple size text.
+func (c *EscposProtocol) OctaSizeText() []byte {
+	size, _ := character.NewSize(8, 8)
+	return c.Character.SelectCharacterSize(size)
+}
+
+// CustomSizeText sets a custom text size.
+func (c *EscposProtocol) CustomSizeText(widthMultiplier, heightMultiplier byte) []byte {
+	if widthMultiplier < 1 {
+		widthMultiplier = 1
+	}
+	if widthMultiplier > 8 {
+		widthMultiplier = 8
+	}
+	if heightMultiplier < 1 {
+		heightMultiplier = 1
+	}
+	if heightMultiplier > 8 {
+		heightMultiplier = 8
+	}
+	size, _ := character.NewSize(widthMultiplier, heightMultiplier)
+	return c.Character.SelectCharacterSize(size)
+}
+
 // EnableBold enables bold text.
 func (c *EscposProtocol) EnableBold() []byte {
 	return c.Character.SetEmphasizedMode(character.OnEm)
+}
+
+// OneDotUnderline enables one-dot underline.
+func (c *EscposProtocol) OneDotUnderline() []byte {
+	cmd, _ := c.Character.SetUnderlineMode(character.OneDot)
+	return cmd
+}
+
+// TwoDotUnderline enables two-dot underline.
+func (c *EscposProtocol) TwoDotUnderline() []byte {
+	cmd, _ := c.Character.SetUnderlineMode(character.TwoDot)
+	return cmd
+}
+
+// DisableUnderline disables underline.
+func (c *EscposProtocol) DisableUnderline() []byte {
+	cmd, _ := c.Character.SetUnderlineMode(character.NoDot)
+	return cmd
+}
+
+// EnableReverseMode enables reverse mode (white on black).
+func (c *EscposProtocol) EnableReverseMode() []byte {
+	return c.Character.SetWhiteBlackReverseMode(character.OnRm)
+}
+
+// DisableReverseMode disables reverse mode (black on white).
+func (c *EscposProtocol) DisableReverseMode() []byte {
+	return c.Character.SetWhiteBlackReverseMode(character.OffRm)
+}
+
+// SetFontA selects Font A.
+func (c *EscposProtocol) SetFontA() []byte {
+	cmd, _ := c.Character.SelectCharacterFont(character.FontA)
+	return cmd
+}
+
+// SetFontB selects Font B.
+func (c *EscposProtocol) SetFontB() []byte {
+	cmd, _ := c.Character.SelectCharacterFont(character.FontB)
+	return cmd
+}
+
+// GenerateBarcode crea una secuencia completa y atómica para imprimir un código de barras.
+// Incluye comandos de configuración (ancho, alto, fuentes) seguidos inmediatamente por los datos.
+func (c *EscposProtocol) GenerateBarcode(cfg twodimensional.BarcodeConfig, data []byte) ([]byte, error) {
+	var buffer bytes.Buffer
+
+	// 1. Configurar Ancho del Módulo (GS w)
+	// Si el valor es 0, usamos default o ignoramos (según tu lógica de negocio).
+	// Aquí asumo que queremos asegurar el estado, así que enviamos el comando.
+	cmd, err := c.Barcode.SetBarcodeWidth(cfg.Width)
+	if err != nil {
+		return nil, fmt.Errorf("config width: %w", err)
+	}
+	buffer.Write(cmd)
+
+	// 2. Configurar Altura (GS h)
+	cmd, err = c.Barcode.SetBarcodeHeight(cfg.Height)
+	if err != nil {
+		return nil, fmt.Errorf("config height: %w", err)
+	}
+	buffer.Write(cmd)
+
+	// 3. Configurar Posición HRI (GS H)
+	cmd, err = c.Barcode.SelectHRICharacterPosition(cfg.HRIPosition)
+	if err != nil {
+		return nil, fmt.Errorf("config HRI pos: %w", err)
+	}
+	buffer.Write(cmd)
+
+	// 4. Configurar Fuente HRI (GS f)
+	cmd, err = c.Barcode.SelectFontForHRI(cfg.HRIFont)
+	if err != nil {
+		return nil, fmt.Errorf("config HRI font: %w", err)
+	}
+	buffer.Write(cmd)
+
+	// 5. Generar Comando de Impresión (GS k)
+	var printCmd []byte
+
+	// Lógica especial para CODE128 segura vs Estándar
+	if cfg.Symbology == barcode.CODE128 {
+		// Usamos la función segura que escapa caracteres e inyecta el CodeSet
+		printCmd, err = c.Barcode.PrintBarcodeWithCodeSet(cfg.Symbology, cfg.CodeSet, data)
+	} else {
+		// Impresión estándar
+		printCmd, err = c.Barcode.PrintBarcode(cfg.Symbology, data)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("generate payload: %w", err)
+	}
+	buffer.Write(printCmd)
+
+	return buffer.Bytes(), nil
 }

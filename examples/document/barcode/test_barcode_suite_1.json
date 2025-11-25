@@ -1,0 +1,419 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "80mm EC-PM-80250",
+    "paper_width": 80,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "debug_log": true,
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "BARCODE TEST SUITE",
+          "content_style": {
+            "bold": true,
+            "size": "2x2"
+          },
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "_-=-",
+        "length": 48
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "1. UPC-A (12 digits)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "UPC-A",
+        "data": "012345678905",
+        "height": 80,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "2. EAN-13 (13 digits)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "EAN13",
+        "data": "1234567890128",
+        "height": 80,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "3. CODE128 - Short",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "ABC123",
+        "width": 3,
+        "height": 60,
+        "hri_position": "both",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "4. CODE128 - Medium",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "INV-2024-001",
+        "width": 2,
+        "height": 70,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "5. CODE39",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE39",
+        "data": "CODE39TEST",
+        "height": 80,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "6. EAN-8 (8 digits)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "EAN8",
+        "data": "12345670",
+        "height": 60,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "7. ITF (Even digits)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "ITF",
+        "data": "1234567890",
+        "height": 70,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "8. Width Test - Narrow (2)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "NARROW",
+        "width": 2,
+        "height": 50,
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "9. Width Test - Wide (5)",
+          "content_style": {
+            "bold": true
+          }
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "WIDE",
+        "width": 5,
+        "height": 50,
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "10. HRI Position Tests",
+          "content_style": {
+            "bold": true,
+            "underline": "1pt"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "No HRI:",
+          "align": "left"
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "NO-TEXT",
+        "height": 40,
+        "hri_position": "none",
+        "align": "center"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "HRI Above:",
+          "align": "left"
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "ABOVE",
+        "height": 40,
+        "hri_position": "above",
+        "align": "center"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "HRI Both:",
+          "align": "left"
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "BOTH",
+        "height": 40,
+        "hri_position": "both",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": ".oO0Oo",
+        "length": 48
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Edge Case: Long CODE128",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "barcode",
+      "data": {
+        "symbology": "CODE128",
+        "data": "THISISAVERYLONGCODE128",
+        "width": 2,
+        "height": 50,
+        "hri_position": "below",
+        "align": "center"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Test Completado!",
+          "content_style": {
+            "size": "2x2",
+            "inverse": true
+          },
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+// Package graphics provides utilities for handling monochrome bitmaps for ESC/POS printers
 package graphics
 
 // MonochromeBitmap represents a black and white bitmap optimized for ESC/POS

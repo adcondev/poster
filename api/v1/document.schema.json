@@ -1,0 +1,581 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/adcondev/poster/api/v1/document.schema.json",
+  "title": "POS Printer Document",
+  "description": "Schema for POS printer document format",
+  "type": "object",
+  "required": [
+    "version",
+    "commands",
+    "profile"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Document format version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "profile": {
+      "$ref": "#/definitions/ProfileConfig"
+    },
+    "debug_log": {
+      "type": "boolean",
+      "description": "Enable debug logging"
+    },
+    "commands": {
+      "type": "array",
+      "description": "List of print commands",
+      "items": {
+        "$ref": "#/definitions/Command"
+      },
+      "minItems": 1
+    }
+  },
+  "definitions": {
+    "ProfileConfig": {
+      "type": "object",
+      "description": "Printer profile configuration",
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Printer model identifier"
+        },
+        "paper_width": {
+          "type": "integer",
+          "description": "Paper width in millimeters",
+          "default": 80,
+          "enum": [
+            58,
+            72,
+            80,
+            100,
+            112,
+            120
+          ]
+        },
+        "code_table": {
+          "type": "string",
+          "description": "Character encoding table (e.g., PC850, WPC1252)",
+          "default": "WPC1252"
+        },
+        "dpi": {
+          "type": "integer",
+          "description": "Dots per inch resolution",
+          "default": 203,
+          "enum": [
+            203,
+            300,
+            600
+          ]
+        },
+        "has_qr": {
+          "type": "boolean",
+          "description": "Indicates if printer supports native QR codes",
+          "default": false
+        }
+      }
+    },
+    "Command": {
+      "type": "object",
+      "description": "Single print command",
+      "required": [
+        "type",
+        "data"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "image",
+            "separator",
+            "feed",
+            "cut",
+            "qr",
+            "table",
+            "barcode"
+          ],
+          "description": "Command type"
+        },
+        "data": {
+          "description": "Command-specific data",
+          "oneOf": [
+            {
+              "$ref": "#/definitions/TextCommand"
+            },
+            {
+              "$ref": "#/definitions/ImageCommand"
+            },
+            {
+              "$ref": "#/definitions/SeparatorCommand"
+            },
+            {
+              "$ref": "#/definitions/FeedCommand"
+            },
+            {
+              "$ref": "#/definitions/CutCommand"
+            },
+            {
+              "$ref": "#/definitions/QRCommand"
+            },
+            {
+              "$ref": "#/definitions/TableCommand"
+            },
+            {
+              "$ref": "#/definitions/BarcodeCommand"
+            }
+          ]
+        }
+      }
+    },
+    "TextCommand": {
+      "type": "object",
+      "required": [
+        "content"
+      ],
+      "properties": {
+        "content": {
+          "$ref": "#/definitions/Content"
+        },
+        "label": {
+          "$ref": "#/definitions/Label"
+        },
+        "new_line": {
+          "type": "boolean",
+          "description": "Add line feed after text",
+          "default": true
+        }
+      }
+    },
+    "Content": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Content text"
+        },
+        "content_style": {
+          "$ref": "#/definitions/TextStyle"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "left"
+        }
+      }
+    },
+    "Label": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Label text",
+          "default": ""
+        },
+        "label_style": {
+          "$ref": "#/definitions/TextStyle"
+        },
+        "separator": {
+          "type": "string",
+          "description": "Separator between label and content",
+          "default": ": "
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "left"
+        }
+      }
+    },
+    "TextStyle": {
+      "type": "object",
+      "properties": {
+        "bold": {
+          "type": "boolean",
+          "default": false
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^([1-8]x[1-8])$",
+          "description": "Text size (e.g., 1x1, 2x2, 3x3...8x8)",
+          "default": "1x1"
+        },
+        "underline": {
+          "type": "string",
+          "enum": [
+            "0pt",
+            "1pt",
+            "2pt"
+          ],
+          "default": "0pt"
+        },
+        "inverse": {
+          "type": "boolean",
+          "description": "White text on black background",
+          "default": false
+        },
+        "font": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "default": "A"
+        }
+      }
+    },
+    "ImageCommand": {
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Base64 encoded image data"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "png",
+            "jpg",
+            "bmp"
+          ],
+          "description": "Image format"
+        },
+        "pixel_width": {
+          "type": "integer",
+          "description": "Desired width in pixels",
+          "minimum": 1,
+          "default": 128
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "center"
+        },
+        "threshold": {
+          "type": "integer",
+          "description": "Black/white threshold (0-255)",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 128
+        },
+        "dithering": {
+          "type": "string",
+          "enum": [
+            "threshold",
+            "atkinson"
+          ],
+          "default": "atkinson"
+        },
+        "scaling": {
+          "type": "string",
+          "enum": [
+            "bilinear",
+            "nns"
+          ],
+          "default": "bilinear"
+        }
+      }
+    },
+    "SeparatorCommand": {
+      "type": "object",
+      "properties": {
+        "char": {
+          "type": "string",
+          "description": "Character(s) to use for separator",
+          "default": "- "
+        },
+        "length": {
+          "type": "integer",
+          "description": "Length in characters",
+          "minimum": 1,
+          "maximum": 255,
+          "default": 48
+        }
+      }
+    },
+    "FeedCommand": {
+      "type": "object",
+      "required": [
+        "lines"
+      ],
+      "properties": {
+        "lines": {
+          "type": "integer",
+          "description": "Number of lines to feed",
+          "minimum": 1,
+          "maximum": 255
+        }
+      }
+    },
+    "CutCommand": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "full",
+            "partial"
+          ]
+        },
+        "feed": {
+          "type": "integer",
+          "description": "Lines to feed before cutting",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 2
+        }
+      }
+    },
+    "QRCommand": {
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "string",
+          "description": "QR code data (URL, text, etc.)"
+        },
+        "human_text": {
+          "type": "string",
+          "description": "Text to display below QR code"
+        },
+        "pixel_width": {
+          "type": "integer",
+          "description": "Desired QR code width in pixels",
+          "minimum": 87,
+          "default": 128
+        },
+        "correction": {
+          "type": "string",
+          "enum": [
+            "L",
+            "M",
+            "Q",
+            "H"
+          ],
+          "description": "Error correction level",
+          "default": "Q"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "description": "QR code alignment",
+          "default": "center"
+        },
+        "logo": {
+          "type": "string",
+          "description": "Base64 encoded logo image"
+        },
+        "circle_shape": {
+          "type": "boolean",
+          "description": "Use circular blocks for QR modules, > 256px width codes"
+        }
+      }
+    },
+    "BarcodeCommand": {
+      "type": "object",
+      "required": [
+        "symbology",
+        "data"
+      ],
+      "properties": {
+        "symbology": {
+          "type": "string",
+          "enum": [
+            "UPC-A",
+            "UPC-E",
+            "EAN13",
+            "EAN8",
+            "CODE39",
+            "CODE128",
+            "ITF",
+            "CODABAR"
+          ],
+          "description": "Barcode symbology type"
+        },
+        "data": {
+          "type": "string",
+          "description": "Barcode data to encode",
+          "minLength": 1,
+          "maxLength": 25
+        },
+        "width": {
+          "type": "integer",
+          "description": "Module width (2-6)",
+          "minimum": 2,
+          "maximum": 6
+        },
+        "height": {
+          "type": "integer",
+          "description": "Height in dots (1-255)",
+          "minimum": 1,
+          "maximum": 255
+        },
+        "hri_position": {
+          "type": "string",
+          "enum": [
+            "none",
+            "above",
+            "below",
+            "both"
+          ],
+          "description": "Human Readable Interpretation position",
+          "default": "below"
+        },
+        "hri_font": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B"
+          ],
+          "description": "Font for HRI text",
+          "default": "A"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "description": "Barcode alignment",
+          "default": "center"
+        }
+      }
+    },
+    "TableCommand": {
+      "type": "object",
+      "required": [
+        "definition",
+        "rows"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/TableDefinition"
+        },
+        "show_headers": {
+          "type": "boolean",
+          "description": "Display table headers",
+          "default": true
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "Table data rows"
+        },
+        "options": {
+          "$ref": "#/definitions/TableOptions"
+        }
+      }
+    },
+    "TableDefinition": {
+      "type": "object",
+      "required": [
+        "columns"
+      ],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TableColumn"
+          },
+          "minItems": 1
+        },
+        "paper_width": {
+          "type": "integer",
+          "description": "Paper width in characters",
+          "minimum": 1
+        }
+      }
+    },
+    "TableColumn": {
+      "type": "object",
+      "required": [
+        "name",
+        "width"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Column header name"
+        },
+        "width": {
+          "type": "integer",
+          "description": "Column width in characters",
+          "minimum": 1
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "description": "Column text alignment",
+          "default": "center"
+        }
+      }
+    },
+    "TableOptions": {
+      "type": "object",
+      "properties": {
+        "header_bold": {
+          "type": "boolean",
+          "description": "Enable bold styling for headers",
+          "default": true
+        },
+        "word_wrap": {
+          "type": "boolean",
+          "description": "Enable automatic text wrapping"
+        },
+        "column_spacing": {
+          "type": "integer",
+          "description": "Spaces between columns, for each column side (x2)",
+          "minimum": 0,
+          "default": 1
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "description": "Default table alignment",
+          "default": "center"
+        }
+      }
+    }
+  }
+}
