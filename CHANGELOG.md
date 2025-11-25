@@ -2,6 +2,19 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+### [3.3.1](https://github.com/adcondev/pos-printer/compare/v3.3.0...v3.3.1) (2025-11-25)
+
+
+### ✅ Tests
+
+* **poster:** add unit tests for profile, connection and graphics packages ([#74](https://github.com/adcondev/pos-printer/issues/74)) ([d56a1e5](https://github.com/adcondev/pos-printer/commit/d56a1e5cf5d4deb33e1c413084d704a1e5c586d9))
+
+
+### 📦 Dependencies
+
+* **gomod:** bump github.com/stretchr/testify from 1.7.0 to 1.11.1 ([#76](https://github.com/adcondev/pos-printer/issues/76)) ([0f40661](https://github.com/adcondev/pos-printer/commit/0f406613e8d716346b01b8116a3e10f72f6a765f))
+* **gomod:** bump gopkg.in/yaml.v3 from 3.0.0 to 3.0.1 ([#75](https://github.com/adcondev/pos-printer/issues/75)) ([254c4cf](https://github.com/adcondev/pos-printer/commit/254c4cf515b4c6f2ed22455a1225b09b42a07d86))
+
 ## [3.3.0](https://github.com/adcondev/pos-printer/compare/v3.2.0...v3.3.0) (2025-11-25)
 
 
