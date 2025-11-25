@@ -2,6 +2,34 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [3.3.0](https://github.com/adcondev/pos-printer/compare/v3.2.0...v3.3.0) (2025-11-25)
+
+
+### ♻️ Code Refactoring
+
+* **document:** update ticket JSON structure and improve text command handling ([5217e05](https://github.com/adcondev/pos-printer/commit/5217e053db72deec249dea2c60f42922a4f90ef4))
+
+
+### 📝 Documentation
+
+* **document:** add JSON schema and documentation for POS printer document format ([ab93895](https://github.com/adcondev/pos-printer/commit/ab938954a29bfdf5c596a8792bc014807c350bfb))
+
+
+### 🐛 Bug Fixes
+
+* **document:** fix panic by enhancing profile application and command handling ([2ce903c](https://github.com/adcondev/pos-printer/commit/2ce903c985210c27bde12224603115bf636f122a))
+
+
+### ✨ Features
+
+* **barcode:** add BarcodeCommand structure for barcode generation ([6762a4c](https://github.com/adcondev/pos-printer/commit/6762a4c897eb6abe8a49e56dac7bef3956442449))
+* **barcode:** implement barcode command handling and configuration ([d76eef1](https://github.com/adcondev/pos-printer/commit/d76eef1aaa6a6f8ef3c858f6a663ed305dff9fca))
+* **barcode:** implement barcode command handling and configuration ([#73](https://github.com/adcondev/pos-printer/issues/73)) ([2408c41](https://github.com/adcondev/pos-printer/commit/2408c41e691c72673a76cab4534d4b1ebd60a936))
+* **document:** add new JSON document examples for receipt and table commands ([75e5881](https://github.com/adcondev/pos-printer/commit/75e58814079099e71d8e98d73392aa0f4847dc76))
+* **document:** add QR and table command handling ([edac830](https://github.com/adcondev/pos-printer/commit/edac830a1472f8a1cbad4d74b98105cef04f83cb))
+* **document:** enhance text command structure with label support ([e389512](https://github.com/adcondev/pos-printer/commit/e389512b505e7d624fc8b52c4b7c14df4921769c))
+* **document:** introduce new text command structure with optional label and style support ([b129df6](https://github.com/adcondev/pos-printer/commit/b129df6db305dfd450fcee9c33d54f8c64650308))
+
 ## [3.2.0](https://github.com/adcondev/pos-printer/compare/v3.1.0...v3.2.0) (2025-11-19)
 
 
