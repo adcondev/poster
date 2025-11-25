@@ -43,7 +43,7 @@ func (m *MockPrinterService) Write(handle uintptr, data []byte) (uint32, error) 
 	return args.Get(0).(uint32), args.Error(1)
 }
 
-// NewWindowsPrintConnectorWithService allows injecting a mock service for testing.
+// newTestWindowsPrintConnector allows injecting a mock service for testing.
 // This function is internal to the package (or exposed for testing if necessary).
 // Since we are in the same package, we can just create the struct directly or modify NewWindowsPrintConnector to accept options.
 // But NewWindowsPrintConnector uses getPlatformPrinterService().
@@ -101,7 +101,7 @@ func TestWindowsPrintConnector_Write_Success(t *testing.T) {
 	mockService.On("Open", "TestPrinter").Return(uintptr(123), nil)
 	mockService.On("StartDoc", uintptr(123), "ESC/POS PrintDataInPageMode Job", "RAW").Return(uint32(1), nil)
 	data := []byte("test data")
-	mockService.On("Write", uintptr(123), data).Return(uint32(len(data)), nil)
+	mockService.On("Write", uintptr(123), data).Return(uint32(len(data)), nil) //nolint:gosec
 
 	connector, _ := newTestWindowsPrintConnector("TestPrinter", mockService)
 
@@ -154,7 +154,7 @@ func TestWindowsPrintConnector_Close_Success(t *testing.T) {
 	mockService.On("Close", uintptr(123)).Return(nil)
 
 	connector, _ := newTestWindowsPrintConnector("TestPrinter", mockService)
-	connector.Write([]byte("test")) // Start job
+	_, _ = connector.Write([]byte("test")) // Start job
 
 	err := connector.Close()
 
@@ -189,7 +189,7 @@ func TestWindowsPrintConnector_Close_EndDocFail_AbortSucceeds(t *testing.T) {
 	mockService.On("Close", uintptr(123)).Return(nil)
 
 	connector, _ := newTestWindowsPrintConnector("TestPrinter", mockService)
-	connector.Write([]byte("test"))
+	_, _ = connector.Write([]byte("test"))
 
 	err := connector.Close()
 
@@ -210,12 +210,14 @@ func TestWindowsPrintConnector_Close_EndDocFail_AbortFails(t *testing.T) {
 	mockService.On("Close", uintptr(123)).Return(nil)
 
 	connector, _ := newTestWindowsPrintConnector("TestPrinter", mockService)
-	connector.Write([]byte("test"))
+	_, _ = connector.Write([]byte("test"))
 
 	err := connector.Close()
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "AbortDoc")
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "AbortDoc")
+	}
+
 	mockService.AssertExpectations(t)
 }
 

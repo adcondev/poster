@@ -34,6 +34,7 @@ func getPlatformPrinterService() PrinterService {
 	return &RealPrinterService{}
 }
 
+// Open opens a handle to the specified printer.
 func (s *RealPrinterService) Open(name string) (uintptr, error) {
 	printerNameUTF16, err := syscall.UTF16PtrFromString(name)
 	if err != nil {
@@ -52,6 +53,7 @@ func (s *RealPrinterService) Open(name string) (uintptr, error) {
 	return uintptr(h), nil
 }
 
+// Close closes the handle to the printer.
 func (s *RealPrinterService) Close(handle uintptr) error {
 	r1, _, err := procClosePrinter.Call(handle)
 	if r1 == 0 {
@@ -60,6 +62,7 @@ func (s *RealPrinterService) Close(handle uintptr) error {
 	return nil
 }
 
+// StartDoc starts a new print job.
 func (s *RealPrinterService) StartDoc(handle uintptr, docName, dataType string) (uint32, error) {
 	docNamePtr, _ := syscall.UTF16PtrFromString(docName)
 	dataTypePtr, _ := syscall.UTF16PtrFromString(dataType)
@@ -77,6 +80,7 @@ func (s *RealPrinterService) StartDoc(handle uintptr, docName, dataType string) 
 	return uint32(r1), nil
 }
 
+// EndDoc ends the current print job.
 func (s *RealPrinterService) EndDoc(handle uintptr) error {
 	r1, _, err := procEndDocPrinter.Call(handle)
 	if r1 == 0 {
@@ -85,6 +89,7 @@ func (s *RealPrinterService) EndDoc(handle uintptr) error {
 	return nil
 }
 
+// AbortDoc aborts the current print job.
 func (s *RealPrinterService) AbortDoc(handle uintptr) error {
 	r1, _, err := procAbortDocPrinter.Call(handle)
 	if r1 == 0 {
@@ -93,6 +98,7 @@ func (s *RealPrinterService) AbortDoc(handle uintptr) error {
 	return nil
 }
 
+// Write writes data to the printer.
 func (s *RealPrinterService) Write(handle uintptr, data []byte) (uint32, error) {
 	//nolint:gosec // Necesario para interactuar con la API de Windows
 	var bytesWritten uint32

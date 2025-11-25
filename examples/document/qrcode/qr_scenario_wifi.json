@@ -10,7 +10,7 @@
     {
       "type": "text",
       "data": {
-        "content": "WIFI GRATIS",
+        "content": "WIFI RED2000",
         "style": {
           "align": "center",
           "bold": true,
@@ -22,7 +22,7 @@
     {
       "type": "separator",
       "data": {
-        "char": "-",
+        "char": "+-+-",
         "length": 48
       }
     },
