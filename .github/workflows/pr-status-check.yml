@@ -1,4 +1,7 @@
 name: PR Status Dashboard
+permissions:
+  contents: read
+  issues: write
 on:
   schedule:
     - cron: '0 9 * * 1'  # Lunes a las 9 AM
