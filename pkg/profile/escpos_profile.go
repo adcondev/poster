@@ -40,6 +40,7 @@ type Escpos struct {
 }
 
 // CreatePt210 crea un perfil para impresora térmica de 58mm PT-58N
+// TODO: Hardcoded Models: Factory functions for specific models might become hard to maintain. Consider configuration-based approach.
 func CreatePt210() *Escpos {
 	p := CreateProfile58mm()
 	p.Model = "58mm PT-210"

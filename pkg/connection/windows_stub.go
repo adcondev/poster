@@ -6,25 +6,39 @@ import (
 	"errors"
 )
 
-// WindowsPrintConnector es un stub para sistemas no-Windows
-type WindowsPrintConnector struct{}
+// StubPrinterService implements PrinterService for non-Windows platforms (always returns errors).
+type StubPrinterService struct{}
 
-// NewWindowsPrintConnector devuelve un error en sistemas no-Windows
-func NewWindowsPrintConnector(_ string) (*WindowsPrintConnector, error) {
-	return nil, errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
+func getPlatformPrinterService() PrinterService {
+	return &StubPrinterService{}
 }
 
-// Write implementación para sistemas no-Windows
-func (c *WindowsPrintConnector) Write(_ []byte) (int, error) {
+// Open always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) Open(_ string) (uintptr, error) {
 	return 0, errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
 }
 
-// Read implementación para sistemas no-Windows
-func (c *WindowsPrintConnector) Read(_ []byte) (int, error) {
-	return 0, errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
-}
-
-// Close implementación para sistemas no-Windows
-func (c *WindowsPrintConnector) Close() error {
+// Close always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) Close(_ uintptr) error {
 	return errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
+}
+
+// StartDoc always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) StartDoc(_ uintptr, _, _ string) (uint32, error) {
+	return 0, errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
+}
+
+// EndDoc always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) EndDoc(_ uintptr) error {
+	return errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
+}
+
+// AbortDoc always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) AbortDoc(_ uintptr) error {
+	return errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
+}
+
+// Write always returns an error indicating unavailability on non-Windows systems.
+func (s *StubPrinterService) Write(_ uintptr, _ []byte) (uint32, error) {
+	return 0, errors.New("WindowsPrintConnector no está disponible en este sistema operativo")
 }

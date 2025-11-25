@@ -75,9 +75,12 @@ func (e *Escpos) EncodeString(text string) (string, error) {
 func (e *Escpos) getEncoding(codeTable character.CodeTable) *encoding.Encoder {
 	enc, ok := codeTableMap[codeTable]
 	if !ok {
+		// FIXME: Side effect: logging directly avoids caller control. Return error or use configured logger.
 		log.Printf("warning: unsupported encoding for code table %v, falling back to Windows-1252", codeTable)
+		// FIXME: Silent fallback to Windows-1252 might lead to incorrect output without caller knowing.
 		return charmap.Windows1252.NewEncoder()
 	}
+	// TODO: Optimization: .NewEncoder() is called on every invocation. Consider caching or reusing encoders if strict state is not required.
 	return enc.NewEncoder()
 }
 

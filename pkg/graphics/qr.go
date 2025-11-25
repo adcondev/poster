@@ -36,6 +36,8 @@ const (
 // TODO: Check if /internals fits better for custom WriteCloser
 
 // WriteCloser wraps bytes.Buffer to implement io.WriteCloser
+// FIXME: /internals fits better for custom WriteCloser?
+// TODO: Consider naming this BufferWriteCloser or similar for clarity.
 type WriteCloser struct {
 	buffer *bytes.Buffer
 }
@@ -57,6 +59,7 @@ func (wc *WriteCloser) Close() error {
 	// NO hacer Reset() aquí porque perdemos los datos antes de leerlos
 	// El defer en ProcessQRImage llama a Close() DESPUÉS de usar Save()
 	// pero ANTES de leer los bytes con Bytes()
+	// FIXME: Empty Close method might indicate a design smell or need for better abstraction.
 	return nil
 }
 
@@ -133,6 +136,8 @@ func (qro *QROptions) GetModuleSize() posqr.ModuleSize {
 }
 
 // GenerateQR calcula y establece el tamaño del módulo basado en PixelWidth y el tamaño de la cuadrícula del QR
+// TODO: GenerateQR modifies QROptions struct (side effects). Consider returning a result struct or modified copy.
+// TODO: Break down complex methods further if possible.
 func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 	if data == "" {
 		return nil, fmt.Errorf("QR data cannot be empty")
@@ -144,20 +149,8 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 
 	// FIXME: === Check if encoding affects QR Code whether is printed as image or natively ===
 
-	// Validación de PixelWidth
-	switch {
-	case qro.PixelWidth < minPixelWidth:
-		log.Printf("warning: pixel_width %d < minimum %d, adjusting to minimum",
-			qro.PixelWidth, minPixelWidth)
-		qro.PixelWidth = minPixelWidth
-	case qro.PixelWidth > maxPixelWidth:
-		log.Printf("warning: pixel_width %d exceeds maximum %d, clamping",
-			qro.PixelWidth, maxPixelWidth)
-		qro.PixelWidth = maxPixelWidth
-	default:
-		qro.Qr.requestedWidth = qro.PixelWidth
-		log.Printf("QR: using requested pixel_width %d", qro.PixelWidth)
-	}
+	// TODO: Validate/clamp PixelWidth explicitly returning errors instead of silent adjustment?
+	qro.validateAndAdjustPixelWidth()
 
 	if qro.ErrorCorrection < posqr.LevelL || qro.ErrorCorrection > posqr.LevelH {
 		qro.ErrorCorrection = posqr.LevelQ
@@ -171,17 +164,53 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 	}
 
 	qro.Qr.gridSize = qrc.Dimension()
+	if err := qro.validateGridSize(); err != nil {
+		return nil, err
+	}
+
+	// Calculate module size
+	qro.calculateModuleSize(data)
+
+	// Calcular y reportar tamaño final real
+	qro.calculateFinalDimensions()
+
+	// Auto-calcular LogoSizeMulti si hay Logo
+	qro.loadLogo()
+
+	return qrc, nil
+}
+
+func (qro *QROptions) validateAndAdjustPixelWidth() {
+	switch {
+	case qro.PixelWidth < minPixelWidth:
+		log.Printf("warning: pixel_width %d < minimum %d, adjusting to minimum",
+			qro.PixelWidth, minPixelWidth)
+		qro.PixelWidth = minPixelWidth
+	case qro.PixelWidth > maxPixelWidth:
+		log.Printf("warning: pixel_width %d exceeds maximum %d, clamping",
+			qro.PixelWidth, maxPixelWidth)
+		qro.PixelWidth = maxPixelWidth
+	default:
+		qro.Qr.requestedWidth = qro.PixelWidth
+		log.Printf("QR: using requested pixel_width %d", qro.PixelWidth)
+	}
+}
+
+func (qro *QROptions) validateGridSize() error {
 	if qro.Qr.gridSize < minGridSize {
-		return nil, fmt.Errorf("QR grid size %d is too small (minimum %d)",
+		return fmt.Errorf("QR grid size %d is too small (minimum %d)",
 			qro.Qr.gridSize, minGridSize)
 	} else if qro.Qr.gridSize >= maxGridSize {
 		log.Printf("warning: QR grid size %d is very large, maybe data is missing", qro.Qr.gridSize)
 	}
+	return nil
+}
 
-	// Tamaño del módulo con mejor precisión
+func (qro *QROptions) calculateModuleSize(data string) {
 	totalModules := qro.Qr.gridSize + (2 * minBorderWidth)
 	if totalModules <= 0 {
-		return nil, fmt.Errorf("invalid total modules calculation: %d", totalModules)
+		// This case should be unreachable given minGridSize validation.
+		panic(fmt.Sprintf("bug: invalid total modules after validation: %d", totalModules))
 	}
 	qro.Qr.moduleSize = posqr.ModuleSize(qro.Qr.requestedWidth / totalModules)
 
@@ -202,8 +231,10 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 	default:
 		log.Printf("QR: using calculated module size %d", qro.Qr.moduleSize)
 	}
+}
 
-	// Calcular y reportar tamaño final real
+func (qro *QROptions) calculateFinalDimensions() {
+	totalModules := qro.Qr.gridSize + (2 * minBorderWidth)
 	qro.Qr.totalWidth = totalModules * int(qro.Qr.moduleSize)
 	qro.Qr.dataWidth = qro.Qr.gridSize * int(qro.Qr.moduleSize)
 	qro.Qr.borderWidth = (2 * minBorderWidth) * int(qro.Qr.moduleSize)
@@ -235,11 +266,13 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 			log.Printf("info: actual QR size matches requested size exactly")
 		}
 	}
+}
 
-	// Auto-calcular LogoSizeMulti si hay Logo
+func (qro *QROptions) loadLogo() {
 	if qro.LogoData != "" {
 		// Load images if base64 strings are provided
 		// FIXME: Define a single place where to load images from base64
+		// TODO: Optimize Base64 handling? Decoding images here might be slow if repeated.
 		logoImg, format, err := load.ImgFromBase64(qro.LogoData)
 		if err != nil {
 			log.Printf("warning: failed to load Logo: %v", err)
@@ -260,10 +293,7 @@ func (qro *QROptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 			log.Printf("QR: loaded Logo format=%s, size=%dx%d, aspect_ratio=%.2f, size_multi=%d",
 				qro.Logo.format, qro.Logo.width, qro.Logo.height, aspectRatio, qro.Logo.sizeMulti)
 		}
-
 	}
-
-	return qrc, nil
 }
 
 // ProcessQRImage genera un QR code como imagen optimizada para impresora térmica
@@ -280,6 +310,7 @@ func ProcessQRImage(data string, opts *QROptions) (image.Image, error) {
 	// grande que el solicitado, preferir generado y no escalar hacia abajo.
 
 	// Generar QR y calcular tamaño del módulo
+	// TODO: Error Handling: GenerateQR modifies opts. If it fails partially, opts might be inconsistent.
 	qrc, err := opts.GenerateQR(data)
 	if err != nil {
 		log.Printf("error setting module size: %v", err)
@@ -328,6 +359,7 @@ func ProcessQRImage(data string, opts *QROptions) (image.Image, error) {
 }
 
 // mapLogoSize calcula el tamaño óptimo del Logo basado en corrección
+// TODO: Avoid magic numbers (7, 6, 5, 4). Define constants for these ratios.
 func mapLogoSize(errorCorrection posqr.ErrorCorrection) int {
 	switch errorCorrection {
 	case posqr.LevelL:

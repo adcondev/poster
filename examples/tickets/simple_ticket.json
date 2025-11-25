@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "80mm EC-PM-80250",
+    "paper_width": 80,
+    "code_table": "WPC1252",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "TICKET DE PRUEBA",
+          "content_style": {
+            "bold": true,
+            "size": "2x2"
+          },
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-++-",
+        "length": 48
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "label": {
+          "text": "Producto"
+        },
+        "content": {
+          "text": "Item de ejemplo"
+        }
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "label": {
+          "text": "Precio"
+        },
+        "content": {
+          "text": "$10.00",
+          "align": "right"
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 3
+      }
+    }
+  ]
+}
