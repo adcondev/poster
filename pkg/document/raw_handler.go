@@ -23,7 +23,7 @@ var dangerousPatterns = []struct {
 	{[]byte{0x1B, 0x70}, "ESC p", "Cash drawer - physical hardware activation"},
 }
 
-// Comandos conocidos que esperan respuesta
+// Known commands that expect responses
 var bidirectionalCommands = []struct {
 	pattern []byte
 	name    string
