@@ -14,7 +14,7 @@ import (
 // Test Helpers
 // ============================================================================
 
-// newMockPrinterForRaw crea un printer mock para testing
+// newMockPrinterForRaw creates a mock printer for testing
 func newMockPrinterForRaw(t *testing.T) *service.Printer {
 	t.Helper()
 
