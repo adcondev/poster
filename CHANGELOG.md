@@ -2,6 +2,13 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [3.4.0](https://github.com/adcondev/pos-printer/compare/v3.3.3...v3.4.0) (2025-11-27)
+
+
+### ✨ Features
+
+* **document:** add support for raw command handling and documentation ([#80](https://github.com/adcondev/pos-printer/issues/80)) ([dca16cf](https://github.com/adcondev/pos-printer/commit/dca16cf535e099de3c7f922d969187bb35ca2d03))
+
 ### [3.3.3](https://github.com/adcondev/pos-printer/compare/v3.3.2...v3.3.3) (2025-11-25)
 
 
