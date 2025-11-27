@@ -11,8 +11,10 @@ import (
 type Alignment string
 
 const (
-	center Alignment = "center"
-	right  Alignment = "right"
+	// Center alignment
+	Center Alignment = "Center"
+	// Right alignment
+	Right Alignment = "Right"
 )
 
 // Column defines a table column configuration
@@ -52,8 +54,8 @@ type Data struct {
 	Rows        []Row      `json:"rows"`
 }
 
-// validate checks if the table data is valid
-func (dt *Data) validate() error {
+// Validate checks if the table data is valid
+func (dt *Data) Validate() error {
 	if len(dt.Definition.Columns) == 0 {
 		return fmt.Errorf("table must have at least one column")
 	}
@@ -86,8 +88,8 @@ func (d *Definition) Validate() error {
 	return nil
 }
 
-// wrapText wraps text to fit within the specified width
-func wrapText(text string, width int) []string {
+// WrapText wraps text to fit within the specified width
+func WrapText(text string, width int) []string {
 	if width <= 0 {
 		return []string{text}
 	}
@@ -139,8 +141,8 @@ func wrapText(text string, width int) []string {
 	return finalLines
 }
 
-// padString pads a string according to alignment
-func padString(s string, width int, align Alignment) string {
+// PadString pads a string according to alignment
+func PadString(s string, width int, align Alignment) string {
 	length := utf8.RuneCountInString(s)
 	if length >= width {
 		// Truncate if necessary
@@ -154,11 +156,11 @@ func padString(s string, width int, align Alignment) string {
 	padTotal := width - length
 
 	switch align {
-	case center:
+	case Center:
 		padLeft := padTotal / 2
 		padRight := padTotal - padLeft
 		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
-	case right:
+	case Right:
 		return strings.Repeat(" ", padTotal) + s
 	default: // AlignLeft
 		return s + strings.Repeat(" ", padTotal)
