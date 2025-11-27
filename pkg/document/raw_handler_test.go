@@ -664,7 +664,7 @@ func TestHandleRaw_MaxSizeLimit(t *testing.T) {
 	executor := document.NewExecutor(printer)
 
 	// Generate hex string > 4096 bytes
-	// Cada "FF " = 1 byte final, necesitamos > 4096 bytes
+	// Each "FF " sequence is parsed as 1 byte (after cleaning), so 4097 repetitions = 4097 bytes (> 4096 bytes)
 	largeHex := strings.Repeat("FF ", 4097)
 
 	rawCmd := document.RawCommand{
