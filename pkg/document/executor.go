@@ -34,21 +34,29 @@ func NewExecutor(printer *service.Printer) *Executor {
 	e.RegisterHandler("text", e.handleText)
 	e.RegisterHandler("feed", e.handleFeed)
 	e.RegisterHandler("cut", e.handleCut)
-
-	// Registrar handlers avanzados
-	e.RegisterHandler("image", e.handleImage)
 	e.RegisterHandler("separator", e.handleSeparator)
 
-	// Handlers para QR y tablas
+	// Handlers para 2D
+	e.RegisterHandler("image", e.handleImage)
 	e.RegisterHandler("qr", e.handleQR)
-	e.RegisterHandler("table", e.handleTable)
-
-	// Handler para barcode
 	e.RegisterHandler("barcode", e.handleBarcode)
 
+	// Registrar handlers avanzados
+	e.RegisterHandler("table", e.handleTable)
+	e.RegisterHandler("raw", e.HandleRaw)
+
 	// TODO: Implement other commands
+	if e.printer.Profile.DebugLog {
+		logHandlerRegistration(e.handlers)
+	}
 
 	return e
+}
+
+func logHandlerRegistration(handlers map[string]CommandHandler) {
+	for cmdType := range handlers {
+		log.Printf("Registered handler for command type: %s", cmdType)
+	}
 }
 
 // RegisterHandler registers a new command handler

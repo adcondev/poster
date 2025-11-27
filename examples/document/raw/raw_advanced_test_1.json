@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "80mm Generic",
+    "paper_width": 80
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "--- TEST DE MODOS OCULTOS ---",
+          "new_line": true,
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 7B 01",
+        "comment": "Activar Upside-Down (Impresión cabeza abajo)"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Texto rotado 180 grados.\nIdeal para montaje en pared.",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 7B 00",
+        "comment": "Desactivar Upside-Down"
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 4D 01",
+        "comment": "Cambiar a Font B (9x17) - Caracteres más densos"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Esta linea usa la Fuente B (Hardware Font).",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 4D 00",
+        "comment": "Volver a Font A (12x24) - Standard"
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 62 01",
+        "comment": "Activar Smoothing (Antialiasing térmico)"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "SUAVE",
+          "content_style": {
+            "size": "4x4"
+          },
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 62 00",
+        "comment": "Desactivar Smoothing"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "NO SUAVE",
+          "content_style": {
+            "size": "4x4"
+          },
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 3A",
+        "comment": "INICIO GRABACIÓN MACRO"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "* COPIA * ",
+          "new_line": true,
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 1
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 3A",
+        "comment": "FIN GRABACIÓN MACRO"
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 5E 03 05 00",
+        "comment": "EJECUTAR MACRO 2 VECES"
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 1
+      }
+    }
+  ]
+}

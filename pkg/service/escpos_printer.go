@@ -56,6 +56,11 @@ func (p *Printer) Initialize() error {
 	}
 
 	init := append(p.Protocol.InitializePrinter(), ct...)
+	// TODO: Make beep configurable in composer, not hardcoded here
+	// Add beep to library
+	// IMPORTANT: The idea is to notify the user that the printer is ready
+	// but it can be annoying for my other dev colleagues :)
+	// FIXME: init = append(init, []byte{0x1B, 0x42, 0x01, 0x05}...) // Beep!
 	return p.Write(init)
 }
 
