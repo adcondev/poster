@@ -7,11 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/adcondev/pos-printer/pkg/tables"
 )
-
-// TODO: Improve builder pattern, then add qr and table commands
 
 // Builder ayuda a construir documentos programáticamente
 type Builder struct {
@@ -161,21 +157,11 @@ func (b *Builder) AddQR(data, text string, pixelWidth int, correction string, al
 	return b
 }
 
-// AddTable adds a table command to the document
-func (b *Builder) AddTable(definition tables.Definition, rows [][]string, showHeaders bool) *Builder {
-	if len(definition.Columns) == 0 {
-		log.Printf("Warning: table has no columns defined")
+// AddTableCommand adds a pre-built TableCommand to the document
+func (b *Builder) AddTableCommand(cmd *TableCommand) *Builder {
+	if cmd == nil || len(cmd.Definition.Columns) == 0 {
+		log.Printf("Warning: table command is nil or has no columns")
 		return b
-	}
-
-	cmd := TableCommand{
-		Definition:  definition,
-		ShowHeaders: showHeaders,
-		Rows:        rows,
-		Options: &TableOptions{
-			HeaderBold: true,
-			WordWrap:   true,
-		},
 	}
 
 	data, err := json.Marshal(cmd)
@@ -260,9 +246,7 @@ func (b *Builder) AddRawBytes(bytes []byte, comment string) *Builder {
 // ============================================================================
 
 // AddPulse opens cash drawer using standard pulse command
-// This is a convenience wrapper around raw command for common operation
 func (b *Builder) AddPulse() *Builder {
-	// ESC p m t1 t2 (Pin 2/connector 1, 100ms on, 200ms off)
 	return b.AddRawWithComment("1B 70 00 32 64", "Open cash drawer (100ms pulse)")
 }
 
@@ -271,7 +255,6 @@ func (b *Builder) AddBeep(times int) *Builder {
 	if times <= 0 || times > 9 {
 		times = 1
 	}
-	// ESC BEL (simple beep) - repeat for multiple beeps
 	hexa := strings.Repeat("07 ", times)
 	return b.AddRawWithComment(strings.TrimSpace(hexa), fmt.Sprintf("Beep %d times", times))
 }
@@ -282,7 +265,7 @@ func (b *Builder) AddRawWithComment(hexString, comment string) *Builder {
 		Hex:      hexString,
 		Format:   "hex",
 		Comment:  comment,
-		SafeMode: false, // Convenience methods bypass safety by default
+		SafeMode: false,
 	}
 
 	data, err := json.Marshal(cmd)
@@ -304,7 +287,7 @@ func (b *Builder) AddRawSafe(hexString, comment string) *Builder {
 		Hex:      hexString,
 		Format:   "hex",
 		Comment:  comment,
-		SafeMode: true, // Explicitly enable safety
+		SafeMode: true,
 	}
 
 	data, err := json.Marshal(cmd)
