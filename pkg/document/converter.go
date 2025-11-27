@@ -2,8 +2,11 @@
 package document
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/adcondev/pos-printer/pkg/tables"
 )
@@ -220,6 +223,98 @@ func (b *Builder) AddBarcode(symbology, bcData string, width, height int, hriPos
 
 	b.doc.Commands = append(b.doc.Commands, Command{
 		Type: "barcode",
+		Data: data,
+	})
+	return b
+}
+
+// AddRaw adds a raw command to the document
+func (b *Builder) AddRaw(hexString string, comment string) *Builder {
+	cmd := RawCommand{
+		Hex:     hexString,
+		Format:  "hex",
+		Comment: comment,
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		log.Printf("Error marshaling raw command: %v", err)
+		return b
+	}
+
+	b.doc.Commands = append(b.doc.Commands, Command{
+		Type: "raw",
+		Data: data,
+	})
+	return b
+}
+
+// AddRawBytes adds raw bytes directly
+func (b *Builder) AddRawBytes(bytes []byte, comment string) *Builder {
+	hexStr := hex.EncodeToString(bytes)
+	return b.AddRaw(hexStr, comment)
+}
+
+// ============================================================================
+// Raw Command Convenience Methods (Escape Hatches)
+// ============================================================================
+
+// AddPulse opens cash drawer using standard pulse command
+// This is a convenience wrapper around raw command for common operation
+func (b *Builder) AddPulse() *Builder {
+	// ESC p m t1 t2 (Pin 2/connector 1, 100ms on, 200ms off)
+	return b.AddRawWithComment("1B 70 00 32 64", "Open cash drawer (100ms pulse)")
+}
+
+// AddBeep emits a beep sound (if buzzer is present)
+func (b *Builder) AddBeep(times int) *Builder {
+	if times <= 0 || times > 9 {
+		times = 1
+	}
+	// ESC BEL (simple beep) - repeat for multiple beeps
+	hexa := strings.Repeat("07 ", times)
+	return b.AddRawWithComment(strings.TrimSpace(hexa), fmt.Sprintf("Beep %d times", times))
+}
+
+// AddRawWithComment adds a raw command with documentation
+func (b *Builder) AddRawWithComment(hexString, comment string) *Builder {
+	cmd := RawCommand{
+		Hex:      hexString,
+		Format:   "hex",
+		Comment:  comment,
+		SafeMode: false, // Convenience methods bypass safety by default
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		log.Printf("Error marshaling raw command: %v", err)
+		return b
+	}
+
+	b.doc.Commands = append(b.doc.Commands, Command{
+		Type: "raw",
+		Data: data,
+	})
+	return b
+}
+
+// AddRawSafe adds a raw command with safety checks enabled
+func (b *Builder) AddRawSafe(hexString, comment string) *Builder {
+	cmd := RawCommand{
+		Hex:      hexString,
+		Format:   "hex",
+		Comment:  comment,
+		SafeMode: true, // Explicitly enable safety
+	}
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		log.Printf("Error marshaling raw command: %v", err)
+		return b
+	}
+
+	b.doc.Commands = append(b.doc.Commands, Command{
+		Type: "raw",
 		Data: data,
 	})
 	return b

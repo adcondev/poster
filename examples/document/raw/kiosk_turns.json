@@ -1,0 +1,97 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "Generic"
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "CONFIGURANDO KIOSKO DE TURNOS...\n",
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 43 31 01 00 E7 03 01 01",
+        "comment": "SETUP: Contador inicia en 1, max 999"
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 3A",
+        "comment": "Start Macro Rec"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "FARMACIA CENTRAL\nPor favor espere su turno",
+          "align": "center",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "TURNO N.",
+          "content_style": {
+            "size": "2x2",
+            "bold": true
+          },
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 63",
+        "comment": "PRINT COUNTER VARIABLE"
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 2
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Gracias por su visita\n",
+          "align": "center"
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 1
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 3A",
+        "comment": "End Macro Rec"
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1D 5E FF 0A 01",
+        "comment": "EXECUTE: 255 veces, espera botón FEED"
+      }
+    }
+  ]
+}

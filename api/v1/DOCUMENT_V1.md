@@ -340,6 +340,43 @@ Corta el papel:
 | `mode` | string  |           | Tipo de corte                    |         | full, partial |
 | `feed` | integer |           | Líneas a avanzar antes del corte | 2       | 0-255         |
 
+### 9. Raw Command
+
+Envía bytes directamente a la impresora sin procesamiento:
+
+⚠️ **ADVERTENCIA**: Comando avanzado. Uso incorrecto puede dañar la configuración de la impresora.
+
+```json
+{
+  "type": "raw",
+  "data": {
+    "hex": "1B 40",
+    "format": "hex",
+    "comment": "Reset printer",
+    "safe_mode": false
+  }
+}
+```
+
+| Campo       | Tipo    | Requerido | Descripción                         | Default | Valores     |
+|-------------|---------|-----------|-------------------------------------|---------|-------------|
+| `hex`       | string  | ✓         | Bytes en formato especificado       |         |             |
+| `format`    | string  |           | Formato de entrada                  | hex     | hex, base64 |
+| `comment`   | string  |           | Descripción del comando             |         |             |
+| `safe_mode` | boolean |           | Habilitar validaciones de seguridad | false   |             |
+
+**Formatos de Hex Soportados:**
+
+- Espacios: `"1B 40"`
+- Sin espacios: `"1B40"`
+- Con comas: `"1B,40"`
+- Con prefijo: `"0x1B 0x40"`
+
+**Límites:**
+
+- Máximo 4096 bytes por comando
+- Solo caracteres hexadecimales válidos
+
 ## Ejemplo Completo
 
 ```json

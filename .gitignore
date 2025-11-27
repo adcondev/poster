@@ -57,7 +57,10 @@ go.work.sum
 !docs/TEMPLATE.md
 !docs/PROFILE_NITPICKS.md
 !docs/CONN_NITPICKS.md
-docs/QR_NITPICKS.md
+!docs/QR_NITPICKS.md
+!docs/RAW_COMMAND.md
+!docs/USAGE.md
+!docs/SECURITY.md
 
 
 !*.php

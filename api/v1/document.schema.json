@@ -96,7 +96,8 @@
             "cut",
             "qr",
             "table",
-            "barcode"
+            "barcode",
+            "raw"
           ],
           "description": "Command type"
         },
@@ -126,6 +127,9 @@
             },
             {
               "$ref": "#/definitions/BarcodeCommand"
+            },
+            {
+              "$ref": "#/definitions/RawCommand"
             }
           ]
         }
@@ -466,6 +470,39 @@
           ],
           "description": "Barcode alignment",
           "default": "center"
+        }
+      }
+    },
+    "RawCommand": {
+      "type": "object",
+      "required": [
+        "hex"
+      ],
+      "properties": {
+        "hex": {
+          "type": "string",
+          "description": "Raw bytes in specified format (hexadecimal or base64)",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "hex",
+            "base64"
+          ],
+          "description": "Format of the hex field",
+          "default": "hex"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional description of what this raw command does",
+          "maxLength": 500
+        },
+        "safe_mode": {
+          "type": "boolean",
+          "description": "Enable safety checks to block known dangerous commands",
+          "default": false
         }
       }
     },

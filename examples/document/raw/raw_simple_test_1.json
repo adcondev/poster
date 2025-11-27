@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "80mm EC-PM-80250",
+    "paper_width": 80,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "debug_log": true,
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "RAW COMMAND TEST",
+          "content_style": {
+            "bold": true,
+            "size": "2x2",
+            "inverse": true
+          },
+          "align": "center",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 42 01 09",
+        "comment": "Generic beeper command"
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 2
+      }
+    }
+  ]
+}

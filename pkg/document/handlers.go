@@ -169,6 +169,10 @@ func (e *Executor) handleCut(printer *service.Printer, data json.RawMessage) err
 		}
 	}
 
+	// TODO: Implement field Dots, as this command make the feed based lines only.
+	// Instead of 0 for Full and Partial cut, it should be the number of dots to feed before cutting.
+	// Maybe calculation from mm to dpl is needed.
+
 	// Ejecutar corte
 	switch strings.ToLower(cmd.Mode) {
 	case "full":
