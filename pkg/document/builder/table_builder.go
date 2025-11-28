@@ -11,9 +11,9 @@ type TableBuilder struct {
 }
 
 type tableColumn struct {
-	Header string `json:"header"`
-	Width  int    `json:"width"`
-	Align  string `json:"align,omitempty"`
+	Name  string `json:"name"`
+	Width int    `json:"width"`
+	Align string `json:"align,omitempty"`
 }
 
 type tableDefinition struct {
@@ -51,8 +51,8 @@ func newTableBuilder(parent *DocumentBuilder) *TableBuilder {
 // Column adds a column definition
 func (tb *TableBuilder) Column(header string, width int, align ...Alignment) *TableBuilder {
 	col := tableColumn{
-		Header: header,
-		Width:  width,
+		Name:  header,
+		Width: width,
 	}
 	if len(align) > 0 {
 		col.Align = string(align[0])

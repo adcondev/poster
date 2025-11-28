@@ -35,9 +35,9 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		AutoRotate:     false,
 	}
 
-	// Si no se especifica ancho, usar el ancho del perfil
+	// Si no se especifica ancho, usar valor por defecto
 	if opts.PixelWidth == 0 {
-		opts.PixelWidth = 256
+		opts.PixelWidth = 128
 	}
 
 	// Si no se especifica threshold, usar valor por defecto

@@ -17,7 +17,7 @@ func (e *Executor) handleSeparator(printer *service.Printer, data json.RawMessag
 
 	// Valores por defecto
 	if cmd.Char == "" {
-		cmd.Char = "-"
+		cmd.Char = "- "
 	}
 	if cmd.Length == 0 {
 		// Usar ancho del papel en caracteres (aproximado)

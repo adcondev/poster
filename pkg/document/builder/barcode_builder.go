@@ -70,7 +70,7 @@ func (bb *BarcodeBuilder) Center() *BarcodeBuilder {
 
 // Right aligns barcode to the right
 func (bb *BarcodeBuilder) Right() *BarcodeBuilder {
-	align := Left.String()
+	align := Right.String()
 	bb.align = &align
 	return bb
 }

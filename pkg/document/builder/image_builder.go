@@ -22,10 +22,11 @@ func newImageBuilder(parent *DocumentBuilder, base64Data string) *ImageBuilder {
 	return &ImageBuilder{
 		parent:     parent,
 		code:       base64Data,
-		pixelWidth: 256,
+		pixelWidth: 128,
 		align:      "center",
 		threshold:  128,
-		dithering:  "threshold",
+		// TODO: make dithering enum
+		dithering: "atkinson",
 	}
 }
 
