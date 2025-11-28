@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC437",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1B 40 1C 2E 1B 74 00",
+        "comment": "RESET (ESC @) + NO CHINO (FS .) + PC437 (ESC t 0)"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "--- DIAGNOSTICO DE TABLA ---\nSi ves simbolos chinos aqui abajo,\nel modo chino sigue activo:\n",
+          "align": "left",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "A0 A1 A2 A3 A4 A5",
+        "comment": "Bytes A0-A5. En PC850 seria: á í ó ú ñ Ñ. En PC437: á í ó ú ñ Ñ (coinciden muchos)"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "\n\nPrueba Byte N (A4):",
+          "new_line": false
+        }
+      }
+    },
+    {
+      "type": "raw",
+      "data": {
+        "hex": "A4",
+        "comment": "Byte A4 (Deberia ser ñ en PC850/PC437)"
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "feed": 3
+      }
+    }
+  ]
+}

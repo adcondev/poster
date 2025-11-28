@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/json"
@@ -13,21 +13,6 @@ import (
 
 const defaultQRSize = 128
 const minQRPixelWidth = 87
-
-// QRCommand represents a QR code command
-type QRCommand struct {
-	Data      string `json:"data"`                 // Datos del QR (URL, texto, etc.)
-	HumanText string `json:"human_text,omitempty"` // Texto a mostrar debajo del QR
-
-	// Opciones básicas
-	PixelWidth int    `json:"pixel_width,omitempty"` // Pixel size
-	Correction string `json:"correction,omitempty"`  // L, M, Q, H
-	Align      string `json:"align,omitempty"`       // left, center, right
-
-	// Opciones avanzadas (solo imagen)
-	Logo        string `json:"logo,omitempty"`         // Base64 del logo
-	CircleShape bool   `json:"circle_shape,omitempty"` // Usar bloques circulares
-}
 
 // handleQR manages QR code commands
 func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) error {

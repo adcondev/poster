@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "debug_log": true,
+  "commands": [
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1C 2E 1B 74 02",
+        "comment": "FIX: Desactivar Chino (FS .) y forzar PC850 (ESC t 2)"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "PRUEBA DE ACENTOS:",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "El camión pasó por aquí.\nMañana será otro día.\nñÑ áéíóú",
+          "align": "left",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial",
+        "feed": 1
+      }
+    }
+  ]
+}

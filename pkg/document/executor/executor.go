@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/adcondev/pos-printer/internal/calculate"
 	"github.com/adcondev/pos-printer/pkg/commands/character"
+	"github.com/adcondev/pos-printer/pkg/document/schema"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
@@ -31,19 +32,19 @@ func NewExecutor(printer *service.Printer) *Executor {
 	}
 
 	// Registrar handlers básicos
-	e.RegisterHandler("text", e.handleText)
-	e.RegisterHandler("feed", e.handleFeed)
-	e.RegisterHandler("cut", e.handleCut)
-	e.RegisterHandler("separator", e.handleSeparator)
+	e.registerHandler("text", e.handleText)
+	e.registerHandler("feed", e.handleFeed)
+	e.registerHandler("cut", e.handleCut)
+	e.registerHandler("separator", e.handleSeparator)
 
 	// Handlers para 2D
-	e.RegisterHandler("image", e.handleImage)
-	e.RegisterHandler("qr", e.handleQR)
-	e.RegisterHandler("barcode", e.handleBarcode)
+	e.registerHandler("image", e.handleImage)
+	e.registerHandler("qr", e.handleQR)
+	e.registerHandler("barcode", e.handleBarcode)
 
 	// Registrar handlers avanzados
-	e.RegisterHandler("table", e.handleTable)
-	e.RegisterHandler("raw", e.HandleRaw)
+	e.registerHandler("table", e.handleTable)
+	e.registerHandler("raw", e.handleRaw)
 
 	// TODO: Implement other commands
 	if e.printer.Profile.DebugLog {
@@ -59,13 +60,13 @@ func logHandlerRegistration(handlers map[string]CommandHandler) {
 	}
 }
 
-// RegisterHandler registers a new command handler
-func (e *Executor) RegisterHandler(cmdType string, handler CommandHandler) {
+// registerHandler registers a new command handler
+func (e *Executor) registerHandler(cmdType string, handler CommandHandler) {
 	e.handlers[cmdType] = handler
 }
 
 // Execute ejecuta un documento completo
-func (e *Executor) Execute(doc *Document) error {
+func (e *Executor) Execute(doc *schema.Document) error {
 	// Inicializar impresora
 	if err := e.printer.Initialize(); err != nil {
 		return fmt.Errorf("failed to initialize printer: %w", err)
@@ -99,6 +100,8 @@ func (e *Executor) setCodeTable(tableName string) error {
 		"PC850":   character.PC850,
 		"PC852":   character.PC852,
 		"WPC1252": character.WPC1252,
+		"PC866":   character.PC866,
+		"PC858":   character.PC858,
 		// TODO: Add Go Compatible code tables (check package profile in escpos_encoding.go)
 	}
 
@@ -121,7 +124,7 @@ func (e *Executor) ExecuteJSON(data []byte) error {
 }
 
 // applyProfileFromDocument aplica la configuración del profile desde el documento JSON
-func (e *Executor) applyProfileFromDocument(doc *Document) error {
+func (e *Executor) applyProfileFromDocument(doc *schema.Document) error {
 	profile := e.printer.Profile
 
 	if doc == nil {
@@ -145,7 +148,7 @@ func (e *Executor) applyProfileFromDocument(doc *Document) error {
 }
 
 // applyProfileOrDefaults aplica configuraciones por defecto al profile
-func (e *Executor) applyProfileOrDefaults(config ProfileConfig) error {
+func (e *Executor) applyProfileOrDefaults(config schema.ProfileConfig) error {
 	profile := e.printer.Profile
 	if config.PaperWidth == 0 {
 		// Default paper width 80mm
