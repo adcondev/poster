@@ -372,3 +372,26 @@ func (e *Executor) resetTextStyle(printer *service.Printer, style *TextStyle) er
 
 	return nil
 }
+
+// TODO: Check if still used, otherwise think in another DRY way to set alignments (aling into left or defer)
+
+// applyAlignment aplica alineación a la impresora y retorna una función para restaurar
+func (e *Executor) applyAlignInto(printer *service.Printer, align string) (restore func() error, err error) {
+	switch align {
+	case center:
+		err = printer.AlignCenter()
+	case right:
+		err = printer.AlignRight()
+	default:
+		err = printer.AlignLeft()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Retornar función para restaurar a izquierda
+	return func() error {
+		return printer.AlignLeft()
+	}, nil
+}
