@@ -1,5 +1,4 @@
-// Package twodimensional contains configurations and utilities for 2D printing commands.
-package twodimensional
+package graphics
 
 import (
 	"github.com/adcondev/pos-printer/pkg/commands/barcode"

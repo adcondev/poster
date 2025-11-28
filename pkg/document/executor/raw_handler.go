@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/base64"
@@ -36,16 +36,8 @@ var bidirectionalCommands = []struct {
 	{[]byte{0x1B, 0x76}, "ESC v - Transmit paper sensor status"},
 }
 
-// RawCommand represents a raw ESC/POS command
-type RawCommand struct {
-	Hex      string `json:"hex"`                 // Hex string
-	Format   string `json:"format,omitempty"`    // "hex" or "base64"
-	Comment  string `json:"comment,omitempty"`   // Documentation
-	SafeMode bool   `json:"safe_mode,omitempty"` // Enable safety checks
-}
-
-// HandleRaw manages raw command execution
-func (e *Executor) HandleRaw(printer *service.Printer, data json.RawMessage) error {
+// handleRaw manages raw command execution
+func (e *Executor) handleRaw(printer *service.Printer, data json.RawMessage) error {
 	var cmd RawCommand
 	if err := json.Unmarshal(data, &cmd); err != nil {
 		return fmt.Errorf("failed to parse raw command: %w", err)

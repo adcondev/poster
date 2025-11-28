@@ -45,7 +45,8 @@ Scope MUST be a noun describing a section of the codebase surrounded by parenthe
 ### Printing Features
 
 - `(commands)` - ESC/POS commands
-- `(document)` - Document structure and management
+- `(executor)` - JSON Commands execution and printing
+- `(builder)` - JSON Commands programmatic building
 - `(graphics)` - Image and graphics handling
 - `(barcode)` - Barcode generation
 - `(qrcode)` - QR code generation

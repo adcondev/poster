@@ -72,7 +72,7 @@ func (te *TabEngine) Render(w io.Writer, data *Data) error {
 	if data == nil {
 		return fmt.Errorf("table data cannot be nil")
 	}
-	if err := data.validate(); err != nil {
+	if err := data.Validate(); err != nil {
 		return fmt.Errorf("invalid table data: %w", err)
 	}
 
@@ -141,7 +141,7 @@ func (te *TabEngine) formatRow(cells []string, def *Definition) string {
 
 	for i, cell := range cells {
 		if i < len(def.Columns) {
-			padded := padString(cell, def.Columns[i].Width, def.Columns[i].Align)
+			padded := PadString(cell, def.Columns[i].Width, def.Columns[i].Align)
 			result.WriteString(padded)
 
 			// Add spacing between columns
@@ -161,7 +161,7 @@ func (te *TabEngine) wrapRow(row Row, def *Definition) [][]string {
 
 	for i, cell := range row {
 		if i < len(def.Columns) {
-			wrapped := wrapText(cell, def.Columns[i].Width)
+			wrapped := WrapText(cell, def.Columns[i].Width)
 			wrappedCells[i] = wrapped
 			if len(wrapped) > maxLines {
 				maxLines = len(wrapped)

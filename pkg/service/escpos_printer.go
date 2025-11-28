@@ -11,7 +11,6 @@ import (
 	"github.com/adcondev/pos-printer/pkg/connection"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/twodimensional"
 )
 
 // Printer represents a POS printer device
@@ -405,7 +404,7 @@ func (p *Printer) printQRAsImage(data string, opts *graphics.QROptions) error {
 
 // PrintBarcode imprime un código de barras configurando todos sus parámetros
 // en una sola transmisión para asegurar consistencia (stateless).
-func (p *Printer) PrintBarcode(cfg twodimensional.BarcodeConfig, data []byte) error {
+func (p *Printer) PrintBarcode(cfg graphics.BarcodeConfig, data []byte) error {
 	if len(data) == 0 {
 		return fmt.Errorf("barcode data cannot be empty")
 	}

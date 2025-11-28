@@ -7,7 +7,7 @@ import (
 
 	"github.com/adcondev/pos-printer/pkg/composer"
 	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document"
+	"github.com/adcondev/pos-printer/pkg/document/executor"
 	"github.com/adcondev/pos-printer/pkg/profile"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
@@ -65,7 +65,7 @@ func main() {
 	}(printer)
 
 	// 5. Crear ejecutor de documentos
-	executor := document.NewExecutor(printer)
+	exec := executor.NewExecutor(printer)
 
 	// Opción A: Cargar documento JSON desde archivo
 	jsonData, err := os.ReadFile(jsonPath)
@@ -73,7 +73,7 @@ func main() {
 		log.Panicf("Failed to read JSON file: %v", err)
 	}
 
-	if err := executor.ExecuteJSON(jsonData); err != nil {
+	if err := exec.ExecuteJSON(jsonData); err != nil {
 		log.Panicf("Failed to execute document: %v", err)
 	}
 

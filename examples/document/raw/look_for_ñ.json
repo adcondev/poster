@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "WPC1252",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "raw",
+      "data": {
+        "hex": "1C 2E",
+        "comment": "IMPORTANTE: Cancelar modo Chino siempre al inicio"
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "PRUEBA SINCRONIZADA:\nTabla: 16 (Windows-1252)\nCaracteres: ñÑ áéíóú",
+          "align": "center",
+          "new_line": true
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "feed": 3
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/json"
@@ -13,40 +13,6 @@ const (
 	single = "1x1"
 	noDot  = "0pt"
 )
-
-// TextCommand represents a text command
-type TextCommand struct {
-	// Contenido principal
-	Content Content `json:"content"`
-	// Label opcional
-	Label *Label `json:"label,omitempty"`
-	// Control de línea
-	NewLine *bool `json:"new_line,omitempty"` // default: true
-}
-
-// Label representa una etiqueta de texto
-type Label struct {
-	Text      string     `json:"text,omitempty"`        // texto del label default: ""
-	Style     *TextStyle `json:"label_style,omitempty"` // estilo del label
-	Separator *string    `json:"separator,omitempty"`   // default: ": "
-	Align     *string    `json:"align,omitempty"`       // left, center, right default: left
-}
-
-// Content representa el contenido de texto
-type Content struct {
-	Text  string     `json:"text"`                    // texto del contenido
-	Style *TextStyle `json:"content_style,omitempty"` // estilo del contenido
-	Align *string    `json:"align,omitempty"`         // left, center, right default: left
-}
-
-// TextStyle estilo de texto
-type TextStyle struct {
-	Bold      *bool   `json:"bold,omitempty"`      // true, false default: false
-	Size      *string `json:"size,omitempty"`      // 1x1, 2x2, 3x3 ... 8x8 default: 1x1
-	Underline *string `json:"underline,omitempty"` // "1pt", "2pt", default: "0pt"
-	Inverse   *bool   `json:"inverse,omitempty"`   // true, false default: false
-	Font      *string `json:"font,omitempty"`      // A, B default: A
-}
 
 // handleText manages text commands
 func (e *Executor) handleText(printer *service.Printer, data json.RawMessage) error {
@@ -405,4 +371,27 @@ func (e *Executor) resetTextStyle(printer *service.Printer, style *TextStyle) er
 	}
 
 	return nil
+}
+
+// TODO: Check if still used, otherwise think in another DRY way to set alignments (aling into left or defer)
+
+// applyAlignment aplica alineación a la impresora y retorna una función para restaurar
+func (e *Executor) applyAlignInto(printer *service.Printer, align string) (restore func() error, err error) {
+	switch align {
+	case center:
+		err = printer.AlignCenter()
+	case right:
+		err = printer.AlignRight()
+	default:
+		err = printer.AlignLeft()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Retornar función para restaurar a izquierda
+	return func() error {
+		return printer.AlignLeft()
+	}, nil
 }

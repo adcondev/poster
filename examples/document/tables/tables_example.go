@@ -10,7 +10,8 @@ import (
 	"github.com/adcondev/pos-printer/internal/load"
 	"github.com/adcondev/pos-printer/pkg/composer"
 	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document"
+	"github.com/adcondev/pos-printer/pkg/document/executor"
+	"github.com/adcondev/pos-printer/pkg/document/schema"
 	"github.com/adcondev/pos-printer/pkg/profile"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
@@ -39,7 +40,7 @@ func main() {
 	}
 
 	// Parse JSON document
-	var doc document.Document
+	var doc schema.Document
 	if err := json.Unmarshal(jsonData, &doc); err != nil {
 		log.Fatalf("Failed to parse JSON: %v", err)
 	}
@@ -95,12 +96,12 @@ func main() {
 		log.Panicf("Failed to create printer service: %v", err)
 	}
 
-	// Create document executor
-	executor := document.NewExecutor(printer)
+	// Create document exec
+	exec := executor.NewExecutor(printer)
 
 	// Execute the document
 	fmt.Printf("Printing table example to %s...\n", printerName)
-	if err := executor.Execute(&doc); err != nil {
+	if err := exec.Execute(&doc); err != nil {
 		log.Panicf("Failed to print document: %v", err)
 	}
 
