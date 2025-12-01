@@ -1,5 +1,9 @@
 package builder
 
+import (
+	"github.com/adcondev/pos-printer/pkg/constants"
+)
+
 // BarcodeBuilder constructs barcode commands
 type BarcodeBuilder struct {
 	parent      *DocumentBuilder
@@ -56,22 +60,29 @@ func (bb *BarcodeBuilder) HRIFont(font string) *BarcodeBuilder {
 
 // Left aligns barcode to the left
 func (bb *BarcodeBuilder) Left() *BarcodeBuilder {
-	align := Left.String()
+	align := constants.AlignLeft.String()
 	bb.align = &align
 	return bb
 }
 
 // Center centers the barcode (default)
 func (bb *BarcodeBuilder) Center() *BarcodeBuilder {
-	align := Center.String()
+	align := constants.AlignCenter.String()
 	bb.align = &align
 	return bb
 }
 
 // Right aligns barcode to the right
 func (bb *BarcodeBuilder) Right() *BarcodeBuilder {
-	align := Right.String()
+	align := constants.AlignRight.String()
 	bb.align = &align
+	return bb
+}
+
+// Align sets barcode alignment (left, center, right)
+func (bb *BarcodeBuilder) Align(align constants.Alignment) *BarcodeBuilder {
+	alignStr := align.String()
+	bb.align = &alignStr
 	return bb
 }
 

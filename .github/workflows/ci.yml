@@ -72,6 +72,7 @@ jobs:
             miscellaneous
             executor
             builder
+            constants
           # NOTE: Changing requireScope from false to true is a breaking change.
           # This will reject any PR titles without a scope that were previously valid.
           # Please ensure your PR titles follow the "<type>(<scope>): <subject>" format.

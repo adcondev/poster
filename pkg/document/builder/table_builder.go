@@ -1,5 +1,9 @@
 package builder
 
+import (
+	"github.com/adcondev/pos-printer/pkg/constants"
+)
+
 // TableBuilder constructs table commands
 type TableBuilder struct {
 	parent      *DocumentBuilder
@@ -49,7 +53,7 @@ func newTableBuilder(parent *DocumentBuilder) *TableBuilder {
 }
 
 // Column adds a column definition
-func (tb *TableBuilder) Column(header string, width int, align ...Alignment) *TableBuilder {
+func (tb *TableBuilder) Column(header string, width int, align ...constants.Alignment) *TableBuilder {
 	col := tableColumn{
 		Name:  header,
 		Width: width,
@@ -107,7 +111,7 @@ func (tb *TableBuilder) ColumnSpacing(spacing int) *TableBuilder {
 }
 
 // Align sets table alignment
-func (tb *TableBuilder) Align(align Alignment) *TableBuilder {
+func (tb *TableBuilder) Align(align constants.Alignment) *TableBuilder {
 	tb.options.Align = string(align)
 	return tb
 }

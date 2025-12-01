@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/adcondev/pos-printer/internal/load"
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
@@ -23,8 +24,6 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 	if err != nil {
 		return fmt.Errorf("failed to load image: %w", err)
 	}
-
-	cmd.Format = format
 	log.Printf("Loaded image with format: %s", format)
 
 	// Configurar opciones de procesamiento
@@ -36,31 +35,37 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 	}
 
 	// Si no se especifica ancho, usar valor por defecto
-	if opts.PixelWidth == 0 {
+	if opts.PixelWidth <= 0 {
 		opts.PixelWidth = 128
 	}
 
 	// Si no se especifica threshold, usar valor por defecto
-	if opts.Threshold == 0 {
+	if opts.Threshold <= 0 {
 		opts.Threshold = 128
 	}
 
 	// Configurar dithering
 	switch strings.ToLower(cmd.Dithering) {
-	case "atkinson":
+	case constants.DitheringAtkinson.String():
 		opts.Dithering = graphics.Atkinson
-	default:
+	case constants.DitheringThreshold.String():
 		opts.Dithering = graphics.Threshold
+	default:
+		opts.Dithering = graphics.DitherMap[constants.DitheringDefault]
+	}
+
+	if cmd.Align == "" {
+		cmd.Align = constants.ImageAlign
 	}
 
 	// Aplicar alineación
 	switch strings.ToLower(cmd.Align) {
-	case center:
+	case constants.AlignCenter.String():
 		err := printer.AlignCenter()
 		if err != nil {
 			return err
 		}
-	case right:
+	case constants.AlignRight.String():
 		err := printer.AlignRight()
 		if err != nil {
 			return err
@@ -70,6 +75,16 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		if err != nil {
 			return err
 		}
+	}
+
+	// Configurar escalado
+	switch strings.ToLower(cmd.Scaling) {
+	case constants.ScalingNNS.String():
+		opts.Scaling = graphics.NearestNeighbor
+	case constants.ScalingBilinear.String():
+		opts.Scaling = graphics.BiLinear
+	default:
+		opts.Scaling = graphics.ScaleMap[constants.ScalingDefault]
 	}
 
 	// Procesar imagen

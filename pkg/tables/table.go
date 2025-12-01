@@ -5,23 +5,15 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
-)
 
-// Alignment represents text alignment within a cell
-type Alignment string
-
-const (
-	// Center alignment
-	Center Alignment = "Center"
-	// Right alignment
-	Right Alignment = "Right"
+	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
 // Column defines a table column configuration
 type Column struct {
-	Header string    `json:"header"`
-	Width  int       `json:"width"`
-	Align  Alignment `json:"align"`
+	Header string              `json:"header"`
+	Width  int                 `json:"width"`
+	Align  constants.Alignment `json:"align"`
 }
 
 // Definition defines the structure of a table
@@ -142,7 +134,7 @@ func WrapText(text string, width int) []string {
 }
 
 // PadString pads a string according to alignment
-func PadString(s string, width int, align Alignment) string {
+func PadString(s string, width int, align constants.Alignment) string {
 	length := utf8.RuneCountInString(s)
 	if length >= width {
 		// Truncate if necessary
@@ -156,13 +148,13 @@ func PadString(s string, width int, align Alignment) string {
 	padTotal := width - length
 
 	switch align {
-	case Center:
+	case constants.AlignCenter:
 		padLeft := padTotal / 2
 		padRight := padTotal - padLeft
 		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
-	case Right:
+	case constants.AlignRight:
 		return strings.Repeat(" ", padTotal) + s
-	default: // AlignLeft
+	default:
 		return s + strings.Repeat(" ", padTotal)
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+
+	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
 // Default values according to document.schema.json
@@ -46,37 +48,6 @@ const (
 	DefaultNewLine   = true
 )
 
-var versionPattern = regexp.MustCompile(`^\d+\.\d+$`)
-
-// Validate valida un documento según las reglas del schema
-func (d *Document) Validate() error {
-	if d.Version != "" && !versionPattern.MatchString(d.Version) {
-		return fmt.Errorf("invalid version format: %s (expected: X.Y)", d.Version)
-	}
-
-	if d.Profile.Model == "" {
-		return fmt.Errorf("profile.model is required")
-	}
-
-	if len(d.Commands) == 0 {
-		return fmt.Errorf("document must contain at least one command")
-	}
-
-	// Validar paper_width
-	validWidths := map[int]bool{58: true, 72: true, 80: true, 100: true, 112: true, 120: true}
-	if d.Profile.PaperWidth != 0 && !validWidths[d.Profile.PaperWidth] {
-		return fmt.Errorf("invalid paper_width: %d (valid: 58, 72, 80, 100, 112, 120)", d.Profile.PaperWidth)
-	}
-
-	// Validar DPI
-	validDPI := map[int]bool{203: true, 300: true, 600: true}
-	if d.Profile.DPI != 0 && !validDPI[d.Profile.DPI] {
-		return fmt.Errorf("invalid DPI: %d (valid: 203, 300, 600)", d.Profile.DPI)
-	}
-
-	return nil
-}
-
 // TODO: Define all_mayus y all_bold options for commands
 
 // Document representa un documento de impresión completo
@@ -107,4 +78,56 @@ type ProfileConfig struct {
 type Command struct {
 	Type string          `json:"type"` // Tipo de comando
 	Data json.RawMessage `json:"data"` // Datos específicos del comando
+}
+
+// Version pattern: X.Y where X and Y are digits
+var versionPattern = regexp.MustCompile(`^\d+\.\d+$`)
+
+// Validate checks the document structure and returns an error if invalid
+func (d *Document) Validate() error {
+	if d.Version == "" {
+		return fmt.Errorf("version is required")
+	}
+	if !versionPattern.MatchString(d.Version) {
+		return fmt.Errorf("invalid version format: %s (expected X.Y pattern, e.g., '1.0')", d.Version)
+	}
+
+	if d.Profile.Model == "" {
+		return fmt.Errorf("profile.model is required")
+	}
+
+	// Use constants for validation
+	if d.Profile.PaperWidth != 0 && !isValidPaperWidth(d.Profile.PaperWidth) {
+		return fmt.Errorf("invalid paper_width: %d (valid values: %v)",
+			d.Profile.PaperWidth, constants.ValidPaperWidths)
+	}
+
+	if d.Profile.DPI != 0 && !isValidDPI(d.Profile.DPI) {
+		return fmt.Errorf("invalid dpi: %d (valid values: %v)",
+			d.Profile.DPI, constants.ValidDPIs)
+	}
+
+	if len(d.Commands) == 0 {
+		return fmt.Errorf("document must contain at least one command")
+	}
+
+	return nil
+}
+
+func isValidPaperWidth(width int) bool {
+	for _, valid := range constants.ValidPaperWidths {
+		if width == valid {
+			return true
+		}
+	}
+	return false
+}
+
+func isValidDPI(dpi int) bool {
+	for _, valid := range constants.ValidDPIs {
+		if dpi == valid {
+			return true
+		}
+	}
+	return false
 }

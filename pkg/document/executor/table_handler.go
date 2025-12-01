@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/service"
 	"github.com/adcondev/pos-printer/pkg/tables"
 )
@@ -95,12 +96,12 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		align = cmd.Options.Align
 	}
 	switch strings.ToLower(align) {
-	case center:
+	case constants.AlignCenter.String():
 		err := printer.AlignCenter()
 		if err != nil {
 			return err
 		}
-	case right:
+	case constants.AlignRight.String():
 		err := printer.AlignRight()
 		if err != nil {
 			return err

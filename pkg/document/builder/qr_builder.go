@@ -2,6 +2,8 @@ package builder
 
 import (
 	"log"
+
+	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
 // QRBuilder constructs QR code commands
@@ -32,7 +34,7 @@ func newQRBuilder(parent *DocumentBuilder, data string) *QRBuilder {
 		data:       data,
 		pixelWidth: 128,
 		correction: "Q",
-		align:      Center.String(),
+		align:      constants.AlignCenter.String(),
 	}
 }
 
@@ -50,19 +52,19 @@ func (qb *QRBuilder) Correction(level string) *QRBuilder {
 
 // Left aligns QR to the left
 func (qb *QRBuilder) Left() *QRBuilder {
-	qb.align = Left.String()
+	qb.align = constants.AlignLeft.String()
 	return qb
 }
 
 // Center centers the QR (default)
 func (qb *QRBuilder) Center() *QRBuilder {
-	qb.align = Center.String()
+	qb.align = constants.AlignCenter.String()
 	return qb
 }
 
 // Right aligns QR to the right
 func (qb *QRBuilder) Right() *QRBuilder {
-	qb.align = Right.String()
+	qb.align = constants.AlignRight.String()
 	return qb
 }
 

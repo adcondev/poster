@@ -1,5 +1,9 @@
 package builder
 
+import (
+	"github.com/adcondev/pos-printer/pkg/constants"
+)
+
 // ImageBuilder constructs image commands
 type ImageBuilder struct {
 	parent     *DocumentBuilder
@@ -8,6 +12,7 @@ type ImageBuilder struct {
 	align      string
 	threshold  int
 	dithering  string
+	scaling    string
 }
 
 type imageCommand struct {
@@ -16,17 +21,18 @@ type imageCommand struct {
 	Align      string `json:"align,omitempty"`
 	Threshold  int    `json:"threshold,omitempty"`
 	Dithering  string `json:"dithering,omitempty"`
+	Scaling    string `json:"scaling,omitempty"`
 }
 
 func newImageBuilder(parent *DocumentBuilder, base64Data string) *ImageBuilder {
 	return &ImageBuilder{
 		parent:     parent,
 		code:       base64Data,
-		pixelWidth: 128,
-		align:      "center",
-		threshold:  128,
-		// TODO: make dithering enum
-		dithering: "atkinson",
+		pixelWidth: constants.ImagePixelWidth,
+		threshold:  constants.ImageThreshold,
+		align:      constants.AlignCenter.String(),
+		dithering:  constants.DitheringAtkinson.String(),
+		scaling:    constants.ScalingBilinear.String(),
 	}
 }
 
@@ -43,26 +49,38 @@ func (ib *ImageBuilder) Threshold(t int) *ImageBuilder {
 }
 
 // Dithering sets dithering algorithm ("threshold" or "atkinson")
-func (ib *ImageBuilder) Dithering(mode string) *ImageBuilder {
-	ib.dithering = mode
+func (ib *ImageBuilder) Dithering(mode constants.Dithering) *ImageBuilder {
+	ib.dithering = mode.String()
+	return ib
+}
+
+// Scaling sets scaling algorithm ("nns" or "bilinear")
+func (ib *ImageBuilder) Scaling(mode constants.Scaling) *ImageBuilder {
+	ib.scaling = mode.String()
 	return ib
 }
 
 // Left aligns image to the left
 func (ib *ImageBuilder) Left() *ImageBuilder {
-	ib.align = "left"
+	ib.align = constants.AlignLeft.String()
 	return ib
 }
 
 // Center centers the image (default)
 func (ib *ImageBuilder) Center() *ImageBuilder {
-	ib.align = "center"
+	ib.align = constants.AlignCenter.String()
 	return ib
 }
 
 // Right aligns image to the right
 func (ib *ImageBuilder) Right() *ImageBuilder {
-	ib.align = "right"
+	ib.align = constants.AlignRight.String()
+	return ib
+}
+
+// Align sets image alignment (left, center, right)
+func (ib *ImageBuilder) Align(align constants.Alignment) *ImageBuilder {
+	ib.align = align.String()
 	return ib
 }
 
@@ -74,6 +92,7 @@ func (ib *ImageBuilder) End() *DocumentBuilder {
 		Align:      ib.align,
 		Threshold:  ib.threshold,
 		Dithering:  ib.dithering,
+		Scaling:    ib.scaling,
 	}
 	return ib.parent.addCommand("image", cmd)
 }

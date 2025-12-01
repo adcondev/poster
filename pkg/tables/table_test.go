@@ -3,6 +3,7 @@ package tables_test
 import (
 	"testing"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/tables"
 )
 
@@ -119,7 +120,7 @@ func TestPadString(t *testing.T) {
 		name     string
 		input    string
 		width    int
-		align    tables.Alignment
+		align    constants.Alignment
 		expected string
 	}{
 		{
@@ -133,35 +134,35 @@ func TestPadString(t *testing.T) {
 			name:     "Right align",
 			input:    "Hi",
 			width:    5,
-			align:    tables.Right,
+			align:    constants.AlignRight,
 			expected: "   Hi",
 		},
 		{
 			name:     "Center align even padding",
 			input:    "Hi",
 			width:    6,
-			align:    tables.Center,
+			align:    constants.AlignCenter,
 			expected: "  Hi  ",
 		},
 		{
 			name:     "Center align odd padding - left gets less",
 			input:    "Hi",
 			width:    5,
-			align:    tables.Center,
+			align:    constants.AlignCenter,
 			expected: " Hi  ",
 		},
 		{
 			name:     "string exactly matches width",
 			input:    "Hello",
 			width:    5,
-			align:    tables.Center,
+			align:    constants.AlignCenter,
 			expected: "Hello",
 		},
 		{
 			name:     "string longer than width gets truncated",
 			input:    "Hello World",
 			width:    5,
-			align:    tables.Center,
+			align:    constants.AlignCenter,
 			expected: "Hello",
 		},
 		{
@@ -175,14 +176,14 @@ func TestPadString(t *testing.T) {
 			name:     "empty string Center aligned",
 			input:    "",
 			width:    4,
-			align:    tables.Center,
+			align:    constants.AlignCenter,
 			expected: "    ",
 		},
 		{
 			name:     "unicode string Right aligned",
 			input:    "Hëllo",
 			width:    8,
-			align:    tables.Right,
+			align:    constants.AlignRight,
 			expected: "   Hëllo",
 		},
 		{

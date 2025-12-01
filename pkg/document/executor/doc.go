@@ -8,7 +8,7 @@
 //
 //	// Setup printer connection
 //	conn, _ := connection.NewWindowsPrintConnector("EPSON TM-T20II")
-//	printer, _ := service.NewPrinter(composer. NewEscpos(), profile.NewEscpos(), conn)
+//	printer, _ := service.NewPrinter(composer.NewEscpos(), profile.NewEscpos(), conn)
 //	defer printer.Close()
 //
 //	// Execute a JSON document
@@ -42,7 +42,7 @@
 // Extend the executor with custom command types:
 //
 //	exec := executor.NewExecutor(printer)
-//	exec.RegisterHandler("logo", func(p *service.Printer, data json.RawMessage) error {
+//	exec.registerHandler("logo", func(p *service.Printer, data json.RawMessage) error {
 //	    var cmd LogoCommand
 //	    json.Unmarshal(data, &cmd)
 //	    // ...  process and print

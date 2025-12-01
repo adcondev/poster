@@ -60,7 +60,7 @@ func NewEscpos() *EscposProtocol {
 	}
 }
 
-// TODO: Implement other methods to access capabilities related to initialization and state management (micellaneous)
+// TODO: Implement other methods to access capabilities related to initialization and state management (miscellaneous)
 
 // InitializePrinter provides a reset of the printer to its power-on state for RAM settings.
 //

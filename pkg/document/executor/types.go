@@ -4,12 +4,6 @@ import (
 	"github.com/adcondev/pos-printer/pkg/tables"
 )
 
-const (
-	center = "center"
-	right  = "right"
-	left   = "left"
-)
-
 // ============================================================================
 // Command Data Structures (for handlers)
 // ============================================================================
@@ -47,8 +41,8 @@ type TextStyle struct {
 
 // ImageCommand for image handler
 type ImageCommand struct {
-	Code       string `json:"code"`
-	Format     string `json:"format,omitempty"`
+	Code string `json:"code"`
+	// Format     string `json:"format,omitempty"`
 	PixelWidth int    `json:"pixel_width,omitempty"`
 	Align      string `json:"align,omitempty"`
 	Threshold  byte   `json:"threshold,omitempty"`

@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
@@ -113,7 +114,7 @@ func (e *Executor) handleText(printer *service.Printer, data json.RawMessage) er
 	}
 
 	// Resetear alineación a izquierda al final
-	return e.applyAlign(printer, strPtr(left))
+	return e.applyAlign(printer, strPtr(constants.AlignLeft.String()))
 }
 
 func (e *Executor) resetDifferingStyles(printer *service.Printer, labelStyle, contentStyle *TextStyle) error {
@@ -186,17 +187,17 @@ func strPtr(s string) *string {
 }
 
 func (e *Executor) applyAlign(printer *service.Printer, align *string) error {
-	alignValue := left // default
+	alignValue := constants.AlignDefault.String() // default
 	if align != nil {
 		alignValue = strings.ToLower(*align)
 	}
 
 	switch alignValue {
-	case center:
+	case constants.AlignCenter.String():
 		return printer.AlignCenter()
-	case right:
+	case constants.AlignRight.String():
 		return printer.AlignRight()
-	case left:
+	case constants.AlignLeft.String():
 		return printer.AlignLeft()
 	default:
 		log.Printf("Unknown alignment: %s, using left", alignValue)
@@ -375,12 +376,12 @@ func (e *Executor) resetTextStyle(printer *service.Printer, style *TextStyle) er
 
 // TODO: Check if still used, otherwise think in another DRY way to set alignments (aling into left or defer)
 
-// applyAlignment aplica alineación a la impresora y retorna una función para restaurar
+/* applyAlignment aplica alineación a la impresora y retorna una función para restaurar
 func (e *Executor) applyAlignInto(printer *service.Printer, align string) (restore func() error, err error) {
 	switch align {
-	case center:
+	case constants.AlignCenter.String():
 		err = printer.AlignCenter()
-	case right:
+	case constants.AlignRight.String():
 		err = printer.AlignRight()
 	default:
 		err = printer.AlignLeft()
@@ -395,3 +396,4 @@ func (e *Executor) applyAlignInto(printer *service.Printer, align string) (resto
 		return printer.AlignLeft()
 	}, nil
 }
+*/

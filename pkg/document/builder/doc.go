@@ -50,13 +50,13 @@
 //
 // # Example: Complete Receipt
 //
-//	doc := builder. NewDocument().
+//	doc := builder.NewDocument().
 //	    SetProfile("EPSON", 80, "WPC1252").
 //	    Text("STORE NAME").Bold().Size("2x2").Center().End().
 //	    Separator("=").
 //	    Table().
 //	        Column("Item", 20).
-//	        Column("Price", 10, builder.AlignRight).
+//	        Column("Price", 10, builder.Right).
 //	        Row("Coffee", "$4.50").
 //	        Row("Muffin", "$3.00").
 //	    End().
@@ -70,9 +70,9 @@
 //
 // # Alignment Constants
 //
-//	builder.AlignLeft    "left"
-//	builder.AlignCenter  "center"
-//	builder.AlignRight   "right"
+//	builder.Left    "left"
+//	builder.Center  "center"
+//	builder.Right   "right"
 //
 // # Output Formats
 //

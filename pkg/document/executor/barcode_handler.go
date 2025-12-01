@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/adcondev/pos-printer/pkg/commands/barcode"
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
@@ -98,15 +99,15 @@ func (e *Executor) handleBarcode(printer *service.Printer, data json.RawMessage)
 	}
 
 	switch align {
-	case center:
+	case constants.AlignCenter.String():
 		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
-	case right:
+	case constants.AlignRight.String():
 		if err := printer.AlignRight(); err != nil {
 			return err
 		}
-	case left:
+	case constants.AlignLeft.String():
 		if err := printer.AlignLeft(); err != nil {
 			return err
 		}

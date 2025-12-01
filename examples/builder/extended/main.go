@@ -8,6 +8,7 @@ import (
 
 	"github.com/adcondev/pos-printer/pkg/composer"
 	"github.com/adcondev/pos-printer/pkg/connection"
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/document/builder"
 	"github.com/adcondev/pos-printer/pkg/document/executor"
 	"github.com/adcondev/pos-printer/pkg/document/schema"
@@ -39,8 +40,8 @@ func main() {
 		// Tabla de productos
 		Table().
 		Column("Producto", 20).
-		Column("Cant", 5, builder.Center).
-		Column("Precio", 10, builder.Right).
+		Column("Cant", 5, constants.AlignCenter).
+		Column("Precio", 10, constants.AlignRight).
 		PaperWidth(48).
 		Row("Café Americano", "2", "$90.00").
 		Row("Pan de chocolate", "3", "$45.00").

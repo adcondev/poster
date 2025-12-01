@@ -483,7 +483,7 @@
           "type": "string",
           "description": "Raw bytes in specified format (hexadecimal or base64)",
           "minLength": 1,
-          "maxLength": 8192
+          "maxLength": 4096
         },
         "format": {
           "type": "string",
@@ -594,7 +594,8 @@
         },
         "word_wrap": {
           "type": "boolean",
-          "description": "Enable automatic text wrapping"
+          "description": "Enable automatic text wrapping",
+          "default": true
         },
         "column_spacing": {
           "type": "integer",
