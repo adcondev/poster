@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/json"
@@ -7,20 +7,10 @@ import (
 	"strings"
 
 	"github.com/adcondev/pos-printer/pkg/commands/barcode"
+	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/service"
-	"github.com/adcondev/pos-printer/pkg/twodimensional"
 )
-
-// BarcodeCommand represents a barcode command
-type BarcodeCommand struct {
-	Symbology   string  `json:"symbology"`              // Requerido: UPC-A, EAN13, CODE128, etc.
-	Data        string  `json:"data"`                   // Requerido: datos del código
-	Width       *int    `json:"width,omitempty"`        // Opcional: ancho del módulo (2-6), default según impresora
-	Height      *int    `json:"height,omitempty"`       // Opcional: altura en dots (1-255), default según impresora
-	HRIPosition *string `json:"hri_position,omitempty"` // Opcional: none, above, below, both (default: below)
-	HRIFont     *string `json:"hri_font,omitempty"`     // Opcional: A, B (default: A)
-	Align       *string `json:"align,omitempty"`        // Opcional: left, center, right (default: center)
-}
 
 // handleBarcode manages barcode commands
 func (e *Executor) handleBarcode(printer *service.Printer, data json.RawMessage) error {
@@ -46,7 +36,7 @@ func (e *Executor) handleBarcode(printer *service.Printer, data json.RawMessage)
 	}
 
 	// Crear configuración con defaults
-	cfg := twodimensional.DefaultConfig()
+	cfg := graphics.DefaultConfig()
 	cfg.Symbology = symbology
 
 	// Aplicar configuración de ancho si se especifica
@@ -109,15 +99,15 @@ func (e *Executor) handleBarcode(printer *service.Printer, data json.RawMessage)
 	}
 
 	switch align {
-	case center:
+	case constants.AlignCenter.String():
 		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
-	case right:
+	case constants.AlignRight.String():
 		if err := printer.AlignRight(); err != nil {
 			return err
 		}
-	case left:
+	case constants.AlignLeft.String():
 		if err := printer.AlignLeft(); err != nil {
 			return err
 		}

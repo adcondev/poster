@@ -15,7 +15,7 @@ import (
 	"github.com/adcondev/pos-printer/pkg/commands/print"
 	"github.com/adcondev/pos-printer/pkg/commands/printposition"
 	"github.com/adcondev/pos-printer/pkg/commands/qrcode"
-	"github.com/adcondev/pos-printer/pkg/twodimensional"
+	"github.com/adcondev/pos-printer/pkg/graphics"
 )
 
 // EscposProtocol implements the ESCPOS Commands
@@ -60,7 +60,7 @@ func NewEscpos() *EscposProtocol {
 	}
 }
 
-// TODO: Implement other methods to access capabilities related to initialization and state management
+// TODO: Implement other methods to access capabilities related to initialization and state management (miscellaneous)
 
 // InitializePrinter provides a reset of the printer to its power-on state for RAM settings.
 //
@@ -274,7 +274,7 @@ func (c *EscposProtocol) SetFontB() []byte {
 
 // GenerateBarcode crea una secuencia completa y atómica para imprimir un código de barras.
 // Incluye comandos de configuración (ancho, alto, fuentes) seguidos inmediatamente por los datos.
-func (c *EscposProtocol) GenerateBarcode(cfg twodimensional.BarcodeConfig, data []byte) ([]byte, error) {
+func (c *EscposProtocol) GenerateBarcode(cfg graphics.BarcodeConfig, data []byte) ([]byte, error) {
 	var buffer bytes.Buffer
 
 	// 1. Configurar Ancho del Módulo (GS w)

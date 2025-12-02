@@ -9,6 +9,7 @@ import (
 	"golang.org/x/image/draw"
 
 	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
 // DitherMode defines how images are converted to monochrome
@@ -27,6 +28,14 @@ const (
 	// Ordered
 )
 
+// DitherMap maps constants to DitherMode
+var DitherMap = map[constants.Dithering]DitherMode{
+	constants.DitheringThreshold: Threshold,
+	constants.DitheringAtkinson:  Atkinson,
+	// constants.DitheringFloydSteinberg.String(): FloydSteinberg,
+	// constants.DitheringOrdered.String():        Ordered,
+}
+
 // ScaleMode defines the scaling algorithm
 type ScaleMode int
 
@@ -37,6 +46,13 @@ const (
 	BiLinear
 	// BiCubic
 )
+
+// ScaleMap maps constants to ScaleMode
+var ScaleMap = map[constants.Scaling]ScaleMode{
+	constants.ScalingNNS:      NearestNeighbor,
+	constants.ScalingBilinear: BiLinear,
+	// constants.ScalingBicubic:  BiCubic,
+}
 
 // ImgOptions configures the graphics processing pipeline
 type ImgOptions struct {
@@ -51,10 +67,10 @@ type ImgOptions struct {
 // DefaultOptions returns sensible defaults for 80mm printers
 func DefaultOptions() *ImgOptions {
 	return &ImgOptions{
-		PixelWidth:     512,
-		Threshold:      128,
-		Dithering:      Threshold,
-		Scaling:        BiLinear,
+		PixelWidth:     constants.ImagePixelWidth,
+		Threshold:      constants.ImageThreshold,
+		Dithering:      DitherMap[constants.DitheringAtkinson],
+		Scaling:        ScaleMap[constants.ScalingBilinear],
 		AutoRotate:     false,
 		PreserveAspect: true,
 	}

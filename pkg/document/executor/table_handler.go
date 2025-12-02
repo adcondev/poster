@@ -1,4 +1,4 @@
-package document
+package executor
 
 import (
 	"encoding/json"
@@ -6,33 +6,14 @@ import (
 	"log"
 	"strings"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/service"
 	"github.com/adcondev/pos-printer/pkg/tables"
 )
 
 // TODO: Consider upper_separator y lower_separator for tables
 
-// TableCommand represents a table command in the document
-type TableCommand struct {
-	Definition  tables.Definition `json:"definition"`
-	ShowHeaders bool              `json:"show_headers,omitempty"`
-	Rows        [][]string        `json:"rows"`
-	Options     *TableOptions     `json:"options,omitempty"`
-}
-
 // TODO: Implementar Header con TextStyle sin alineación
-
-// TableOptions configures table rendering options
-type TableOptions struct {
-	// HeaderBold enables bold styling for table headers
-	HeaderBold bool `json:"header_bold,omitempty"`
-	// WordWrap enables automatic text wrapping in cells
-	WordWrap bool `json:"word_wrap,omitempty"`
-	// ColumnSpacing sets the number of spaces between columns (default: 1)
-	ColumnSpacing int `json:"column_spacing,omitempty"`
-	// Align sets the default alignment for table content (left, center, right)
-	Align string `json:"align,omitempty"`
-}
 
 // TODO: Manage text_under and text_above options instead of human_text
 
@@ -115,12 +96,12 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		align = cmd.Options.Align
 	}
 	switch strings.ToLower(align) {
-	case center:
+	case constants.AlignCenter.String():
 		err := printer.AlignCenter()
 		if err != nil {
 			return err
 		}
-	case right:
+	case constants.AlignRight.String():
 		err := printer.AlignRight()
 		if err != nil {
 			return err

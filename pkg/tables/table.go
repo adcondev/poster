@@ -5,21 +5,15 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
-)
 
-// Alignment represents text alignment within a cell
-type Alignment string
-
-const (
-	center Alignment = "center"
-	right  Alignment = "right"
+	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
 // Column defines a table column configuration
 type Column struct {
-	Header string    `json:"header"`
-	Width  int       `json:"width"`
-	Align  Alignment `json:"align"`
+	Header string              `json:"header"`
+	Width  int                 `json:"width"`
+	Align  constants.Alignment `json:"align"`
 }
 
 // Definition defines the structure of a table
@@ -52,8 +46,8 @@ type Data struct {
 	Rows        []Row      `json:"rows"`
 }
 
-// validate checks if the table data is valid
-func (dt *Data) validate() error {
+// Validate checks if the table data is valid
+func (dt *Data) Validate() error {
 	if len(dt.Definition.Columns) == 0 {
 		return fmt.Errorf("table must have at least one column")
 	}
@@ -86,8 +80,8 @@ func (d *Definition) Validate() error {
 	return nil
 }
 
-// wrapText wraps text to fit within the specified width
-func wrapText(text string, width int) []string {
+// WrapText wraps text to fit within the specified width
+func WrapText(text string, width int) []string {
 	if width <= 0 {
 		return []string{text}
 	}
@@ -139,8 +133,8 @@ func wrapText(text string, width int) []string {
 	return finalLines
 }
 
-// padString pads a string according to alignment
-func padString(s string, width int, align Alignment) string {
+// PadString pads a string according to alignment
+func PadString(s string, width int, align constants.Alignment) string {
 	length := utf8.RuneCountInString(s)
 	if length >= width {
 		// Truncate if necessary
@@ -154,13 +148,13 @@ func padString(s string, width int, align Alignment) string {
 	padTotal := width - length
 
 	switch align {
-	case center:
+	case constants.AlignCenter:
 		padLeft := padTotal / 2
 		padRight := padTotal - padLeft
 		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
-	case right:
+	case constants.AlignRight:
 		return strings.Repeat(" ", padTotal) + s
-	default: // AlignLeft
+	default:
 		return s + strings.Repeat(" ", padTotal)
 	}
 }

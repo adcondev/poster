@@ -36,9 +36,13 @@ commands:
   - changed-files:
       - any-glob-to-any-file: 'pkg/commands/**'
 
-document:
+executor:
   - changed-files:
-      - any-glob-to-any-file: 'pkg/document/**'
+      - any-glob-to-any-file: 'pkg/document/executor/**'
+
+builder:
+  - changed-files:
+      - any-glob-to-any-file: 'pkg/document/builder/**'
 
 graphics:
   - changed-files:
