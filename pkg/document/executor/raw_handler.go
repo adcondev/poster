@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
@@ -77,8 +78,8 @@ func (e *Executor) handleRaw(printer *service.Printer, data json.RawMessage) err
 	if len(bytes) == 0 {
 		return fmt.Errorf("raw command cannot be empty")
 	}
-	if len(bytes) > 4096 { // 4KB limit
-		return fmt.Errorf("raw command too large: %d bytes (max 4096)", len(bytes))
+	if len(bytes) > constants.RawMaxBytes { // 4KB limit
+		return fmt.Errorf("raw command too large: %d bytes (max %d)", len(bytes), constants.RawMaxBytes)
 	}
 
 	// Safety checks if enabled (AFTER parsing bytes)

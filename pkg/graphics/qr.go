@@ -495,3 +495,14 @@ func ScaleImageToWidth(img image.Image, targetWidth int) image.Image {
 
 	return dst
 }
+
+/*
+var ecMap = map[string]posqr.ErrorCorrection{
+	constants.L.String(): posqr.LevelL,
+	constants.M.String(): posqr.LevelM,
+	constants.Q.String(): posqr.LevelQ,
+	constants.H.String(): posqr.LevelH,
+}
+*/
+
+// TODO: Add error correction mapping

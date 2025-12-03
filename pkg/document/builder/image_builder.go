@@ -28,11 +28,11 @@ func newImageBuilder(parent *DocumentBuilder, base64Data string) *ImageBuilder {
 	return &ImageBuilder{
 		parent:     parent,
 		code:       base64Data,
-		pixelWidth: constants.ImagePixelWidth,
-		threshold:  constants.ImageThreshold,
-		align:      constants.AlignCenter.String(),
-		dithering:  constants.DitheringAtkinson.String(),
-		scaling:    constants.ScalingBilinear.String(),
+		pixelWidth: constants.DefaultImagePixelWidth,
+		threshold:  constants.DefaultImageThreshold,
+		align:      constants.Center.String(),
+		dithering:  constants.Atkinson.String(),
+		scaling:    constants.Bilinear.String(),
 	}
 }
 
@@ -62,19 +62,19 @@ func (ib *ImageBuilder) Scaling(mode constants.Scaling) *ImageBuilder {
 
 // Left aligns image to the left
 func (ib *ImageBuilder) Left() *ImageBuilder {
-	ib.align = constants.AlignLeft.String()
+	ib.align = constants.Left.String()
 	return ib
 }
 
 // Center centers the image (default)
 func (ib *ImageBuilder) Center() *ImageBuilder {
-	ib.align = constants.AlignCenter.String()
+	ib.align = constants.Center.String()
 	return ib
 }
 
 // Right aligns image to the right
 func (ib *ImageBuilder) Right() *ImageBuilder {
-	ib.align = constants.AlignRight.String()
+	ib.align = constants.Right.String()
 	return ib
 }
 

@@ -10,11 +10,6 @@ import (
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
-const (
-	single = "1x1"
-	noDot  = "0pt"
-)
-
 // handleText manages text commands
 func (e *Executor) handleText(printer *service.Printer, data json.RawMessage) error {
 	var cmd TextCommand
@@ -114,7 +109,7 @@ func (e *Executor) handleText(printer *service.Printer, data json.RawMessage) er
 	}
 
 	// Resetear alineación a izquierda al final
-	return e.applyAlign(printer, strPtr(constants.AlignLeft.String()))
+	return e.applyAlign(printer, strPtr(constants.Left.String()))
 }
 
 func (e *Executor) resetDifferingStyles(printer *service.Printer, labelStyle, contentStyle *TextStyle) error {
@@ -137,7 +132,7 @@ func (e *Executor) resetDifferingStyles(printer *service.Printer, labelStyle, co
 	}
 
 	if !sameOrNil(labelStyle.Size, contentStyle.Size) {
-		if labelStyle.Size != nil && *labelStyle.Size != single {
+		if labelStyle.Size != nil && *labelStyle.Size != constants.DefaultTextSize.String() {
 			if err := printer.SingleSize(); err != nil {
 				return err
 			}
@@ -145,7 +140,7 @@ func (e *Executor) resetDifferingStyles(printer *service.Printer, labelStyle, co
 	}
 
 	if !sameOrNil(labelStyle.Underline, contentStyle.Underline) {
-		if labelStyle.Underline != nil && *labelStyle.Underline != noDot {
+		if labelStyle.Underline != nil && *labelStyle.Underline != constants.NoDot.String() {
 			if err := printer.NoDot(); err != nil {
 				return err
 			}
@@ -187,17 +182,17 @@ func strPtr(s string) *string {
 }
 
 func (e *Executor) applyAlign(printer *service.Printer, align *string) error {
-	alignValue := constants.AlignDefault.String() // default
+	alignValue := constants.DefaultTextAlignment.String() // default
 	if align != nil {
 		alignValue = strings.ToLower(*align)
 	}
 
 	switch alignValue {
-	case constants.AlignCenter.String():
+	case constants.Center.String():
 		return printer.AlignCenter()
-	case constants.AlignRight.String():
+	case constants.Right.String():
 		return printer.AlignRight()
-	case constants.AlignLeft.String():
+	case constants.Left.String():
 		return printer.AlignLeft()
 	default:
 		log.Printf("Unknown alignment: %s, using left", alignValue)
@@ -207,21 +202,21 @@ func (e *Executor) applyAlign(printer *service.Printer, align *string) error {
 
 func (e *Executor) applySize(printer *service.Printer, size string) error {
 	switch ss := strings.ToLower(size); ss {
-	case "", single:
+	case constants.Normal.String():
 		return printer.SingleSize()
-	case "2x2":
+	case constants.Double.String():
 		return printer.DoubleSize()
-	case "3x3":
+	case constants.Triple.String():
 		return printer.TripleSize()
-	case "4x4":
+	case constants.Quad.String():
 		return printer.QuadraSize()
-	case "5x5":
+	case constants.Penta.String():
 		return printer.PentaSize()
-	case "6x6":
+	case constants.Hexa.String():
 		return printer.HexaSize()
-	case "7x7":
+	case constants.Hepta.String():
 		return printer.HeptaSize()
-	case "8x8":
+	case constants.Octa.String():
 		return printer.OctaSize()
 	default:
 		// Intentar parsear tamaño personalizado WxH
@@ -241,11 +236,11 @@ func (e *Executor) applySize(printer *service.Printer, size string) error {
 
 func (e *Executor) applyUnderline(printer *service.Printer, underline string) error {
 	switch strings.ToLower(underline) {
-	case "", noDot:
+	case constants.NoDot.String():
 		return printer.NoDot()
-	case "1pt":
+	case constants.OneDot.String():
 		return printer.OneDot()
-	case "2pt":
+	case constants.TwoDot.String():
 		return printer.TwoDot()
 	default:
 		log.Printf("Unknown underline style: %s, using none", underline)
@@ -344,14 +339,14 @@ func (e *Executor) resetTextStyle(printer *service.Printer, style *TextStyle) er
 	}
 
 	// Reset size solo si no es el default
-	if style.Size != nil && *style.Size != "" && *style.Size != single && *style.Size != "1" {
+	if style.Size != nil && *style.Size != "" && *style.Size != constants.Normal.String() && *style.Size != "1" {
 		if err := printer.SingleSize(); err != nil {
 			return fmt.Errorf("failed to reset size: %w", err)
 		}
 	}
 
 	// Reset underline solo si no es el default
-	if style.Underline != nil && *style.Underline != "" && *style.Underline != "0" && *style.Underline != noDot {
+	if style.Underline != nil && *style.Underline != "" && *style.Underline != "0" && *style.Underline != constants.NoDot.String() {
 		if err := printer.NoDot(); err != nil {
 			return fmt.Errorf("failed to reset underline: %w", err)
 		}
@@ -379,12 +374,12 @@ func (e *Executor) resetTextStyle(printer *service.Printer, style *TextStyle) er
 /* applyAlignment aplica alineación a la impresora y retorna una función para restaurar
 func (e *Executor) applyAlignInto(printer *service.Printer, align string) (restore func() error, err error) {
 	switch align {
-	case constants.AlignCenter.String():
-		err = printer.AlignCenter()
-	case constants.AlignRight.String():
-		err = printer.AlignRight()
+	case constants.Center.String():
+		err = printer.Center()
+	case constants.Right.String():
+		err = printer.Right()
 	default:
-		err = printer.AlignLeft()
+		err = printer.Left()
 	}
 
 	if err != nil {
@@ -393,7 +388,7 @@ func (e *Executor) applyAlignInto(printer *service.Printer, align string) (resto
 
 	// Retornar función para restaurar a izquierda
 	return func() error {
-		return printer.AlignLeft()
+		return printer.Left()
 	}, nil
 }
 */
