@@ -20,6 +20,8 @@ const (
 	DefaultCodeTable = "WPC1252"
 	// DefaultDPI default
 	DefaultDPI = 203
+	// DefaultVersion default
+	DefaultVersion = "1.0"
 )
 
 // Valid options for profile configuration

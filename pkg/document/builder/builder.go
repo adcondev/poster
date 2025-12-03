@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/document/schema"
 )
 
@@ -18,7 +19,7 @@ type DocumentBuilder struct {
 // NewDocument creates a new document builder
 func NewDocument() *DocumentBuilder {
 	return &DocumentBuilder{
-		version:  "1.0",
+		version:  constants.DefaultVersion,
 		commands: []schema.Command{},
 	}
 }
