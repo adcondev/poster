@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
@@ -17,15 +18,15 @@ func (e *Executor) handleSeparator(printer *service.Printer, data json.RawMessag
 
 	// Valores por defecto
 	if cmd.Char == "" {
-		cmd.Char = "- "
+		cmd.Char = constants.DefaultSeparatorChar
 	}
-	if cmd.Length == 0 {
+	if cmd.Length <= 0 {
 		// Usar ancho del papel en caracteres (aproximado)
 		// TODO: Verify the following line for different fonts, constrained to Font A
 		cmd.Length = e.printer.Profile.DotsPerLine / 12 // Aproximación para Font A
 	}
 
-	err := printer.AlignCenter()
+	err := printer.SetAlignment(constants.DefaultSeparatorAlignment.String())
 	if err != nil {
 		return err
 	}
@@ -53,7 +54,7 @@ func (e *Executor) handleFeed(printer *service.Printer, data json.RawMessage) er
 	}
 
 	if cmd.Lines <= 0 {
-		cmd.Lines = 1
+		cmd.Lines = constants.DefaultFeedLines
 	}
 
 	return printer.FeedLines(byte(cmd.Lines))
@@ -68,7 +69,7 @@ func (e *Executor) handleCut(printer *service.Printer, data json.RawMessage) err
 
 	// Default feed antes del corte según schema
 	if cmd.Feed == 0 {
-		cmd.Feed = 2 // Default según schema
+		cmd.Feed = constants.DefaultCutFeed
 	}
 
 	// Avance antes del corte si se especifica
@@ -84,8 +85,10 @@ func (e *Executor) handleCut(printer *service.Printer, data json.RawMessage) err
 
 	// Ejecutar corte
 	switch strings.ToLower(cmd.Mode) {
-	case "full":
+	case constants.Full.String():
 		return printer.FullFeedAndCut(0)
+	case constants.Partial.String():
+		return printer.PartialFeedAndCut(0)
 	default: // partial
 		return printer.PartialFeedAndCut(0)
 	}

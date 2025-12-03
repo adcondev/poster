@@ -54,6 +54,9 @@ type ImageCommand struct {
 type SeparatorCommand struct {
 	Char   string `json:"char,omitempty"`
 	Length int    `json:"length,omitempty"`
+	// TODO: Add TextStyle if needed
+	// TODO: Add Align if needed
+	// TODO: Add Pre and Post feed line if needed
 }
 
 // FeedCommand for feed handler
@@ -87,6 +90,7 @@ type BarcodeCommand struct {
 	HRIPosition *string `json:"hri_position,omitempty"`
 	HRIFont     *string `json:"hri_font,omitempty"`
 	Align       *string `json:"align,omitempty"`
+	// TODO: Check if CodeSet is needed
 }
 
 // TableCommand for table handler

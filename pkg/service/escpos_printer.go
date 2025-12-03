@@ -9,6 +9,7 @@ import (
 	"github.com/adcondev/pos-printer/pkg/commands/mechanismcontrol"
 	"github.com/adcondev/pos-printer/pkg/composer"
 	"github.com/adcondev/pos-printer/pkg/connection"
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/graphics"
 	"github.com/adcondev/pos-printer/pkg/profile"
 )
@@ -149,6 +150,21 @@ func (p *Printer) AlignCenter() error {
 func (p *Printer) AlignRight() error {
 	cmd := p.Protocol.RightAlign()
 	return p.Write(cmd)
+}
+
+// SetAlignment sets text alignment
+func (p *Printer) SetAlignment(align string) error {
+	switch align {
+	case constants.Left.String():
+		return p.AlignLeft()
+	case constants.Center.String():
+		return p.AlignCenter()
+	case constants.Right.String():
+		return p.AlignRight()
+	default:
+		log.Printf("warning: unknown alignment '%s', doing nothing", align)
+		return nil
+	}
 }
 
 // SingleSize resets text to normal size

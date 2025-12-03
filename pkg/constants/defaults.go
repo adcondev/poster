@@ -52,6 +52,8 @@ const (
 	DefaultTextSize = Normal
 	// DefaultTextNewLine indicates if a new line is added after text by default
 	DefaultTextNewLine = true
+	// DefaultUnderline is the default underline style
+	DefaultUnderline = NoDot
 )
 
 // Image defaults for processing
@@ -108,6 +110,12 @@ const (
 	DefaultSeparatorLength = 32
 	// DefaultSeparatorAlignment is the default alignment for separators
 	DefaultSeparatorAlignment = Center
+)
+
+// Feed defaults
+const (
+	// DefaultFeedLines default
+	DefaultFeedLines = 2
 )
 
 // Cut defaults
@@ -236,6 +244,29 @@ const (
 	Hepta Size = "7x7"
 	// Octa is octa text size
 	Octa Size = "8x8"
+)
+
+// ============================================================================
+// Underline Constants
+// ============================================================================
+
+// Ensure Underline implements fmt.Stringer
+var _ fmt.Stringer = Underline("")
+
+// Underline options for text underlining
+type Underline string
+
+func (u Underline) String() string {
+	return string(u)
+}
+
+const (
+	// NoDot indicates no underline
+	NoDot Underline = "0pt"
+	// OneDot indicates single underline
+	OneDot Underline = "1pt"
+	// TwoDot indicates double underline
+	TwoDot Underline = "2pt"
 )
 
 // ============================================================================
@@ -420,12 +451,12 @@ const (
 // ============================================================================
 
 const (
-	// MinBarcodeWidth is the minimum dot per module
-	MinBarcodeWidth = 2
-	// MaxBarcodeWidth is the maximum dot per module
-	MaxBarcodeWidth = 6
+	// MinBarcodeModuleWidth is the minimum dot per module
+	MinBarcodeModuleWidth = 2
+	// MaxBarcodeModuleWidth is the maximum dot per module
+	MaxBarcodeModuleWidth = 6
 	// MinBarcodeHeight is the minimum height in dots
-	MinBarcodeHeight = 32
+	MinBarcodeHeight = 1
 	// MaxBarcodeHeight is the maximum height in dots
 	MaxBarcodeHeight = 255
 )
