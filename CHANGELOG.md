@@ -2,6 +2,31 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [3.6.0](https://github.com/adcondev/pos-printer/compare/v3.5.0...v3.6.0) (2025-12-04)
+
+
+### ✅ Tests
+
+* **tables:** update method names to follow Go naming conventions ([97518ca](https://github.com/adcondev/pos-printer/commit/97518cac6b807e1c8fd239ebc122f9866bf7d888))
+
+
+### 🐛 Bug Fixes
+
+* **poster:** correct alignment and default values in barcode and image builders ([95a7857](https://github.com/adcondev/pos-printer/commit/95a7857a7704516b2ad228c997f7a43d427c4423))
+
+
+### ✨ Features
+
+* **barcode:** enhance barcode configuration and mapping functions ([db5e03b](https://github.com/adcondev/pos-printer/commit/db5e03bdc49249e392cbabee96bb0ba0b806e174))
+* **builder:** use centralized default version in document creation ([0beb10d](https://github.com/adcondev/pos-printer/commit/0beb10d5279a6845f2894842b22b5faa71403457))
+* **constants:** expand default constants for various configurations ([4d56b0e](https://github.com/adcondev/pos-printer/commit/4d56b0e3288af00f90c229ff3c8b3e63fdc10290))
+* **constants:** introduce centralized constants for alignment and default values ([fb97aed](https://github.com/adcondev/pos-printer/commit/fb97aedbf8842bf91e78b2f0bf9aefc5f170e08e))
+* **constants:** introduce centralized constants for alignment and default values ([#82](https://github.com/adcondev/pos-printer/issues/82)) ([8255c69](https://github.com/adcondev/pos-printer/commit/8255c69b9caca46837015b4df283ea1ce672f840))
+* **executor:** add new executor package for handling JSON print documents ([e480f32](https://github.com/adcondev/pos-printer/commit/e480f32ad65ff93e205bbaa2495feb05f410ed57))
+* **executor:** implement handler registry for command management ([9ccb2be](https://github.com/adcondev/pos-printer/commit/9ccb2be414cbe650937ba8ebfdf978b779ceb91e))
+* **poster:** update default constants for image and QR code handling ([d0d638f](https://github.com/adcondev/pos-printer/commit/d0d638f1839d486955a3c07b664d992b7517c9d2))
+* **tables:** introduce TableBuilder for fluent API to build table commands ([5e54f02](https://github.com/adcondev/pos-printer/commit/5e54f028fd83747cd016c8d6a14c8069dfcc0703))
+
 ## [3.5.0](https://github.com/adcondev/pos-printer/compare/v3.4.0...v3.5.0) (2025-12-02)
 
 
