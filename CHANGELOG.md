@@ -2,6 +2,13 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [3.5.0](https://github.com/adcondev/pos-printer/compare/v3.4.0...v3.5.0) (2025-12-02)
+
+
+### ✨ Features
+
+* **executor:** add new executor package for handling JSON print documents ([#81](https://github.com/adcondev/pos-printer/issues/81)) ([8183c79](https://github.com/adcondev/pos-printer/commit/8183c797252db05a327b4d4c285b099c06171125))
+
 ## [3.4.0](https://github.com/adcondev/pos-printer/compare/v3.3.3...v3.4.0) (2025-11-27)
 
 
