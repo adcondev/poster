@@ -29,165 +29,149 @@ func (e *Executor) handleBarcode(printer *service.Printer, data json.RawMessage)
 
 	e.analyzeBarcodeRisk(cmd.Data)
 
-	// Mapear la simbología del schema a la constante del paquete barcode
-	symbology, err := mapSymbology(cmd.Symbology)
-	if err != nil {
-		return err
-	}
-
 	// Crear configuración con defaults
-	cfg := graphics.DefaultConfig()
+	cfg := graphics.DefaultBarcodeConfig()
+
+	// Mapear la simbología del schema a la constante del paquete barcode
+	symbology, err := graphics.MapSymbology(cmd.Symbology)
+	if err != nil {
+		symbology = barcode.CODE128 // Fallback seguro
+		log.Printf("Unsupported barcode symbology '%s', defaulting to CODE128", cmd.Symbology)
+	}
 	cfg.Symbology = symbology
 
 	// Aplicar configuración de ancho si se especifica
 	if cmd.Width != nil {
-		if *cmd.Width < 2 || *cmd.Width > 6 {
-			return fmt.Errorf("barcode width must be between 2 and 6, got %d", *cmd.Width)
+		switch {
+		case *cmd.Width < constants.MinBarcodeModuleWidth:
+			cfg.Width = constants.MinBarcodeModuleWidth
+			log.Printf("Barcode width too small, set to minimum %d", *cmd.Width)
+		case *cmd.Width > constants.MaxBarcodeModuleWidth:
+			cfg.Width = constants.MaxBarcodeModuleWidth
+			log.Printf("Barcode width too large, set to maximum %d", *cmd.Width)
+		default:
+			cfg.Width = barcode.Width(*cmd.Width)
+			log.Printf("Barcode width set to %d", *cmd.Width)
 		}
-		cfg.Width = barcode.Width(*cmd.Width)
-		log.Printf("Barcode width set to %d", *cmd.Width)
+	} else {
+		// Si no se especifica, usar valor por defecto
+		cfg.Width = constants.DefaultBarcodeModuleWidth
+		log.Printf("Barcode width using default %d", cfg.Width)
 	}
 
 	// Aplicar configuración de altura si se especifica
 	if cmd.Height != nil {
-		if *cmd.Height < 1 || *cmd.Height > 255 {
-			return fmt.Errorf("barcode height must be between 1 and 255, got %d", *cmd.Height)
+		switch {
+		case *cmd.Height < constants.MinBarcodeHeight:
+			cfg.Height = constants.MinBarcodeHeight
+			log.Printf("Barcode height too small, set to minimum %d dots", *cmd.Height)
+		case *cmd.Height > constants.MaxBarcodeHeight:
+			cfg.Height = constants.MaxBarcodeHeight
+			log.Printf("Barcode height too large, set to maximum %d dots", *cmd.Height)
+		default:
+			cfg.Height = barcode.Height(*cmd.Height)
+			log.Printf("Barcode height set to %d dots", *cmd.Height)
 		}
-		cfg.Height = barcode.Height(*cmd.Height)
-		log.Printf("Barcode height set to %d dots", *cmd.Height)
+	} else {
+		// Si no se especifica, usar valor por defecto
+		cfg.Height = constants.DefaultBarcodeHeight
+		log.Printf("Barcode height using default %d dots", cfg.Height)
 	}
 
 	// Configurar posición del HRI (Human Readable Interpretation)
-	hriPos := "below" // default según schema
+	hriPos := constants.DefaultBarcodeHriPosition // default según schema
 	if cmd.HRIPosition != nil {
-		hriPos = strings.ToLower(*cmd.HRIPosition)
+		hriPos = constants.HriPosition(strings.ToLower(*cmd.HRIPosition))
 	}
-
-	hriPosition, err := mapHRIPosition(hriPos)
-	if err != nil {
-		return err
-	}
-	cfg.HRIPosition = hriPosition
+	cfg.HRIPosition = mapHRIPosition(hriPos)
 
 	// Configurar fuente del HRI
-	hriFont := "A" // default según schema
+	hriFont := constants.DefaultBarcodeHriFont // default según schema
 	if cmd.HRIFont != nil {
-		hriFont = strings.ToUpper(*cmd.HRIFont)
+		hriFont = constants.Font(strings.ToLower(*cmd.HRIFont))
 	}
-
-	hriF, err := mapHRIFont(hriFont)
-	if err != nil {
-		return err
-	}
-	cfg.HRIFont = hriF
+	cfg.HRIFont = mapHRIFont(hriFont)
 
 	// Para CODE128, establecer el CodeSet por defecto si es necesario
 	if symbology == barcode.CODE128 || symbology == barcode.GS1128 {
 		// Validar que los datos sean compatibles con el code set B por defecto
 		cfg.CodeSet = barcode.Code128SetB // Default para texto general
 
-		// Si los datos contienen solo números y tienen longitud par, sugerir Code Set C
+		// Si los datos contienen solo números y tienen longitud par, usar Code Set C
 		if barcode.ValidateNumericData([]byte(cmd.Data)) && len(cmd.Data)%2 == 0 {
-			log.Printf("warning: consider using Code Set C for numeric data '%s' for better density", cmd.Data)
+			cfg.CodeSet = barcode.Code128SetC
+			log.Printf("CODE128 data is numeric with even length, using Code Set C")
 		}
 	}
 
 	// Aplicar alineación
-	align := "center" // default según schema
+	align := constants.DefaultBarcodeAlignment // default según schema
 	if cmd.Align != nil {
-		align = strings.ToLower(*cmd.Align)
+		align = constants.Alignment(strings.ToLower(*cmd.Align))
 	}
 
 	switch align {
-	case constants.AlignCenter.String():
+	case constants.Center:
 		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
-	case constants.AlignRight.String():
+	case constants.Right:
 		if err := printer.AlignRight(); err != nil {
 			return err
 		}
-	case constants.AlignLeft.String():
+	case constants.Left:
 		if err := printer.AlignLeft(); err != nil {
 			return err
 		}
 	default:
-		if err := printer.AlignCenter(); err != nil {
+		if err := printer.SetAlignment(constants.DefaultTextAlignment.String()); err != nil {
 			return err
 		}
 	}
 
-	// Imprimir el código de barras usando el método stateless
+	// Imprimir el código de barras usando el méetodo stateless
 	if err := printer.PrintBarcode(cfg, []byte(cmd.Data)); err != nil {
 		return fmt.Errorf("failed to print barcode: %w", err)
 	}
 
 	// Restaurar alineación a la izquierda
-	if err := printer.AlignLeft(); err != nil {
+	if err := printer.SetAlignment(constants.DefaultTextAlignment.String()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// mapSymbology mapea los nombres del schema a las constantes del paquete barcode
-func mapSymbology(sym string) (barcode.Symbology, error) {
-	// Normalizar el input
-	normalized := strings.ToUpper(strings.ReplaceAll(sym, "-", ""))
-
-	symbologyMap := map[string]barcode.Symbology{
-		"UPCA":    barcode.UPCAB,    // Function B version para mayor compatibilidad
-		"UPCE":    barcode.UPCEB,    // Function B version
-		"EAN13":   barcode.EAN13,    // Function B version (ya está en 67)
-		"EAN8":    barcode.EAN8,     // Function B version (ya está en 68)
-		"CODE39":  barcode.CODE39B,  // Function B version
-		"CODE128": barcode.CODE128,  // Function B con code set
-		"ITF":     barcode.ITFB,     // Function B version
-		"CODABAR": barcode.CODABARB, // Function B version
-		// Agregar soporte para sinónimos comunes
-		"JAN13": barcode.EAN13, // JAN13 es equivalente a EAN13
-		"JAN8":  barcode.EAN8,  // JAN8 es equivalente a EAN8
-	}
-
-	symbology, ok := symbologyMap[normalized]
-	if !ok {
-		// Listar simbologías soportadas en el error
-		return 0, fmt.Errorf("unsupported barcode symbology: %s (supported: UPC-A, UPC-E, EAN13, EAN8, CODE39, CODE128, ITF, CODABAR)", sym)
-	}
-
-	return symbology, nil
-}
-
 // mapHRIPosition mapea las posiciones del schema a las constantes del paquete barcode
-func mapHRIPosition(pos string) (barcode.HRIPosition, error) {
-	posMap := map[string]barcode.HRIPosition{
-		"none":  barcode.HRINotPrinted,
-		"above": barcode.HRIAbove,
-		"below": barcode.HRIBelow,
-		"both":  barcode.HRIBoth,
+func mapHRIPosition(pos constants.HriPosition) barcode.HRIPosition {
+	posMap := map[constants.HriPosition]barcode.HRIPosition{
+		constants.None:  barcode.HRINotPrinted,
+		constants.Above: barcode.HRIAbove,
+		constants.Below: barcode.HRIBelow,
+		constants.Both:  barcode.HRIBoth,
 	}
 
 	hriPos, ok := posMap[pos]
 	if !ok {
-		return 0, fmt.Errorf("invalid HRI position: %s (valid: none, above, below, both)", pos)
+		return posMap[constants.DefaultBarcodeHriPosition] // Default
 	}
 
-	return hriPos, nil
+	return hriPos
 }
 
 // mapHRIFont mapea las fuentes del schema a las constantes del paquete barcode
-func mapHRIFont(font string) (barcode.HRIFont, error) {
-	fontMap := map[string]barcode.HRIFont{
-		"A": barcode.HRIFontA,
-		"B": barcode.HRIFontB,
+func mapHRIFont(font constants.Font) barcode.HRIFont {
+	fontMap := map[constants.Font]barcode.HRIFont{
+		constants.A: barcode.HRIFontA,
+		constants.B: barcode.HRIFontB,
 	}
 
 	hriFont, ok := fontMap[font]
 	if !ok {
-		return 0, fmt.Errorf("invalid HRI font: %s (valid: A, B)", font)
+		return fontMap[constants.DefaultBarcodeHriFont] // Default
 	}
 
-	return hriFont, nil
+	return hriFont
 }
 
 // analyzeBarcodeRisk evalúa la longitud de los datos contra el ancho del papel

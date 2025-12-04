@@ -29,11 +29,11 @@ const (
 )
 
 // DitherMap maps constants to DitherMode
-var DitherMap = map[constants.Dithering]DitherMode{
-	constants.DitheringThreshold: Threshold,
-	constants.DitheringAtkinson:  Atkinson,
-	// constants.DitheringFloydSteinberg.String(): FloydSteinberg,
-	// constants.DitheringOrdered.String():        Ordered,
+var DitherMap = map[string]DitherMode{
+	constants.Threshold.String(): Threshold,
+	constants.Atkinson.String():  Atkinson,
+	// constants.DitheringFloydSteinberg: FloydSteinberg,
+	// constants.DitheringOrdered:        Ordered,
 }
 
 // ScaleMode defines the scaling algorithm
@@ -49,8 +49,8 @@ const (
 
 // ScaleMap maps constants to ScaleMode
 var ScaleMap = map[constants.Scaling]ScaleMode{
-	constants.ScalingNNS:      NearestNeighbor,
-	constants.ScalingBilinear: BiLinear,
+	constants.NearestNeighbor: NearestNeighbor,
+	constants.Bilinear:        BiLinear,
 	// constants.ScalingBicubic:  BiCubic,
 }
 
@@ -67,10 +67,10 @@ type ImgOptions struct {
 // DefaultOptions returns sensible defaults for 80mm printers
 func DefaultOptions() *ImgOptions {
 	return &ImgOptions{
-		PixelWidth:     constants.ImagePixelWidth,
-		Threshold:      constants.ImageThreshold,
-		Dithering:      DitherMap[constants.DitheringAtkinson],
-		Scaling:        ScaleMap[constants.ScalingBilinear],
+		PixelWidth:     constants.DefaultImagePixelWidth,
+		Threshold:      constants.DefaultImageThreshold,
+		Dithering:      DitherMap[constants.Atkinson.String()],
+		Scaling:        ScaleMap[constants.Bilinear],
 		AutoRotate:     false,
 		PreserveAspect: true,
 	}

@@ -96,12 +96,12 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		align = cmd.Options.Align
 	}
 	switch strings.ToLower(align) {
-	case constants.AlignCenter.String():
+	case constants.Center.String():
 		err := printer.AlignCenter()
 		if err != nil {
 			return err
 		}
-	case constants.AlignRight.String():
+	case constants.Right.String():
 		err := printer.AlignRight()
 		if err != nil {
 			return err

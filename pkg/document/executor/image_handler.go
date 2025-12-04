@@ -36,36 +36,36 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 
 	// Si no se especifica ancho, usar valor por defecto
 	if opts.PixelWidth <= 0 {
-		opts.PixelWidth = 128
+		opts.PixelWidth = constants.DefaultImagePixelWidth
 	}
 
 	// Si no se especifica threshold, usar valor por defecto
 	if opts.Threshold <= 0 {
-		opts.Threshold = 128
+		opts.Threshold = constants.DefaultImageThreshold
 	}
 
 	// Configurar dithering
 	switch strings.ToLower(cmd.Dithering) {
-	case constants.DitheringAtkinson.String():
+	case constants.Atkinson.String():
 		opts.Dithering = graphics.Atkinson
-	case constants.DitheringThreshold.String():
+	case constants.Threshold.String():
 		opts.Dithering = graphics.Threshold
 	default:
-		opts.Dithering = graphics.DitherMap[constants.DitheringDefault]
+		opts.Dithering = graphics.DitherMap[constants.DefaultImageDithering.String()]
 	}
 
 	if cmd.Align == "" {
-		cmd.Align = constants.ImageAlign
+		cmd.Align = constants.DefaultImageAlignment.String()
 	}
 
 	// Aplicar alineación
 	switch strings.ToLower(cmd.Align) {
-	case constants.AlignCenter.String():
+	case constants.Center.String():
 		err := printer.AlignCenter()
 		if err != nil {
 			return err
 		}
-	case constants.AlignRight.String():
+	case constants.Right.String():
 		err := printer.AlignRight()
 		if err != nil {
 			return err
@@ -79,12 +79,12 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 
 	// Configurar escalado
 	switch strings.ToLower(cmd.Scaling) {
-	case constants.ScalingNNS.String():
+	case constants.NearestNeighbor.String():
 		opts.Scaling = graphics.NearestNeighbor
-	case constants.ScalingBilinear.String():
+	case constants.Bilinear.String():
 		opts.Scaling = graphics.BiLinear
 	default:
-		opts.Scaling = graphics.ScaleMap[constants.ScalingDefault]
+		opts.Scaling = graphics.ScaleMap[constants.DefaultImageScaling]
 	}
 
 	// Procesar imagen

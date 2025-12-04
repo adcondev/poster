@@ -34,7 +34,7 @@ func newQRBuilder(parent *DocumentBuilder, data string) *QRBuilder {
 		data:       data,
 		pixelWidth: 128,
 		correction: "Q",
-		align:      constants.AlignCenter.String(),
+		align:      constants.Center.String(),
 	}
 }
 
@@ -52,19 +52,19 @@ func (qb *QRBuilder) Correction(level string) *QRBuilder {
 
 // Left aligns QR to the left
 func (qb *QRBuilder) Left() *QRBuilder {
-	qb.align = constants.AlignLeft.String()
+	qb.align = constants.Left.String()
 	return qb
 }
 
 // Center centers the QR (default)
 func (qb *QRBuilder) Center() *QRBuilder {
-	qb.align = constants.AlignCenter.String()
+	qb.align = constants.Center.String()
 	return qb
 }
 
 // Right aligns QR to the right
 func (qb *QRBuilder) Right() *QRBuilder {
-	qb.align = constants.AlignRight.String()
+	qb.align = constants.Right.String()
 	return qb
 }
 

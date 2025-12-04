@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/adcondev/pos-printer/pkg/constants"
 	"github.com/adcondev/pos-printer/pkg/document/schema"
 )
 
@@ -22,7 +23,7 @@ func ParseDocument(data []byte) (*schema.Document, error) {
 	// Validación básica
 	if doc.Version == "" {
 		// TODO: Review an smart way to handle versioning
-		doc.Version = "1.0"
+		doc.Version = constants.DefaultVersion
 	}
 
 	if len(doc.Commands) == 0 {

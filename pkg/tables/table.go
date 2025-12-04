@@ -148,11 +148,11 @@ func PadString(s string, width int, align constants.Alignment) string {
 	padTotal := width - length
 
 	switch align {
-	case constants.AlignCenter:
+	case constants.Center:
 		padLeft := padTotal / 2
 		padRight := padTotal - padLeft
 		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
-	case constants.AlignRight:
+	case constants.Right:
 		return strings.Repeat(" ", padTotal) + s
 	default:
 		return s + strings.Repeat(" ", padTotal)

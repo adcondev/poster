@@ -412,16 +412,17 @@
         "symbology": {
           "type": "string",
           "enum": [
-            "UPC-A",
-            "UPC-E",
-            "EAN13",
-            "EAN8",
-            "CODE39",
-            "CODE128",
-            "ITF",
-            "CODABAR"
+            "upca",
+            "upce",
+            "ean13",
+            "ean8",
+            "code39",
+            "code128",
+            "itf",
+            "codabar"
           ],
-          "description": "Barcode symbology type"
+          "description": "Barcode symbology type",
+          "default": "code128"
         },
         "data": {
           "type": "string",
@@ -433,7 +434,8 @@
           "type": "integer",
           "description": "Module width (2-6)",
           "minimum": 2,
-          "maximum": 6
+          "maximum": 6,
+          "default": 3
         },
         "height": {
           "type": "integer",

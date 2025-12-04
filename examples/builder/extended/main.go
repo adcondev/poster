@@ -40,8 +40,8 @@ func main() {
 		// Tabla de productos
 		Table().
 		Column("Producto", 20).
-		Column("Cant", 5, constants.AlignCenter).
-		Column("Precio", 10, constants.AlignRight).
+		Column("Cant", 5, constants.Center).
+		Column("Precio", 10, constants.Right).
 		PaperWidth(48).
 		Row("Café Americano", "2", "$90.00").
 		Row("Pan de chocolate", "3", "$45.00").

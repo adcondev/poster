@@ -9,45 +9,6 @@ import (
 	"github.com/adcondev/pos-printer/pkg/constants"
 )
 
-// Default values according to document.schema.json
-const (
-	// Profile defaults
-	DefaultPaperWidth = 80
-	DefaultCodeTable  = "WPC1252"
-	DefaultDPI        = 203
-
-	// Image defaults
-	DefaultImagePixelWidth = 128
-	DefaultImageThreshold  = 128
-	DefaultImageDithering  = "atkinson"
-	DefaultImageAlign      = "center"
-
-	// Separator defaults
-	DefaultSeparatorChar   = "- "
-	DefaultSeparatorLength = 48
-
-	// Cut defaults
-	DefaultCutMode = "partial"
-	DefaultCutFeed = 2
-
-	// QR defaults
-	DefaultQRPixelWidth = 128
-	DefaultQRCorrection = "Q"
-	DefaultQRAlign      = "center"
-	MinQRPixelWidth     = 87
-
-	// Barcode defaults
-	DefaultBarcodeHRIPosition = "below"
-	DefaultBarcodeHRIFont     = "A"
-	DefaultBarcodeAlign       = "center"
-
-	// Text defaults
-	DefaultTextAlign = "left"
-	DefaultTextSize  = "1x1"
-	DefaultTextFont  = "A"
-	DefaultNewLine   = true
-)
-
 // TODO: Define all_mayus y all_bold options for commands
 
 // Document representa un documento de impresión completo

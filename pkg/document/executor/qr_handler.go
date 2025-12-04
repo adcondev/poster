@@ -12,9 +12,6 @@ import (
 	"github.com/adcondev/pos-printer/pkg/service"
 )
 
-const defaultQRSize = 128
-const minQRPixelWidth = 87
-
 // handleQR manages QR code commands
 func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) error {
 	var cmd QRCommand
@@ -35,14 +32,14 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 
 	// Configurar tamaño del QR
 	if cmd.PixelWidth > 0 {
-		if cmd.PixelWidth < minQRPixelWidth { // Mínimo según schema
+		if cmd.PixelWidth < constants.MinQrPixelWidth { // Mínimo según schema
 			log.Printf("Warning: pixel_width %d too small, setting to minimum 87", cmd.PixelWidth)
-			cmd.PixelWidth = minQRPixelWidth
+			cmd.PixelWidth = constants.MinQrPixelWidth
 		}
 		opts.PixelWidth = cmd.PixelWidth
 	} else {
 		// Default: 128
-		opts.PixelWidth = defaultQRSize
+		opts.PixelWidth = constants.DefaultQrPixelWidth
 	}
 
 	// Mapear corrección de errores (default: Q según schema)
@@ -87,15 +84,15 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 	}
 
 	switch align {
-	case constants.AlignCenter.String():
+	case constants.Center.String():
 		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
-	case constants.AlignRight.String():
+	case constants.Right.String():
 		if err := printer.AlignRight(); err != nil {
 			return err
 		}
-	case constants.AlignLeft.String():
+	case constants.Left.String():
 		if err := printer.AlignLeft(); err != nil {
 			return err
 		}

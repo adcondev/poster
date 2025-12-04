@@ -60,21 +60,21 @@ func (bb *BarcodeBuilder) HRIFont(font string) *BarcodeBuilder {
 
 // Left aligns barcode to the left
 func (bb *BarcodeBuilder) Left() *BarcodeBuilder {
-	align := constants.AlignLeft.String()
+	align := constants.Left.String()
 	bb.align = &align
 	return bb
 }
 
 // Center centers the barcode (default)
 func (bb *BarcodeBuilder) Center() *BarcodeBuilder {
-	align := constants.AlignCenter.String()
+	align := constants.Center.String()
 	bb.align = &align
 	return bb
 }
 
 // Right aligns barcode to the right
 func (bb *BarcodeBuilder) Right() *BarcodeBuilder {
-	align := constants.AlignRight.String()
+	align := constants.Right.String()
 	bb.align = &align
 	return bb
 }
