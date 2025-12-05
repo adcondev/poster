@@ -38,10 +38,10 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 
 	// Create table options with defaults
 	opts := &tables.Options{
-		ShowHeaders:   cmd.ShowHeaders,
-		WordWrap:      true,
-		ColumnSpacing: 1,
-		HeaderStyle:   tables.Style{Bold: true},
+		ShowHeaders:   constants.DefaultTableShowHeaders,
+		WordWrap:      constants.DefaultTableWordWrap,
+		ColumnSpacing: constants.DefaultTableColumnSpacing,
+		HeaderStyle:   tables.Style{Bold: constants.DefaultTableHeaderBold},
 	}
 
 	// Apply custom options if provided
@@ -90,8 +90,8 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		return fmt.Errorf("failed to render table: %w", err)
 	}
 
-	// Aplicar alineación
-	align := "left"
+	// Apply alignment
+	align := constants.DefaultTableAlignment.String()
 	if cmd.Options != nil && cmd.Options.Align != "" {
 		align = cmd.Options.Align
 	}

@@ -124,11 +124,11 @@ func TestPadString(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "left align default",
+			name:     "center align default",
 			input:    "Hi",
 			width:    5,
 			align:    "",
-			expected: "Hi   ",
+			expected: " Hi  ",
 		},
 		{
 			name:     "Right align",
