@@ -85,7 +85,7 @@ go.work.sum
 # ...even if they are in subdirectories
 !*/
 !assets/
-!assets/images/pos-printer.jpeg
+!assets/images/poster.png
 !assets/images/imagen.txt
 !assets/images/logo.txt
 
