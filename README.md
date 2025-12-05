@@ -1,186 +1,223 @@
-# POS Printer: A Modular Go Library for Thermal Printers
+# POS Printer Driver & Utility
 
-<div align="center">
+![Go Version](https://img.shields.io/badge/go-1.20+-00ADD8?style=flat&logo=go)
+![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-![CI Status](https://github.com/adcondev/pos-printer/actions/workflows/ci.yml/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/adcondev/pos-printer)](https://goreportcard.com/report/github.com/adcondev/pos-printer)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/adcondev/pos-printer)
-[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
-[![Go Version](https://img.shields.io/badge/go-1.24-blue.svg)](https://go.dev/)
-[![Release](https://img.shields.io/github/v/release/adcondev/pos-printer)](https://github.com/adcondev/pos-printer/releases)
-[![Coverage](https://codecov.io/gh/adcondev/pos-printer/branch/main/graph/badge.svg)](https://codecov.io/gh/adcondev/pos-printer)
-[![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://github.com/adcondev/pos-printer/pkgs/container/pos-printer)
+A professional, production-ready Go library and command-line utility for controlling ESC/POS thermal printers. Designed
+for high-reliability retail and POS environments, it features a robust JSON-based document protocol, native Windows
+Spooler integration, and an advanced graphics engine.
 
+## 🚀 Key Features
 
-<br>
+- **JSON Document Protocol**: Define print jobs using a clean, versioned JSON schema. Decouples business logic from
+  hardware commands.
+- **Native Windows Integration**: Prints directly via the Windows Print Spooler API (`winspool.drv`), supporting USB,
+  Serial, and Network printers installed in Windows.
+- **Advanced Graphics Engine**:
+    - High-quality image printing with **Atkinson Dithering**.
+    - Automatic scaling and aspect ratio preservation.
+    - Supports PNG, JPG, BMP.
+- **Smart QR & Barcodes**: Automatically chooses between native printer firmware commands (fastest) or software
+  rendering (maximum compatibility) based on the printer profile.
+- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping and
+  multi-column support.
+- **Hardware Agnostic**: Includes profiles for standard 80mm (Epson-compatible) and 58mm (generic) printers.
 
-<img src="assets/images/pos-printer.jpeg" alt="POS Printer LogoPath" width="200" height="auto">
+## 🏗️ Architecture
 
-**A modular, extensible library for thermal printer communication across multiple protocols**
-
-</div>
-
-## 📝 Table of Contents
-
-- [Overview](#-overview)
-- [Key-Features](#-key-features)
-- [Architecture-Diagram](#️-architecture-diagram)
-- [Installation](#-installation)
-- [Usage-Example](#-usage-example)
-- [Supported-Protocols](#️-supported-protocols)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [DevOps-and-CI/CD](#-devops-and-cicd)
-- [License](#-license)
-
-## 📝 Overview
-
-**POS Printer** is a Go library that provides a unified, developer-friendly interface for communicating with a wide range of POS (Point of Sale) printer models. Designed with a clean and modular architecture, it simplifies the process of sending commands to thermal printers, whether you need to print text, generate QR codes, or render images. With comprehensive test coverage and support for multiple connection types, this library is built for reliability in production environments.
-
-## ✨ Key Features
-
-- **Multi-Protocol Support**: Native support for **ESC/POS** and **ZPL**, with an extensible architecture to add more.
-- **Flexible Connection ImgOptions**: Connect to printers via **Serial**, **USB**, **Network (TCP/IP)**, or **Bluetooth
-  **.
-- **Protocol-Agnostic Image Printing**: A powerful imaging package that handles direct bitmap generation from image files.
-- **Centralized Printer Registry**: Manage multiple printer configurations in a centralized system, making it easy to switch between devices.
-- **Comprehensive Testing**: Includes a full suite of unit tests, mocks, and fakes to ensure stable and predictable behavior.
-- **Well-Documented and Idiomatic Go**: Clean, commented code that follows modern Go best practices.
-
-## 🏗️ Architecture Diagram
-
-The library is designed with a decoupled architecture, where each core functionality is separated into its own package. This allows for easy extension and maintenance.
+The project follows a layered architecture to ensure modularity and testability:
 
 ```mermaid
 graph TD
-    A[Application] --> B{pos Printer API}
+    JSON[JSON Document] --> Parser[Parser & Validator]
+    Parser --> Executor[Command Executor]
+    Executor --> Service[Printer Service]
 
-    subgraph "Core Library"
-        B --> C[Printer Registry]
-        B --> D[Connection Manager]
-        B --> E{Protocols}
+    subgraph Core Logic
+        Service --> Protocol[ESC/POS Composer]
+        Service --> Profile[Device Profile]
+        Service --> Graphics[Graphics Engine]
     end
 
-    subgraph "Connection Layer"
-        D --> F[USB]
-        D --> G[Network]
-        D --> H[Serial]
-        D --> I[Bluetooth]
-    end
+    Service --> Connector[Connection Interface]
 
-    subgraph "Protocols Layer"
-        E --> J[ESC/POS]
-        E --> K[ZPL]
-        E --> L[Imaging]
+    subgraph Hardware Layer
+        Connector --> WinAPI[Windows Spooler API]
+        WinAPI --> Device[Physical Printer]
     end
-
-    J --> M[Physical Printer]
-    K --> M
-    L --> M
 ```
 
-## 🚀 Installation
+## 📦 Installation
 
-To get started, add the library to your Go project using `go get`:
+### Prerequisites
+
+- Go 1.20 or higher
+- Windows OS (for native spooler support)
+
+### Build from Source
 
 ```bash
-go get github.com/adcondev/pos-printer
+# Clone the repository
+git clone https://github.com/adcondev/pos-printer.git
+
+# Navigate to the project directory
+cd pos-printer
+
+# Build the binary
+go build -o pos-printer.exe ./cmd/poster
 ```
 
-## 💡 Usage Example
+## 📖 Usage
 
-Here’s a simple example of how to connect to a printer and print a "Hello, World!" message.
+### Command Line Interface (CLI)
+
+The `pos-printer` utility takes a JSON document and sends it to a specified printer.
+
+```bash
+# Print a document to a specific printer
+pos-printer.exe -file receipt.json -printer "EPSON TM-T88V"
+
+# Dry-run (validate JSON without printing)
+pos-printer.exe -file receipt.json -dry-run
+
+# List available command options
+pos-printer.exe -help
+```
+
+### JSON Document Example
+
+Create a file named `ticket.json`:
+
+```json
+{
+  "version": "1.0",
+  "profile": {
+    "model": "Generic 80mm",
+    "paper_width": 80
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "STORE NAME",
+          "content_style": {
+            "bold": true,
+            "size": "2x2",
+            "align": "center"
+          }
+        }
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-"
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "Item",
+              "width": 20,
+              "align": "left"
+            },
+            {
+              "name": "Price",
+              "width": 10,
+              "align": "right"
+            }
+          ]
+        },
+        "rows": [
+          [
+            "Coffee",
+            "$3.50"
+          ],
+          [
+            "Sandwich",
+            "$8.00"
+          ]
+        ]
+      }
+    },
+    {
+      "type": "qr",
+      "data": {
+        "data": "https://example.com",
+        "align": "center",
+        "pixel_width": 150
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "feed": 3
+      }
+    }
+  ]
+}
+```
+
+### Library Usage (Go)
+
+You can also use the packages directly in your Go application:
 
 ```go
 package main
 
 import (
-	"log"
-
-	"github.com/adcondev/pos-printer/escpos"
-	"github.com/adcondev/pos-printer/pos"
+	"github.com/adcondev/pos-printer/pkg/composer"
+	"github.com/adcondev/pos-printer/pkg/connection"
+	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/pos-printer/pkg/service"
 )
 
 func main() {
-	// 1. Create a new printer profile in the registry
-	registry := pos.NewPrinterRegistry()
-	printerProfile := &pos.Printer{
-		Name: "MyReceiptPrinter",
-		Device: &pos.Device{
-			Connector: &pos.NetworkConnector{Address: "192.168.1.100:9100"},
-		},
-	}
-	registry.Add("my_printer", printerProfile)
+	// 1. Configure Profile
+	prof := profile.CreateProfile80mm()
 
-	// 2. Get the printer from the registry
-	p, err := registry.Get("my_printer")
-	if err != nil {
-		log.Fatalf("Failed to get printer: %v", err)
-	}
+	// 2. Connect to Printer
+	conn, _ := connection.NewWindowsPrintConnector("POS-80")
+	defer conn.Close()
 
-	// 3. Connect to the printer
-	if err := p.Connect(); err != nil {
-		log.Fatalf("Failed to connect: %v", err)
-	}
-	defer p.Close()
+	// 3. Initialize Service
+	proto := composer.NewEscpos()
+	printer, _ := service.NewPrinter(proto, prof, conn)
+	defer printer.Close()
 
-	// 4. Send a command
-	cmd := escpos.NewPrinter(p.Device.Connector)
-	if err := cmd.Print("Hello, World!\n"); err != nil {
-		log.Fatalf("Failed to print: %v", err)
-	}
-
-	log.Println("Successfully printed!")
+	// 4. Print
+	printer.Initialize()
+	printer.PrintLine("Hello World!")
+	printer.FullFeedAndCut(2)
 }
 ```
 
-## 🖨️ Supported Protocols
+## ⚙️ Configuration
 
-| Protocol | Status         | Description                                    |
-|----------|----------------|------------------------------------------------|
-| ESC/POS  | ✅ Stable       | Epson Standard Code for Point of Sale Printers |
-| ZPL      | 🔄 In Progress | Zebra Programming Language for label printers  |
-| Image    | ✅ Stable       | Direct bitmap generation for any printer       |
+### Connection Types
 
-## 🗺️ Roadmap
+Currently, the primary supported connection is **Windows Spooler**.
 
-- [ ] Full support for the ZPL protocol.
-- [ ] Add support for Bluetooth connections.
-- [ ] Implement a more advanced logging system.
-- [ ] Create a web-based interface for managing printers.
+- **Windows**: Uses the OS driver. Best for USB/Network printers installed in Windows.
+- *Planned*: Direct Network (Raw TCP/9100) and Serial (COM) support.
+
+### Printer Profiles
+
+The library includes built-in profiles for common hardware:
+
+- `CreateProfile80mm()`: Standard ESC/POS (Epson TM-T88, etc.)
+- `CreateProfile58mm()`: Generic 58mm thermal printers.
+- `CreatePt210()`: Specific tweaks for PT-210 portable printers.
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you'd like to help improve the library, please feel free to fork the repository, make your changes, and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
-
-1.  **Fork** the repository.
-2.  Create your feature branch (`git checkout -b feat/amazing-feature`).
-3.  Commit your changes (`git commit -m 'Add some Amazing Feature'`).
-4.  Push to the branch (`git push origin feat/amazing-feature`).
-5.  Open a **Pull Request**.
-
-## 📚 Documentación Estratégica
-
-Este proyecto incluye una documentación completa de la arquitectura y estrategia. Consulta estos documentos para
-comprender el enfoque y las decisiones de diseño:
-
-| Documento                                 | Descripción                                                                                     |
-|-------------------------------------------|-------------------------------------------------------------------------------------------------|
-| [`MOTIVATION1.md`](./docs/MOTIVATION1.md) | Reporte estratégico sobre la arquitectura de una librería ESC/POS de siguiente generación en Go |
-| [`MOTIVATION2.md`](./docs/MOTIVATION2.md) | Análisis comparativo de bibliotecas ESC/POS rivales y plan de superioridad arquitectónica       |
-| [`MOTIVATION3.md`](./docs/MOTIVATION3.md) | Análisis detallado del conflicto semántico entre tablas ASCII y protocolos ESCPOS               |
-| [`TEMPLATE.md`](./docs/TEMPLATE.md)       | Plantilla de paquete Go y guía estándar de godoc para comandos ESC/POS                          |
-| [`RELEASING.md`](./docs/RELEASING.md)     | Proceso automatizado de versioning y release management                                         |
-| [`LEARNING.md`](./docs/LEARNING.md)       | Descripción general del proyecto, stack tecnológico y habilidades demostradas                   |
-
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-  <sub>Built with ❤️ by adcondev</sub>
-</div>
+This project is licensed under the MIT License - see the LICENSE file for details.

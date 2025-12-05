@@ -36,14 +36,6 @@ var (
 	ValidCodeTables = []string{"WPC1252", "PC850", "PC437", "PC858"}
 )
 
-// Default alignment constants for various elements
-const (
-	// DefaultAlignTable is the default alignment for tables
-	DefaultAlignTable = Center
-	// DefaultAlignTableColumn is the default alignment for table columns
-	DefaultAlignTableColumn = Center
-)
-
 // Text defaults
 const (
 	// DefaultTextAlignment is the default text alignment

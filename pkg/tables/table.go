@@ -154,7 +154,12 @@ func PadString(s string, width int, align constants.Alignment) string {
 		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
 	case constants.Right:
 		return strings.Repeat(" ", padTotal) + s
-	default:
+	case constants.Left:
 		return s + strings.Repeat(" ", padTotal)
+	default:
+		// FIXME: it has to depend on constant.DefaultTableColumnAlignment
+		padLeft := padTotal / 2
+		padRight := padTotal - padLeft
+		return strings.Repeat(" ", padLeft) + s + strings.Repeat(" ", padRight)
 	}
 }

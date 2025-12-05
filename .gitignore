@@ -43,16 +43,20 @@ go.work.sum
 !go.mod
 
 !README.md
+!LEARNING.md
 !CONTRIBUTING.md
 !CHANGELOG.md
 !CODE_OF_CONDUCT.md
 !LICENSE
+
+
 !docs/
 !docs/LEARNING.md
 !docs/RELEASING.md
 !docs/MOTIVATION1.md
 !docs/MOTIVATION2.md
 !docs/MOTIVATION3.md
+!docs/MOTIVATION4.md
 !docs/ARCHITECTURE.md
 !docs/TEMPLATE.md
 !docs/PROFILE_NITPICKS.md
