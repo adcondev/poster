@@ -90,7 +90,7 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		return fmt.Errorf("failed to render table: %w", err)
 	}
 
-	// Aplicar alineación
+	// Apply alignment
 	align := constants.DefaultTableAlignment.String()
 	if cmd.Options != nil && cmd.Options.Align != "" {
 		align = cmd.Options.Align
