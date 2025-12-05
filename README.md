@@ -1,8 +1,12 @@
-# POS Printer Driver & Utility
+# *Poster: Printer Driver & POS Utility*
 
 ![Go Version](https://img.shields.io/badge/go-1.20+-00ADD8?style=flat&logo=go)
 ![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+<p align="center">
+  <img src="assets/images/poster.png" alt="POS Printer Logo" width="576">
+</p>
 
 A professional, production-ready Go library and command-line utility for controlling ESC/POS thermal printers. Designed
 for high-reliability retail and POS environments, it features a robust JSON-based document protocol, native Windows
