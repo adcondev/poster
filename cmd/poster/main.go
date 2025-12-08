@@ -1,5 +1,5 @@
-// Package main es el ejecutor principal de la librería pos-printer
-// Uso: pos-printer [options] <json_file> [printer_name]
+// Package main es el ejecutor principal de la librería poster
+// Uso: poster [options] <json_file> [printer_name]
 package main
 
 import (
@@ -9,15 +9,15 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document/executor"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/document/executor"
+	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 const (
-	AppName    = "pos-printer"
+	AppName    = "poster"
 	AppVersion = "1.0.0"
 	AppAuthor  = "adcondev"
 	win        = "windows"
@@ -147,7 +147,7 @@ CONNECTION TYPES:
 
 NOTES:
   - If no printer is specified, attempts to auto-detect common models
-  - JSON files should follow the pos-printer document format
+  - JSON files should follow the poster document format
   - Use --dry-run to validate JSON without printing`)
 }
 

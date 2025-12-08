@@ -3,7 +3,7 @@ package builder
 import (
 	"log"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 // QRBuilder constructs QR code commands

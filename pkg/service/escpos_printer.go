@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/mechanismcontrol"
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/graphics"
-	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/graphics"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 // Printer represents a POS printer device

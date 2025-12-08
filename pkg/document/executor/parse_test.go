@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 // ============================================================================

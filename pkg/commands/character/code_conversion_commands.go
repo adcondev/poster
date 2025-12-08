@@ -1,7 +1,7 @@
 package character
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // SelectCharacterEncodeSystem selects the character encoding system.

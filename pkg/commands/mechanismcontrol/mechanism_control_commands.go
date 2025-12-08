@@ -1,7 +1,7 @@
 package mechanismcontrol
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // ReturnHome moves the print head to the standby position.

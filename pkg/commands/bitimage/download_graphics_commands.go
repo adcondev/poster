@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // GetDownloadGraphicsRemainingCapacity transmits the remaining capacity (unused area) in the download graphics area.

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/adcondev/pos-printer/internal/calculate"
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/internal/calculate"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // Executor ejecuta documentos de impresión

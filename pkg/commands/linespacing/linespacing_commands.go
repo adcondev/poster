@@ -1,7 +1,7 @@
 package linespacing
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // SetLineSpacing sets the line spacing to spacing × (vertical or horizontal motion unit).

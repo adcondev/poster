@@ -3,9 +3,9 @@ package mechanismcontrol_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/internal/testutils"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	"github.com/adcondev/pos-printer/pkg/commands/mechanismcontrol"
+	"github.com/adcondev/poster/internal/testutils"
+	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
 )
 
 // ============================================================================

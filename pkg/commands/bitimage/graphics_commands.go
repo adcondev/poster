@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // SetGraphicsDotDensity sets the reference dot density for graphics and bit image data.

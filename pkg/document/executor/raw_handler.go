@@ -8,8 +8,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // Known dangerous command patterns (for safe mode)

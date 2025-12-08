@@ -1,9 +1,9 @@
 package profile
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	"github.com/adcondev/pos-printer/pkg/graphics"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/graphics"
 )
 
 // Escpos defines all the physical characteristics and capabilities of a printer

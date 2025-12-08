@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
 
 // DocumentBuilder constructs print documents using a fluent API

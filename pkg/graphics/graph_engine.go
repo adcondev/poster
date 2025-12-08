@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/image/draw"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 // DitherMode defines how images are converted to monochrome

@@ -6,14 +6,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/document/builder"
-	"github.com/adcondev/pos-printer/pkg/document/executor"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
-	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/builder"
+	"github.com/adcondev/poster/pkg/document/executor"
+	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 func main() {

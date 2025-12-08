@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/document/schema"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 const Release = "1.0"

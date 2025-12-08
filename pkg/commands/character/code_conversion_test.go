@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adcondev/pos-printer/internal/testutils"
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/internal/testutils"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // TODO: Swap out hardcoded bytes and values with constants from the character package

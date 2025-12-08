@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/commands/barcode"
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/commands/barcode"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 var (

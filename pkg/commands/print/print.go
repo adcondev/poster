@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // ============================================================================

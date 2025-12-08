@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	"github.com/adcondev/pos-printer/pkg/commands/print"
+	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/print"
 )
 
 // ============================================================================

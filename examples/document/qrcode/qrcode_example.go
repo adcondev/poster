@@ -1,15 +1,15 @@
-// Package main implements an example of printing a document using the pos-printer library in JSON print job.
+// Package main implements an example of printing a document using the poster library in JSON print job.
 package main
 
 import (
 	"log"
 	"os"
 
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document/executor"
-	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/document/executor"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 func main() {

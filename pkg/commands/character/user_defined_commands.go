@@ -3,7 +3,7 @@ package character
 import (
 	"fmt"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // SelectUserDefinedCharacterSet selects or cancels the user-defined character set.

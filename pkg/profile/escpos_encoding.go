@@ -8,7 +8,7 @@ import (
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/encoding/japanese"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/character"
 )
 
 // TODO: Add new encodings as needed, many of them defined in ESCPOS don't have a direct mapping in Go

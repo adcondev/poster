@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestIntegration_Character_BasicFormatting(t *testing.T) {

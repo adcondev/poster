@@ -3,7 +3,7 @@ package barcode
 import (
 	"errors"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // ============================================================================

@@ -6,10 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adcondev/pos-printer/internal/load"
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/graphics"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/internal/load"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/graphics"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // handleImage manages image commands

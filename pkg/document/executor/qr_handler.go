@@ -6,10 +6,10 @@ import (
 	"log"
 	"strings"
 
-	posqr "github.com/adcondev/pos-printer/pkg/commands/qrcode"
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/graphics"
-	"github.com/adcondev/pos-printer/pkg/service"
+	posqr "github.com/adcondev/poster/pkg/commands/qrcode"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/graphics"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // handleQR manages QR code commands
