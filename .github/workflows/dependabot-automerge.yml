@@ -51,6 +51,7 @@ jobs:
           create_label_if_not_exists "needs-review" "ededed" "Requires manual review"
           create_label_if_not_exists "auto-merge" "22863a" "Auto-merge enabled"
           create_label_if_not_exists "major-update" "b60205" "Major version update"
+          create_label_if_not_exists "javascript" "f1e05a" "JavaScript related"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
