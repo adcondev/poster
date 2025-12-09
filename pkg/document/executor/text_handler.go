@@ -260,6 +260,9 @@ func (e *Executor) applyFont(printer *service.Printer, font string) error {
 	}
 }
 
+// TODO: Normalize string comparisons
+// .ToLower, .TrimSpace, etc.
+
 // applyTextStyle aplica los estilos de texto especificados
 func (e *Executor) applyTextStyle(printer *service.Printer, style *TextStyle) error {
 	if style == nil {
