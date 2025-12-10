@@ -2,6 +2,36 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [4.0.0](https://github.com/adcondev/pos-printer/compare/v3.6.1...v4.0.0) (2025-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **poster:** add ESC/POS emulator functionality with receipt generation (#86)
+* **poster:** update package references from pos-printer to poster
+
+### 🐛 Bug Fixes
+
+* update pkg/document/executor/table_handler.go ([ef8f9d5](https://github.com/adcondev/pos-printer/commit/ef8f9d57f6c7531f6ec35868430c77cf0f3ccc3f))
+
+
+### 📝 Documentation
+
+* **poster:** update README and .gitignore for poster image inclusion ([ca7432f](https://github.com/adcondev/pos-printer/commit/ca7432ffcf7b866f7b3784f31c163834a78c8f66))
+
+
+### ♻️ Code Refactoring
+
+* **constants:** introduce constants for paper dimensions and rendering parameters ([e4096b9](https://github.com/adcondev/pos-printer/commit/e4096b984d7a5c49b0d5172128909ea257047ea2))
+* **tables:** implement default alignment and configuration options for table formatting ([3c35b3c](https://github.com/adcondev/pos-printer/commit/3c35b3c9bd1ec501bbf5366c073fb0632d01a0ac))
+
+
+### ✨ Features
+
+* **emulator:** add ESC/POS emulator functionality with receipt generation ([d08ccc5](https://github.com/adcondev/pos-printer/commit/d08ccc51062ff5f690a45e04d5dc11c26cfbc348))
+* **poster:** add ESC/POS emulator functionality with receipt generation ([#86](https://github.com/adcondev/pos-printer/issues/86)) ([03dcf8b](https://github.com/adcondev/pos-printer/commit/03dcf8b8653c89bb43b6b78159d9b6d17b211336)), closes [/#diff-33ef32bf6c23acb95f5902d7097b7a1d5128ca061167ec0716715b0b9eeaa5f6L1-R10](https://github.com/adcondev///issues/diff-33ef32bf6c23acb95f5902d7097b7a1d5128ca061167ec0716715b0b9eeaa5f6L1-R10) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL12-R20](https://github.com/adcondev///issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL12-R20) [/#diff-d4ee3a8f9dcd4bf2bad9d891f11121d0f2f8d49c0019afc23d1c0da3682acad3L10-R11](https://github.com/adcondev///issues/diff-d4ee3a8f9dcd4bf2bad9d891f11121d0f2f8d49c0019afc23d1c0da3682acad3L10-R11) [/#diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL9-R11](https://github.com/adcondev///issues/diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL9-R11) [/#diff-f07392da22522af73cbf199f87fb184e3e7f097515b4569ab59462af74815658L12-R15](https://github.com/adcondev///issues/diff-f07392da22522af73cbf199f87fb184e3e7f097515b4569ab59462af74815658L12-R15) [/#diff-809c1fbe1dfa048ffe8a5d9b35ba3337d6574f4ac2f879e3c611400519cd1203L9-R16](https://github.com/adcondev///issues/diff-809c1fbe1dfa048ffe8a5d9b35ba3337d6574f4ac2f879e3c611400519cd1203L9-R16) [/#diff-023610994a3e13e717bb2f341581b98599c4ab15975a574ea0356afbdd94326fL7-R7](https://github.com/adcondev///issues/diff-023610994a3e13e717bb2f341581b98599c4ab15975a574ea0356afbdd94326fL7-R7) [/#diff-55fbc650eb407e0f997756721dd12c5acdc64a69c6bc405267900d74c7bb7c59L1-R12](https://github.com/adcondev///issues/diff-55fbc650eb407e0f997756721dd12c5acdc64a69c6bc405267900d74c7bb7c59L1-R12) [/#diff-fecc96d8fa561aa1e3e1af1ae980ac8f6d4b35bb5a2253eb4b59a4f79d5613edL1-R12](https://github.com/adcondev///issues/diff-fecc96d8fa561aa1e3e1af1ae980ac8f6d4b35bb5a2253eb4b59a4f79d5613edL1-R12) [/#diff-264ff1948e3bb2221f8eba6d0d2e85731b4f1c27211b8955c141e67a9f0d27caL10-R16](https://github.com/adcondev///issues/diff-264ff1948e3bb2221f8eba6d0d2e85731b4f1c27211b8955c141e67a9f0d27caL10-R16) [/#diff-af506b9fe4fcc35d7d61e3b6aba087ea5f4187c8a4a7025e40d5248dd0302abbL8-R13](https://github.com/adcondev///issues/diff-af506b9fe4fcc35d7d61e3b6aba087ea5f4187c8a4a7025e40d5248dd0302abbL8-R13) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL1-R2](https://github.com/adcondev///issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL1-R2) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL150-R150](https://github.com/adcondev///issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL150-R150) [/#diff-55fbc650eb407e0f997756721dd12c5acdc64a69c6bc405267900d74c7bb7c59L1-R12](https://github.com/adcondev///issues/diff-55fbc650eb407e0f997756721dd12c5acdc64a69c6bc405267900d74c7bb7c59L1-R12) [/#diff-fecc96d8fa561aa1e3e1af1ae980ac8f6d4b35bb5a2253eb4b59a4f79d5613edL1-R12](https://github.com/adcondev///issues/diff-fecc96d8fa561aa1e3e1af1ae980ac8f6d4b35bb5a2253eb4b59a4f79d5613edL1-R12) [/#diff-264ff1948e3bb2221f8eba6d0d2e85731b4f1c27211b8955c141e67a9f0d27caL1-R1](https://github.com/adcondev///issues/diff-264ff1948e3bb2221f8eba6d0d2e85731b4f1c27211b8955c141e67a9f0d27caL1-R1)
+* **poster:** update package references from pos-printer to poster ([03271f3](https://github.com/adcondev/pos-printer/commit/03271f311d3838ba3a2ed58c35d09a751c0d4960))
+
 ### [3.6.1](https://github.com/adcondev/pos-printer/compare/v3.6.0...v3.6.1) (2025-12-08)
 
 ### ♻️ Code Refactoring
