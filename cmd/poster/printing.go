@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
-	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 func detectPrinter() string {

@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/graphics"
+	"github.com/adcondev/poster/pkg/graphics"
 )
 
 func TestNewPipeline(t *testing.T) {

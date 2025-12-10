@@ -1,4 +1,4 @@
-// Package main is an example of printing a document with tables using the pos-printer library in JSON format.
+// Package main is an example of printing a document with tables using the poster library in JSON format.
 package main
 
 import (
@@ -7,13 +7,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/adcondev/pos-printer/internal/load"
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/document/executor"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
-	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/internal/load"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/document/executor"
+	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 func main() {

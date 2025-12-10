@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/adcondev/pos-printer/internal/load"
-	"github.com/adcondev/pos-printer/pkg/document/schema"
+	"github.com/adcondev/poster/internal/load"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
 
 func loadJSON(filePath string) ([]byte, error) {

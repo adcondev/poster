@@ -10,9 +10,9 @@ import (
 	"github.com/yeqown/go-qrcode/writer/standard"
 	"golang.org/x/image/draw"
 
-	"github.com/adcondev/pos-printer/internal/load"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	posqr "github.com/adcondev/pos-printer/pkg/commands/qrcode"
+	"github.com/adcondev/poster/internal/load"
+	"github.com/adcondev/poster/pkg/commands/common"
+	posqr "github.com/adcondev/poster/pkg/commands/qrcode"
 )
 
 const (

@@ -3,9 +3,9 @@ package character_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/internal/testutils"
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/internal/testutils"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // ============================================================================

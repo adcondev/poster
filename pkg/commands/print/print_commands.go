@@ -1,7 +1,7 @@
 package print
 
 import (
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // FormFeed executes form feed operation (behavior varies by mode).

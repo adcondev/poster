@@ -6,16 +6,16 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/adcondev/pos-printer/pkg/commands/barcode"
-	"github.com/adcondev/pos-printer/pkg/commands/bitimage"
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
-	"github.com/adcondev/pos-printer/pkg/commands/linespacing"
-	"github.com/adcondev/pos-printer/pkg/commands/mechanismcontrol"
-	"github.com/adcondev/pos-printer/pkg/commands/print"
-	"github.com/adcondev/pos-printer/pkg/commands/printposition"
-	"github.com/adcondev/pos-printer/pkg/commands/qrcode"
-	"github.com/adcondev/pos-printer/pkg/graphics"
+	"github.com/adcondev/poster/pkg/commands/barcode"
+	"github.com/adcondev/poster/pkg/commands/bitimage"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/linespacing"
+	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
+	"github.com/adcondev/poster/pkg/commands/print"
+	"github.com/adcondev/poster/pkg/commands/printposition"
+	"github.com/adcondev/poster/pkg/commands/qrcode"
+	"github.com/adcondev/poster/pkg/graphics"
 )
 
 // EscposProtocol implements the ESCPOS Commands

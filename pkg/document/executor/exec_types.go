@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/adcondev/pos-printer/pkg/tables"
+	"github.com/adcondev/poster/pkg/tables"
 )
 
 // ============================================================================

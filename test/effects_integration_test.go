@@ -3,7 +3,7 @@ package test_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/character"
 )
 
 func TestIntegration_Effects_ColorCombinations(t *testing.T) {

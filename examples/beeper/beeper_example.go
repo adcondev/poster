@@ -9,10 +9,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 func main() {

@@ -3,8 +3,8 @@ package profile_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
-	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 func TestEncodeString(t *testing.T) {

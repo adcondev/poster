@@ -4,26 +4,28 @@ All notable changes to the POS Printer library will be documented in this file.
 
 ### [3.6.1](https://github.com/adcondev/pos-printer/compare/v3.6.0...v3.6.1) (2025-12-08)
 
-
 ### ♻️ Code Refactoring
 
-* **tables:** implement default alignment and configuration options for table formatting ([#83](https://github.com/adcondev/pos-printer/issues/83)) ([949fa9f](https://github.com/adcondev/pos-printer/commit/949fa9f5c78312d1ac765c19c0ad798d90dd601b))
-
+* **tables:** implement default alignment and configuration options for table
+  formatting ([#83](https://github.com/adcondev/pos-printer/issues/83)) ([949fa9f](https://github.com/adcondev/pos-printer/commit/949fa9f5c78312d1ac765c19c0ad798d90dd601b))
 
 ### 📝 Documentation
 
-* **poster:** update readme ([#84](https://github.com/adcondev/pos-printer/issues/84)) ([84af0d0](https://github.com/adcondev/pos-printer/commit/84af0d0d505f29f22d17a43e3f6c593f1192faaa))
-
+* **poster:** update
+  readme ([#84](https://github.com/adcondev/pos-printer/issues/84)) ([84af0d0](https://github.com/adcondev/pos-printer/commit/84af0d0d505f29f22d17a43e3f6c593f1192faaa))
 
 ### 🐛 Bug Fixes
 
-* **labels:** add JavaScript related label to auto-merge workflow ([7b10cf2](https://github.com/adcondev/pos-printer/commit/7b10cf2e0e437926be4681b8a2d9253e13cbf5f4))
-
+* **labels:** add JavaScript related label to auto-merge
+  workflow ([7b10cf2](https://github.com/adcondev/pos-printer/commit/7b10cf2e0e437926be4681b8a2d9253e13cbf5f4))
 
 ### 📦 Dependencies
 
-* **npm:** bump the minor-and-patch group with 2 updates ([62b290c](https://github.com/adcondev/pos-printer/commit/62b290c336043f244e89ecb4814545897094c212))
-* **npm:** bump the minor-and-patch group with 2 updates ([#85](https://github.com/adcondev/pos-printer/issues/85)) ([f863545](https://github.com/adcondev/pos-printer/commit/f8635450b5bef14df4fba398e4e9960a58e679d1)), closes [conventional-changelog/commitlint#4542](https://github.com/conventional-changelog/commitlint/issues/4542) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4542](https://github.com/conventional-changelog/commitlint/issues/4542) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4553](https://github.com/conventional-changelog/commitlint/issues/4553) [conventional-changelog/commitlint#4551](https://github.com/conventional-changelog/commitlint/issues/4551) [conventional-changelog/commitlint#4553](https://github.com/conventional-changelog/commitlint/issues/4553) [conventional-changelog/commitlint#4551](https://github.com/conventional-changelog/commitlint/issues/4551)
+* **npm:** bump the minor-and-patch group with 2
+  updates ([62b290c](https://github.com/adcondev/pos-printer/commit/62b290c336043f244e89ecb4814545897094c212))
+* **npm:** bump the minor-and-patch group with 2
+  updates ([#85](https://github.com/adcondev/pos-printer/issues/85)) ([f863545](https://github.com/adcondev/pos-printer/commit/f8635450b5bef14df4fba398e4e9960a58e679d1)),
+  closes [conventional-changelog/commitlint#4542](https://github.com/conventional-changelog/commitlint/issues/4542) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4542](https://github.com/conventional-changelog/commitlint/issues/4542) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4548](https://github.com/conventional-changelog/commitlint/issues/4548) [conventional-changelog/commitlint#4540](https://github.com/conventional-changelog/commitlint/issues/4540) [conventional-changelog/commitlint#4559](https://github.com/conventional-changelog/commitlint/issues/4559) [conventional-changelog/commitlint#4553](https://github.com/conventional-changelog/commitlint/issues/4553) [conventional-changelog/commitlint#4551](https://github.com/conventional-changelog/commitlint/issues/4551) [conventional-changelog/commitlint#4553](https://github.com/conventional-changelog/commitlint/issues/4553) [conventional-changelog/commitlint#4551](https://github.com/conventional-changelog/commitlint/issues/4551)
 
 ## [3.6.0](https://github.com/adcondev/pos-printer/compare/v3.5.0...v3.6.0) (2025-12-04)
 

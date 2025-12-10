@@ -3,8 +3,8 @@ package qrcode_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/internal/testutils"
-	"github.com/adcondev/pos-printer/pkg/commands/qrcode"
+	"github.com/adcondev/poster/internal/testutils"
+	"github.com/adcondev/poster/pkg/commands/qrcode"
 )
 
 // ============================================================================

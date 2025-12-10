@@ -3,7 +3,7 @@ package qrcode
 import (
 	"fmt"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 // SelectQRCodeModel selects the QR Code model to be used for encoding.

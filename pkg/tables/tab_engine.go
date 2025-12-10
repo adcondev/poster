@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/commands/print"
-	"github.com/adcondev/pos-printer/pkg/composer"
+	"github.com/adcondev/poster/pkg/commands/print"
+	"github.com/adcondev/poster/pkg/composer"
 )
 
 // Paper width constants (in characters)

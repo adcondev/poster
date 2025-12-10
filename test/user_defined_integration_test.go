@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/character"
 )
 
 func TestIntegration_UserDefined_CustomLogoWorkflow(t *testing.T) {

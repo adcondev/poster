@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/pos-printer/internal/testutils"
-	"github.com/adcondev/pos-printer/pkg/commands/bitimage"
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/internal/testutils"
+	"github.com/adcondev/poster/pkg/commands/bitimage"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {

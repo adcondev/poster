@@ -4,7 +4,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/adcondev/pos-printer/pkg/document/builder"
+	"github.com/adcondev/poster/pkg/document/builder"
 )
 
 func main() {

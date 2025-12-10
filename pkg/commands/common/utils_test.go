@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestUtils_IsBufOk_ValidInput(t *testing.T) {

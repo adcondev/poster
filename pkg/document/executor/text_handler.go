@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // handleText manages text commands
@@ -259,6 +259,9 @@ func (e *Executor) applyFont(printer *service.Printer, font string) error {
 		return printer.FontA()
 	}
 }
+
+// TODO: Normalize string comparisons
+// .ToLower, .TrimSpace, etc.
 
 // applyTextStyle aplica los estilos de texto especificados
 func (e *Executor) applyTextStyle(printer *service.Printer, style *TextStyle) error {

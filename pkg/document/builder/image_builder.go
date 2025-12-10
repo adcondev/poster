@@ -1,7 +1,7 @@
 package builder
 
 import (
-	"github.com/adcondev/pos-printer/pkg/constants"
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 // ImageBuilder constructs image commands

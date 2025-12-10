@@ -3,7 +3,7 @@ package graphics_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/graphics"
+	"github.com/adcondev/poster/pkg/graphics"
 )
 
 func TestMonochromeBitmap_New(t *testing.T) {

@@ -1,8 +1,8 @@
 package testutils
 
 import (
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/profile"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 // MockConnector para testing

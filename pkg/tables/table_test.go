@@ -3,8 +3,8 @@ package tables_test
 import (
 	"testing"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/tables"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/tables"
 )
 
 // ============================================================================

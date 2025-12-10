@@ -6,9 +6,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/adcondev/pos-printer/pkg/constants"
-	"github.com/adcondev/pos-printer/pkg/service"
-	"github.com/adcondev/pos-printer/pkg/tables"
+	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
+	"github.com/adcondev/poster/pkg/tables"
 )
 
 // TODO: Consider upper_separator y lower_separator for tables
