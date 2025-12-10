@@ -3,7 +3,29 @@ package emulator
 import (
 	"image/color"
 	"strings"
+
+	"github.com/adcondev/poster/pkg/constants"
 )
+
+// TextStyle represents text formatting options for the emulator
+type TextStyle struct {
+	Bold      bool
+	Underline int     // 0: none, 1: single, 2: double
+	Inverse   bool    // White on black
+	ScaleW    float64 // Width multiplier (1.0 - 8.0)
+	ScaleH    float64 // Height multiplier (1.0 - 8.0)
+}
+
+// DefaultTextStyle returns a TextStyle with default values
+func DefaultTextStyle() TextStyle {
+	return TextStyle{
+		Bold:      false,
+		Underline: 0,
+		Inverse:   false,
+		ScaleW:    1.0,
+		ScaleH:    1.0,
+	}
+}
 
 // TextRenderer handles text rendering for the emulator
 type TextRenderer struct {
@@ -87,12 +109,12 @@ func (tr *TextRenderer) Feed(lines int) {
 
 // calculateAlignedX calculates the X starting position based on alignment
 func (tr *TextRenderer) calculateAlignedX(textWidth float64) float64 {
-	paperWidth := float64(tr.state.PaperWidthPx)
+	paperWidth := float64(tr.state.PaperPxWidth)
 
 	switch tr.state.Align {
-	case AlignCenter:
+	case constants.Center.String():
 		return (paperWidth - textWidth) / 2
-	case AlignRight:
+	case constants.Right.String():
 		return paperWidth - textWidth
 	default: // AlignLeft
 		return 0

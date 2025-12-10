@@ -8,8 +8,15 @@ import (
 	"log"
 	"strings"
 
-	emfonts "github.com/adcondev/poster/pkg/emulator/fonts"
+	"github.com/adcondev/poster/pkg/constants"
 )
+
+// RenderResult contains the output of an emulation render
+type RenderResult struct {
+	Image  image.Image
+	Width  int
+	Height int
+}
 
 // Engine is the main entry point for ESC/POS emulation
 type Engine struct {
@@ -28,25 +35,25 @@ type Engine struct {
 
 // NewEngine creates a new emulator engine with the given configuration
 func NewEngine(config Config) (*Engine, error) {
-	if config.PaperWidthPx <= 0 {
-		return nil, fmt.Errorf("invalid paper width: %d (must be > 0)", config.PaperWidthPx)
+	if config.PaperPxWidth <= 0 {
+		return nil, fmt.Errorf("invalid paper width: %d (must be > 0)", config.PaperPxWidth)
 	}
 	if config.DPI <= 0 {
 		config.DPI = 203 // Default sensible
 	}
 
 	// Create canvas
-	canvas := NewDynamicCanvas(config.PaperWidthPx)
+	canvas := NewDynamicCanvas(config.PaperPxWidth)
 
 	// TODO: Remove later - for debugging font embedding issues
-	emfonts.DiagnoseEmbedding()
+	// emfonts.DiagnoseEmbedding()
 
 	// Create font manager and load fonts
 	fonts := NewFontManager()
 
 	// Try to load embedded fonts, fall back to bitmap if not available
-	errA := fonts.LoadFont("A", "JetBrainsMono-Bold.ttf", FontAWidth, FontAHeight)
-	errB := fonts.LoadFont("B", "JetBrainsMono-Regular.ttf", FontBWidth, FontBHeight)
+	errA := fonts.LoadFont("A", "JetBrainsMono-ExtraBold.ttf", constants.FontAWidth, constants.FontAHeight)
+	errB := fonts.LoadFont("B", "JetBrainsMono-Bold.ttf", constants.FontBWidth, constants.FontBHeight)
 	if errA != nil {
 		log.Printf("[Emulator] Warning: Font A failed to load:  %v (using fallback)", errA)
 	}
@@ -61,7 +68,7 @@ func NewEngine(config Config) (*Engine, error) {
 	}
 
 	// Create printer state
-	state := NewPrinterState(config.PaperWidthPx)
+	state := NewPrinterState(config.PaperPxWidth)
 	state.DPI = config.DPI
 
 	engine := &Engine{
@@ -77,10 +84,6 @@ func NewEngine(config Config) (*Engine, error) {
 
 	// Aplicar margen superior inicial para evitar recorte
 	engine.applyTopMargin()
-
-	if engine.debug {
-		log.Printf("[Emulator] New engine created with paper width: %d px, DPI: %d", config.PaperWidthPx, config.DPI)
-	}
 
 	return engine, nil
 }
@@ -98,7 +101,7 @@ func New58mmEngine() (*Engine, error) {
 // Reset resets the engine to initial state (like ESC @)
 func (e *Engine) Reset() {
 	e.applyTopMargin()
-	e.canvas = NewDynamicCanvas(e.config.PaperWidthPx)
+	e.canvas = NewDynamicCanvas(e.config.PaperPxWidth)
 	e.state.Reset()
 	e.textRenderer = NewTextRenderer(e.canvas, e.fonts, e.state)
 	e.basicRenderer = NewBasicRenderer(e.canvas, e.fonts, e.state)
@@ -144,11 +147,11 @@ func (e *Engine) SetAlign(align string) {
 	// Set alignment based on input
 	switch align {
 	case "center":
-		e.state.Align = AlignCenter
+		e.state.Align = constants.Center.String()
 	case "right":
-		e.state.Align = AlignRight
+		e.state.Align = constants.Right.String()
 	default:
-		e.state.Align = AlignLeft
+		e.state.Align = constants.Left.String()
 	}
 	if e.debug {
 		log.Printf("[Emulator] Alignment set to: %s", e.state.Align)
@@ -157,17 +160,17 @@ func (e *Engine) SetAlign(align string) {
 
 // AlignLeft sets left alignment
 func (e *Engine) AlignLeft() {
-	e.state.Align = AlignLeft
+	e.state.Align = constants.Left.String()
 }
 
 // AlignCenter sets center alignment
 func (e *Engine) AlignCenter() {
-	e.state.Align = AlignCenter
+	e.state.Align = constants.Center.String()
 }
 
 // AlignRight sets right alignment
 func (e *Engine) AlignRight() {
-	e.state.Align = AlignRight
+	e.state.Align = constants.Right.String()
 }
 
 // SetBold enables or disables bold text
@@ -228,7 +231,7 @@ func (e *Engine) SetSize(width, height int) {
 // applyTopMargin ensures there's enough space at the top for scaled text
 func (e *Engine) applyTopMargin() {
 	// Añadir espacio equivalente a una línea con la escala máxima típica (2x)
-	e.state.CursorY = float64(DefaultLineSpacing) + float64(FontAHeight)
+	e.state.CursorY = float64(constants.DefaultLineSpacing) + float64(constants.FontAHeight)
 }
 
 // ============================================================================

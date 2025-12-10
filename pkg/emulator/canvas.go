@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+
+	"github.com/adcondev/poster/pkg/constants"
 )
 
 var (
@@ -24,10 +26,10 @@ type DynamicCanvas struct {
 func NewDynamicCanvas(width int) *DynamicCanvas {
 	dc := &DynamicCanvas{
 		width:  width,
-		height: InitialHeight,
+		height: constants.InitialHeight,
 		maxY:   0,
 	}
-	dc.img = image.NewRGBA(image.Rect(0, 0, width, InitialHeight))
+	dc.img = image.NewRGBA(image.Rect(0, 0, width, constants.InitialHeight))
 	dc.Clear()
 	return dc
 }
@@ -45,12 +47,12 @@ func (dc *DynamicCanvas) EnsureHeight(requiredY float64) {
 	}
 
 	// Calculate new height
-	newHeight := int(float64(dc.height) * GrowthFactor)
+	newHeight := int(float64(dc.height) * constants.GrowthFactor)
 	if newHeight < int(requiredY)+100 {
 		newHeight = int(requiredY) + 500
 	}
-	if newHeight > MaxCanvasHeight {
-		newHeight = MaxCanvasHeight
+	if newHeight > constants.MaxCanvasHeight {
+		newHeight = constants.MaxCanvasHeight
 	}
 
 	// Create new larger image
@@ -91,7 +93,7 @@ func (dc *DynamicCanvas) Crop() image.Image {
 		return image.NewRGBA(image.Rect(0, 0, dc.width, 1))
 	}
 
-	finalHeight := int(math.Ceil(dc.maxY)) + BottomPadding
+	finalHeight := int(math.Ceil(dc.maxY)) + constants.BottomPadding
 
 	// Create final image of exact size
 	rect := image.Rect(0, 0, dc.width, finalHeight)
