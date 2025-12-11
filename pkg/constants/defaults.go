@@ -135,3 +135,22 @@ const (
 	// DefaultTableColumnAlignment default font for table columns
 	DefaultTableColumnAlignment = Center
 )
+
+// Pulse (Cash Drawer) defaults
+const (
+	DefaultPulsePin     = 0
+	DefaultPulseOnTime  = 50  // ms
+	DefaultPulseOffTime = 100 // ms
+)
+
+// Beep defaults
+const (
+	DefaultBeepTimes = 1
+	DefaultBeepLapse = 1
+)
+
+// Raw defaults
+const (
+	// DefaultRawFormat is the default format for raw data
+	DefaultRawFormat = Hex
+)

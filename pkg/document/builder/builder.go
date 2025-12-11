@@ -114,21 +114,3 @@ func (b *DocumentBuilder) Image(base64Data string) *ImageBuilder {
 func (b *DocumentBuilder) Raw(hexData string) *RawBuilder {
 	return newRawBuilder(b, hexData)
 }
-
-// ============================================================================
-// Internal command structures
-// ============================================================================
-
-type feedCommand struct {
-	Lines int `json:"lines"`
-}
-
-type cutCommand struct {
-	Mode string `json:"mode,omitempty"`
-	Feed int    `json:"feed,omitempty"`
-}
-
-type separatorCommand struct {
-	Char   string `json:"char,omitempty"`
-	Length int    `json:"length,omitempty"`
-}

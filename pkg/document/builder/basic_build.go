@@ -1,8 +1,33 @@
 package builder
 
 import (
-	"fmt"
+	"github.com/adcondev/poster/pkg/constants"
 )
+
+type pulseCommand struct {
+	Pin     int `json:"pin,omitempty"`
+	OnTime  int `json:"on_time,omitempty"`
+	OffTime int `json:"off_time,omitempty"`
+}
+
+type beepCommand struct {
+	Times int `json:"times,omitempty"`
+	Lapse int `json:"lapse,omitempty"`
+}
+
+type feedCommand struct {
+	Lines int `json:"lines"`
+}
+
+type cutCommand struct {
+	Mode string `json:"mode,omitempty"`
+	Feed int    `json:"feed,omitempty"`
+}
+
+type separatorCommand struct {
+	Char   string `json:"char,omitempty"`
+	Length int    `json:"length,omitempty"`
+}
 
 // Feed adds paper feed lines
 func (b *DocumentBuilder) Feed(lines int) *DocumentBuilder {
@@ -36,23 +61,28 @@ func (b *DocumentBuilder) SeparatorWithLength(char string, length int) *Document
 
 // Pulse opens the cash drawer
 func (b *DocumentBuilder) Pulse() *DocumentBuilder {
-	return b.Raw("1B 70 00 32 64").Comment("Cash Drawer Pulse").End()
+	return b.addCommand("pulse", pulseCommand{
+		Pin:     constants.DefaultPulsePin,
+		OnTime:  constants.DefaultPulseOnTime,
+		OffTime: constants.DefaultPulseOffTime,
+	})
+}
+
+// PulseWithOptions opens the cash drawer with custom timing
+func (b *DocumentBuilder) PulseWithOptions(pin, onTime, offTime int) *DocumentBuilder {
+
+	return b.addCommand("pulse", pulseCommand{Pin: pin, OnTime: onTime, OffTime: offTime})
 }
 
 // Beep emits beep sounds
-//
-// ADVERTENCIA DE COMPATIBILIDAD:
-//
-// El estándar ESC/POS define 'ESC ( A' (Buzz) para el buzzer.
-// Sin embargo, este hardware específico usa 'ESC B' (no existe es ESC/POS).
-//
-//	Formato: ESC B n t
-//	Hex:     1B  42 n t
-//
-//	1B 42 -> Cabecera del comando (ESC B)
-//	n     -> times: Número de repeticiones (9 veces)
-//	t     -> lapse: Duración/Intervalo (factor de tiempo, aprox 100ms * t)
 func (b *DocumentBuilder) Beep(times, lapse int) *DocumentBuilder {
-	raw := fmt.Sprintf("1B 42 %02X %02X", times, lapse)
-	return b.Raw(raw).Comment("Beep Sound").End()
+	return b.addCommand("beep", beepCommand{Times: times, Lapse: lapse})
+}
+
+// BeepOnce emits a single beep sound
+func (b *DocumentBuilder) BeepOnce() *DocumentBuilder {
+	return b.addCommand("beep", beepCommand{
+		Times: constants.DefaultBeepTimes,
+		Lapse: constants.DefaultBeepLapse,
+	})
 }
