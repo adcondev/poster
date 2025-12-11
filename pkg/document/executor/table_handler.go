@@ -19,6 +19,22 @@ import (
 
 // TODO: Consider a title fields for tables as field in TableCommand
 
+// TableCommand for table handler
+type TableCommand struct {
+	Definition  tables.Definition `json:"definition"`
+	ShowHeaders bool              `json:"show_headers,omitempty"`
+	Rows        [][]string        `json:"rows"`
+	Options     *TableOptions     `json:"options,omitempty"`
+}
+
+// TableOptions for table configuration
+type TableOptions struct {
+	HeaderBold    bool   `json:"header_bold,omitempty"`
+	WordWrap      bool   `json:"word_wrap,omitempty"`
+	ColumnSpacing int    `json:"column_spacing,omitempty"`
+	Align         string `json:"align,omitempty"`
+}
+
 // handleTable manages table commands
 func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) error {
 	var cmd TableCommand

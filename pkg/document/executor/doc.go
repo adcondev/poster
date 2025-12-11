@@ -35,6 +35,8 @@
 //	separator   Line separators             handleSeparator
 //	feed        Paper advance               handleFeed
 //	cut         Paper cutting               handleCut
+//	pulse       Cash drawer activation      handlePulse
+//	beep        Buzzer sound                handleBeep
 //	raw         Direct ESC/POS bytes        handleRaw
 //
 // # Custom Handlers

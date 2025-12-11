@@ -37,6 +37,10 @@ func NewExecutor(printer *service.Printer) *Executor {
 	e.registerHandler("cut", e.handleCut)
 	e.registerHandler("separator", e.handleSeparator)
 
+	// Registrar handlers para hardware
+	e.registerHandler("pulse", e.handlePulse)
+	e.registerHandler("beep", e.handleBeep)
+
 	// Handlers para 2D
 	e.registerHandler("image", e.handleImage)
 	e.registerHandler("qr", e.handleQR)
@@ -81,9 +85,11 @@ func (e *Executor) Execute(doc *schema.Document) error {
 	for i, cmd := range doc.Commands {
 		handler, exists := e.handlers[cmd.Type]
 		if !exists {
-			return fmt.Errorf("unknown command type at position %d: %s", i, cmd.Type)
+			log.Printf("[EXECUTOR] unknown command type at position %d: %s", i, cmd.Type)
+			continue
 		}
 
+		// TODO: Check proper handling when one command fails (ignore or stop execution, print ticket: <type> failed)?
 		if err := handler(e.printer, cmd.Data); err != nil {
 			return fmt.Errorf("command %d (%s) failed: %w", i, cmd.Type, err)
 		}
