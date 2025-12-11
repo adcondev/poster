@@ -14,6 +14,8 @@ import (
 	"github.com/adcondev/poster/pkg/profile"
 )
 
+var _ PrinterActions = (*Printer)(nil)
+
 // Printer represents a POS printer device
 type Printer struct {
 	Profile    profile.Escpos
