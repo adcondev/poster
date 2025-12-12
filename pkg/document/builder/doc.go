@@ -47,6 +47,8 @@
 //	Separator(c)    *DocumentBuilder  Line separator
 //	Pulse()         *DocumentBuilder  Cash drawer
 //	Beep(n,t)       *DocumentBuilder  Buzzer sound
+//	Pulse()         *DocumentBuilder  Cash drawer
+//	Beep(n,t)       *DocumentBuilder  Buzzer sound
 //
 // # Example: Complete Receipt
 //

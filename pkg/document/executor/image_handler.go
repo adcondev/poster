@@ -12,6 +12,17 @@ import (
 	"github.com/adcondev/poster/pkg/service"
 )
 
+// ImageCommand for image handler
+type ImageCommand struct {
+	Code string `json:"code"`
+	// Format     string `json:"format,omitempty"`
+	PixelWidth int    `json:"pixel_width,omitempty"`
+	Align      string `json:"align,omitempty"`
+	Threshold  byte   `json:"threshold,omitempty"`
+	Dithering  string `json:"dithering,omitempty"`
+	Scaling    string `json:"scaling,omitempty"`
+}
+
 // handleImage manages image commands
 func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) error {
 	var cmd ImageCommand

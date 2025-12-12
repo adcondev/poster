@@ -6,71 +6,67 @@
 //
 // # Quick Start
 //
-//	// Setup printer connection
 //	conn, _ := connection.NewWindowsPrintConnector("EPSON TM-T20II")
-//	printer, _ := service.NewPrinter(composer.NewEscpos(), profile.NewEscpos(), conn)
+//	printer, _ := service.NewPrinter(composer. NewEscpos(), profile.NewEscpos(), conn)
 //	defer printer.Close()
 //
-//	// Execute a JSON document
 //	exec := executor.NewExecutor(printer)
 //	err := exec.ExecuteJSON(jsonData)
 //
 // # Architecture
 //
-// The executor uses a handler registry pattern.  Each command type ("text",
-// "qr", "table", etc.) has a dedicated handler function that knows how to
-// translate the JSON data into printer commands.
+// The executor uses a handler registry pattern.  Each command type has a
+// dedicated handler that translates JSON data into printer commands:
 //
 //	Document JSON → ParseDocument() → Execute() → handlers → Printer
 //
 // # Built-in Commands
 //
-//	Type        Description                 Handler
-//	────────────────────────────────────────────────────
-//	text        Styled text with labels     handleText
-//	image       Base64 images               handleImage
-//	qr          QR codes (native/image)     handleQR
-//	barcode     1D barcodes                 handleBarcode
-//	table       Formatted tables            handleTable
-//	separator   Line separators             handleSeparator
-//	feed        Paper advance               handleFeed
-//	cut         Paper cutting               handleCut
-//	raw         Direct ESC/POS bytes        handleRaw
-//
-// # Custom Handlers
-//
-// Extend the executor with custom command types:
-//
-//	exec := executor.NewExecutor(printer)
-//	exec.registerHandler("logo", func(p *service.Printer, data json.RawMessage) error {
-//	    var cmd LogoCommand
-//	    json.Unmarshal(data, &cmd)
-//	    // ...  process and print
-//	    return nil
-//	})
+//	text        Styled text with labels
+//	image       Base64 images
+//	qr          QR codes (native/image fallback)
+//	barcode     1D barcodes (CODE128, EAN13, etc.)
+//	table       Formatted tables
+//	separator   Line separators
+//	feed        Paper advance
+//	cut         Paper cutting (full/partial)
+//	pulse       Cash drawer activation
+//	beep        Buzzer sound
+//	raw         Direct ESC/POS bytes
 //
 // # Error Handling
 //
-// All errors include context about which command failed:
+// Errors include context about which command failed:
 //
 //	command 3 (barcode) failed: barcode data is required
 //
+// # Testing
+//
+// Handler tests follow a standardized three-category structure:
+//
+//   - Parsing:  Verify JSON unmarshaling (2-4 cases)
+//   - Defaults:  Verify nil/zero handling (1-3 cases)
+//   - Validation: Verify invalid JSON rejection (2-3 cases)
+//
+// Tests verify JSON parsing only—handler business logic is tested separately.
+//
 // # Key Types
 //
-//	Document       - Complete print document structure
-//	ProfileConfig  - Printer configuration (model, paper width, etc.)
-//	Command        - Single command with type and JSON data
-//	Executor       - Main executor with handler registry
-//	CommandHandler - Function signature for handlers
+//	Document        Complete print document structure
+//	ProfileConfig   Printer configuration (model, paper width, etc.)
+//	Command         Single command with type and JSON data
+//	Executor        Main executor with handler registry
+//	CommandHandler  Function signature:  func(*service.Printer, json.RawMessage) error
+//	HandlerRegistry Registry for custom command handlers
 //
 // # Thread Safety
 //
-// Executor instances are NOT safe for concurrent use. Create one executor
-// per goroutine or synchronize access externally.
+// Executor instances are NOT safe for concurrent use. Create one per
+// goroutine or synchronize access externally.
 //
 // # Related Packages
 //
-//	builder  - Fluent API to create Document JSON
-//	service  - Low-level printer communication
-//	profile  - Printer capability profiles
+//	builder   Fluent API to create Document JSON
+//	service   Low-level printer communication
+//	profile   Printer capability profiles
 package executor

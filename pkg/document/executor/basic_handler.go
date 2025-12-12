@@ -3,11 +3,45 @@ package executor
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/service"
 )
+
+// SeparatorCommand for separator handler
+type SeparatorCommand struct {
+	Char   string `json:"char,omitempty"`
+	Length int    `json:"length,omitempty"`
+	// TODO: Add TextStyle if needed
+	// TODO: Add Align if needed
+	// TODO: Add Pre and Post feed line if needed
+}
+
+// FeedCommand for feed handler
+type FeedCommand struct {
+	Lines int `json:"lines"`
+}
+
+// CutCommand for cut handler
+type CutCommand struct {
+	Mode string `json:"mode,omitempty"`
+	Feed int    `json:"feed,omitempty"`
+}
+
+// PulseCommand for cash drawer pulse handler
+type PulseCommand struct {
+	Pin     int `json:"pin,omitempty"`      // Drawer pin (0 or 1), default 0
+	OnTime  int `json:"on_time,omitempty"`  // On time in ms, default 50
+	OffTime int `json:"off_time,omitempty"` // Off time in ms, default 100
+}
+
+// BeepCommand for beep sound handler
+type BeepCommand struct {
+	Times int `json:"times,omitempty"` // Number of beeps, default 1
+	Lapse int `json:"lapse,omitempty"` // Duration/interval factor, default 1
+}
 
 // handleSeparator manages separator commands
 func (e *Executor) handleSeparator(printer *service.Printer, data json.RawMessage) error {
@@ -92,4 +126,53 @@ func (e *Executor) handleCut(printer *service.Printer, data json.RawMessage) err
 	default: // partial
 		return printer.PartialFeedAndCut(0)
 	}
+}
+
+// handlePulse manages cash drawer pulse commands
+func (e *Executor) handlePulse(printer *service.Printer, data json.RawMessage) error {
+	var cmd PulseCommand
+	if err := json.Unmarshal(data, &cmd); err != nil {
+		return fmt.Errorf("failed to parse pulse command: %w", err)
+	}
+
+	// Validate pin (must be 0 or 1)
+	if cmd.Pin < 0 || cmd.Pin > 1 {
+		log.Printf("Warning: invalid pulse pin %d, using 0", cmd.Pin)
+		cmd.Pin = constants.DefaultPulsePin
+	}
+
+	// Set defaults
+	if cmd.OnTime <= 0 {
+		cmd.OnTime = constants.DefaultPulseOnTime // 50ms default
+	}
+	if cmd.OffTime <= 0 {
+		cmd.OffTime = constants.DefaultPulseOffTime // 100ms default
+	}
+
+	// ESC p m t1 t2 - Generate pulse on connector pin
+	// m = 0 or 1 (pin selection)
+	// t1 = on time (t1 * 2 ms)
+	// t2 = off time (t2 * 2 ms)
+	bytes := []byte{0x1B, 0x70, byte(cmd.Pin), byte(cmd.OnTime / 2), byte(cmd.OffTime / 2)}
+	return printer.Write(bytes)
+}
+
+// handleBeep manages beep sound commands
+func (e *Executor) handleBeep(printer *service.Printer, data json.RawMessage) error {
+	var cmd BeepCommand
+	if err := json.Unmarshal(data, &cmd); err != nil {
+		return fmt.Errorf("failed to parse beep command: %w", err)
+	}
+
+	// Set defaults
+	if cmd.Times <= 0 {
+		cmd.Times = constants.DefaultBeepTimes
+	}
+	if cmd.Lapse <= 0 {
+		cmd.Lapse = constants.DefaultBeepLapse
+	}
+
+	// ESC B n t - Beep command (non-standard, hardware-specific)
+	bytes := []byte{0x1B, 0x42, byte(cmd.Times), byte(cmd.Lapse)}
+	return printer.Write(bytes)
 }

@@ -381,6 +381,23 @@ const (
 // Raw Command Constants
 // ============================================================================
 
+// Ensure Format implements fmt.Stringer
+var _ fmt.Stringer = Format("")
+
+// Format options for Human Readable Interpretation placement
+type Format string
+
+func (r Format) String() string {
+	return string(r)
+}
+
+const (
+	// Hex indicates raw command is in hexadecimal format
+	Hex Format = "hex"
+	// Base64 indicates raw command is in base64 format
+	Base64 Format = "base64"
+)
+
 const (
 	// RawMaxBytes maximum bytes for raw command
 	RawMaxBytes = 4096

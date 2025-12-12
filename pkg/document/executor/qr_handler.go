@@ -12,6 +12,17 @@ import (
 	"github.com/adcondev/poster/pkg/service"
 )
 
+// QRCommand for QR handler
+type QRCommand struct {
+	Data        string `json:"data"`
+	HumanText   string `json:"human_text,omitempty"`
+	PixelWidth  int    `json:"pixel_width,omitempty"`
+	Correction  string `json:"correction,omitempty"`
+	Align       string `json:"align,omitempty"`
+	Logo        string `json:"logo,omitempty"`
+	CircleShape bool   `json:"circle_shape,omitempty"`
+}
+
 // handleQR manages QR code commands
 func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) error {
 	var cmd QRCommand
@@ -78,7 +89,7 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 	}
 
 	// Aplicar alineación (default: center según schema)
-	align := "center"
+	align := constants.DefaultQrAlignment.String()
 	if cmd.Align != "" {
 		align = strings.ToLower(cmd.Align)
 	}

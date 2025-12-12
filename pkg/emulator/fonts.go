@@ -64,7 +64,6 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 
 	// Heuristic search for optimal font size
 	var bestFace font.Face
-	var bestSize float64
 	minDiff := math.MaxFloat64
 
 	// Search range for thermal printer fonts (6pt to 72pt)
@@ -97,7 +96,6 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 		if totalDiff < minDiff {
 			minDiff = totalDiff
 			bestFace = face
-			bestSize = size
 		}
 	}
 
@@ -107,15 +105,6 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 		fm.useFallback = true
 		return fmt.Errorf("could not fit font %s to dimensions %.2fx%.2f", filename, targetWidth, targetHeight)
 	}
-
-	// Get actual metrics from best face
-	actualMetrics := bestFace.Metrics()
-	advance, _ := bestFace.GlyphAdvance('M')
-	actualWidth := float64(advance) / 64.0
-	actualHeight := float64(actualMetrics.Height) / 64.0
-
-	log.Printf("[FontManager] Best match for '%s': size=%.1fpt, actual=%.1fx%.1f, diff=%.2f",
-		name, bestSize, actualWidth, actualHeight, minDiff)
 
 	// Store with TARGET metrics for consistent spacing (important!)
 	fm.fonts[name] = &ScaledFont{
