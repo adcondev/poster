@@ -7,10 +7,6 @@ import (
 	"github.com/adcondev/poster/pkg/constants"
 )
 
-// ============================================================================
-// Barcode Builder Tests
-// ============================================================================
-
 func TestBarcodeBuilder(t *testing.T) {
 	width := 3
 	height := 100
@@ -44,20 +40,71 @@ func TestBarcodeBuilder(t *testing.T) {
 	if *cmd.Width != width {
 		t.Errorf("Expected width %d, got %d", width, *cmd.Width)
 	}
+
+	if *cmd.Height != height {
+		t.Errorf("Expected height %d, got %d", height, *cmd.Height)
+	}
+
+	if *cmd.HRIPosition != "below" {
+		t.Errorf("Expected HRI position 'below', got '%s'", *cmd.HRIPosition)
+	}
+
+	if *cmd.HRIFont != "A" {
+		t.Errorf("Expected HRI font 'A', got '%s'", *cmd.HRIFont)
+	}
 }
 
-func TestBarcodeBuilderAlign(t *testing.T) {
+func TestBarcodeBuilderDefaults(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
 		Barcode("EAN13", "1234567890123").
-		Align(constants.Right).
 		End().
 		Build()
 
 	var cmd barcodeCommand
 	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
 
-	if *cmd.Align != constants.Right.String() {
-		t.Errorf("Expected align 'right', got '%s'", *cmd.Align)
+	if cmd.Symbology != "EAN13" {
+		t.Errorf("Expected symbology 'EAN13', got '%s'", cmd.Symbology)
+	}
+
+	if cmd.Width != nil {
+		t.Errorf("Expected width to be nil, got %d", *cmd.Width)
+	}
+
+	if cmd.Height != nil {
+		t.Errorf("Expected height to be nil, got %d", *cmd.Height)
+	}
+
+	if cmd.HRIPosition != nil {
+		t.Errorf("Expected HRI position to be nil, got '%s'", *cmd.HRIPosition)
+	}
+
+	if cmd.Align != nil {
+		t.Errorf("Expected align to be nil, got '%s'", *cmd.Align)
+	}
+}
+
+func TestBarcodeBuilderAlignment(t *testing.T) {
+	tests := []struct {
+		name     string
+		align    func(*BarcodeBuilder) *BarcodeBuilder
+		expected string
+	}{
+		{"Left", func(bb *BarcodeBuilder) *BarcodeBuilder { return bb.Left() }, constants.Left.String()},
+		{"Center", func(bb *BarcodeBuilder) *BarcodeBuilder { return bb.Center() }, constants.Center.String()},
+		{"Right", func(bb *BarcodeBuilder) *BarcodeBuilder { return bb.Right() }, constants.Right.String()},
+		{"Align", func(bb *BarcodeBuilder) *BarcodeBuilder { return bb.Align(constants.Right) }, constants.Right.String()},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bb := newBarcodeBuilder(NewDocument(), "CODE128", "data")
+			tt.align(bb)
+
+			if *bb.align != tt.expected {
+				t.Errorf("Expected align '%s', got '%s'", tt.expected, *bb.align)
+			}
+		})
 	}
 }

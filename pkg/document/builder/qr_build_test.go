@@ -7,10 +7,6 @@ import (
 	"github.com/adcondev/poster/pkg/constants"
 )
 
-// ============================================================================
-// QR Builder Tests
-// ============================================================================
-
 func TestQRBuilder(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
@@ -45,6 +41,14 @@ func TestQRBuilder(t *testing.T) {
 	if cmd.HumanText != "Scan me" {
 		t.Errorf("Expected human text 'Scan me', got '%s'", cmd.HumanText)
 	}
+
+	if cmd.Logo != "logobase64" {
+		t.Errorf("Expected logo 'logobase64', got '%s'", cmd.Logo)
+	}
+
+	if cmd.Align != constants.Center.String() {
+		t.Errorf("Expected align 'center', got '%s'", cmd.Align)
+	}
 }
 
 func TestQRBuilderDefaults(t *testing.T) {
@@ -66,5 +70,40 @@ func TestQRBuilderDefaults(t *testing.T) {
 
 	if cmd.Align != constants.Center.String() {
 		t.Errorf("Expected default align 'center', got '%s'", cmd.Align)
+	}
+
+	if cmd.HumanText != "" {
+		t.Errorf("Expected empty human text, got '%s'", cmd.HumanText)
+	}
+
+	if cmd.Logo != "" {
+		t.Errorf("Expected empty logo, got '%s'", cmd.Logo)
+	}
+
+	if cmd.CircleShape != false {
+		t.Error("Expected CircleShape to be false by default")
+	}
+}
+
+func TestQRBuilderAlignment(t *testing.T) {
+	tests := []struct {
+		name     string
+		align    func(*QRBuilder) *QRBuilder
+		expected string
+	}{
+		{"Left", func(qb *QRBuilder) *QRBuilder { return qb.Left() }, constants.Left.String()},
+		{"Center", func(qb *QRBuilder) *QRBuilder { return qb.Center() }, constants.Center.String()},
+		{"Right", func(qb *QRBuilder) *QRBuilder { return qb.Right() }, constants.Right.String()},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qb := newQRBuilder(NewDocument(), "data")
+			tt.align(qb)
+
+			if qb.align != tt.expected {
+				t.Errorf("Expected align '%s', got '%s'", tt.expected, qb.align)
+			}
+		})
 	}
 }

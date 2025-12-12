@@ -5,15 +5,15 @@ import (
 	"testing"
 )
 
-// ============================================================================
-// Basic Command Tests
-// ============================================================================
-
-func TestFeed(t *testing.T) {
+func TestBasicFeedCommands(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
 		Feed(5).
 		Build()
+
+	if doc.Commands[0].Type != "feed" {
+		t.Errorf("Expected type 'feed', got '%s'", doc.Commands[0].Type)
+	}
 
 	var cmd feedCommand
 	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
@@ -23,158 +23,148 @@ func TestFeed(t *testing.T) {
 	}
 }
 
-func TestCut(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		Cut().
-		Build()
-
-	var cmd cutCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if cmd.Mode != "partial" {
-		t.Errorf("Expected mode 'partial', got '%s'", cmd.Mode)
+func TestBasicCutCommands(t *testing.T) {
+	tests := []struct {
+		name         string
+		buildFunc    func(*DocumentBuilder) *DocumentBuilder
+		expectedMode string
+		expectedFeed int
+	}{
+		{"PartialCut", func(b *DocumentBuilder) *DocumentBuilder { return b.Cut() }, "partial", 2},
+		{"FullCut", func(b *DocumentBuilder) *DocumentBuilder { return b.FullCut() }, "full", 2},
+		{"CutWithFeed", func(b *DocumentBuilder) *DocumentBuilder { return b.CutWithFeed("full", 10) }, "full", 10},
 	}
 
-	if cmd.Feed != 2 {
-		t.Errorf("Expected feed 2, got %d", cmd.Feed)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := NewDocument().SetProfile("Test", 80, "WPC1252")
+			doc = tt.buildFunc(doc)
+			result := doc.Build()
 
-func TestFullCut(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		FullCut().
-		Build()
+			if result.Commands[0].Type != "cut" {
+				t.Errorf("Expected type 'cut', got '%s'", result.Commands[0].Type)
+			}
 
-	var cmd cutCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+			var cmd cutCommand
+			_ = json.Unmarshal(result.Commands[0].Data, &cmd)
 
-	if cmd.Mode != "full" {
-		t.Errorf("Expected mode 'full', got '%s'", cmd.Mode)
-	}
-}
+			if cmd.Mode != tt.expectedMode {
+				t.Errorf("Expected mode '%s', got '%s'", tt.expectedMode, cmd.Mode)
+			}
 
-func TestCutWithFeed(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		CutWithFeed("full", 10).
-		Build()
-
-	var cmd cutCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if cmd.Mode != "full" {
-		t.Errorf("Expected mode 'full', got '%s'", cmd.Mode)
-	}
-
-	if cmd.Feed != 10 {
-		t.Errorf("Expected feed 10, got %d", cmd.Feed)
+			if cmd.Feed != tt.expectedFeed {
+				t.Errorf("Expected feed %d, got %d", tt.expectedFeed, cmd.Feed)
+			}
+		})
 	}
 }
 
-func TestSeparator(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		Separator("-").
-		Build()
-
-	var cmd separatorCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if cmd.Char != "-" {
-		t.Errorf("Expected char '-', got '%s'", cmd.Char)
+func TestBasicSeparatorCommands(t *testing.T) {
+	tests := []struct {
+		name           string
+		buildFunc      func(*DocumentBuilder) *DocumentBuilder
+		expectedChar   string
+		expectedLength int
+	}{
+		{"DefaultLength", func(b *DocumentBuilder) *DocumentBuilder { return b.Separator("-") }, "-", 48},
+		{"CustomLength", func(b *DocumentBuilder) *DocumentBuilder { return b.SeparatorWithLength("=", 32) }, "=", 32},
 	}
 
-	if cmd.Length != 48 {
-		t.Errorf("Expected default length 48, got %d", cmd.Length)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := NewDocument().SetProfile("Test", 80, "WPC1252")
+			doc = tt.buildFunc(doc)
+			result := doc.Build()
 
-func TestSeparatorWithLength(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		SeparatorWithLength("=", 32).
-		Build()
+			if result.Commands[0].Type != "separator" {
+				t.Errorf("Expected type 'separator', got '%s'", result.Commands[0].Type)
+			}
 
-	var cmd separatorCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+			var cmd separatorCommand
+			_ = json.Unmarshal(result.Commands[0].Data, &cmd)
 
-	if cmd.Char != "=" {
-		t.Errorf("Expected char '=', got '%s'", cmd.Char)
-	}
+			if cmd.Char != tt.expectedChar {
+				t.Errorf("Expected char '%s', got '%s'", tt.expectedChar, cmd.Char)
+			}
 
-	if cmd.Length != 32 {
-		t.Errorf("Expected length 32, got %d", cmd.Length)
-	}
-}
-
-func TestPulse(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		Pulse().
-		Build()
-
-	if doc.Commands[0].Type != "pulse" {
-		t.Errorf("Expected type 'pulse', got '%s'", doc.Commands[0].Type)
-	}
-
-	var cmd pulseCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if cmd.Pin != 0 {
-		t.Errorf("Expected pin 0, got %d", cmd.Pin)
-	}
-
-	if cmd.OnTime != 50 {
-		t.Errorf("Expected on_time 50, got %d", cmd.OnTime)
-	}
-
-	if cmd.OffTime != 100 {
-		t.Errorf("Expected off_time 100, got %d", cmd.OffTime)
+			if cmd.Length != tt.expectedLength {
+				t.Errorf("Expected length %d, got %d", tt.expectedLength, cmd.Length)
+			}
+		})
 	}
 }
 
-func TestPulseWithOptions(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		PulseWithOptions(1, 100, 200).
-		Build()
-
-	var cmd pulseCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if cmd.Pin != 1 {
-		t.Errorf("Expected pin 1, got %d", cmd.Pin)
+func TestBasicPulseCommands(t *testing.T) {
+	tests := []struct {
+		name            string
+		buildFunc       func(*DocumentBuilder) *DocumentBuilder
+		expectedPin     int
+		expectedOnTime  int
+		expectedOffTime int
+	}{
+		{"DefaultPulse", func(b *DocumentBuilder) *DocumentBuilder { return b.Pulse() }, 0, 50, 100},
+		{"CustomPulse", func(b *DocumentBuilder) *DocumentBuilder { return b.PulseWithOptions(1, 100, 200) }, 1, 100, 200},
 	}
 
-	if cmd.OnTime != 100 {
-		t.Errorf("Expected on_time 100, got %d", cmd.OnTime)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := NewDocument().SetProfile("Test", 80, "WPC1252")
+			doc = tt.buildFunc(doc)
+			result := doc.Build()
 
-	if cmd.OffTime != 200 {
-		t.Errorf("Expected off_time 200, got %d", cmd.OffTime)
+			if result.Commands[0].Type != "pulse" {
+				t.Errorf("Expected type 'pulse', got '%s'", result.Commands[0].Type)
+			}
+
+			var cmd pulseCommand
+			_ = json.Unmarshal(result.Commands[0].Data, &cmd)
+
+			if cmd.Pin != tt.expectedPin {
+				t.Errorf("Expected pin %d, got %d", tt.expectedPin, cmd.Pin)
+			}
+
+			if cmd.OnTime != tt.expectedOnTime {
+				t.Errorf("Expected on_time %d, got %d", tt.expectedOnTime, cmd.OnTime)
+			}
+
+			if cmd.OffTime != tt.expectedOffTime {
+				t.Errorf("Expected off_time %d, got %d", tt.expectedOffTime, cmd.OffTime)
+			}
+		})
 	}
 }
 
-func TestBeep(t *testing.T) {
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		Beep(3, 5).
-		Build()
-
-	if doc.Commands[0].Type != "beep" {
-		t.Errorf("Expected type 'beep', got '%s'", doc.Commands[0].Type)
+func TestBasicBeepCommands(t *testing.T) {
+	tests := []struct {
+		name          string
+		buildFunc     func(*DocumentBuilder) *DocumentBuilder
+		expectedTimes int
+		expectedLapse int
+	}{
+		{"DefaultBeep", func(b *DocumentBuilder) *DocumentBuilder { return b.BeepOnce() }, 1, 1},
+		{"CustomBeep", func(b *DocumentBuilder) *DocumentBuilder { return b.Beep(3, 5) }, 3, 5},
 	}
 
-	var cmd beepCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := NewDocument().SetProfile("Test", 80, "WPC1252")
+			doc = tt.buildFunc(doc)
+			result := doc.Build()
 
-	if cmd.Times != 3 {
-		t.Errorf("Expected times 3, got %d", cmd.Times)
-	}
+			if result.Commands[0].Type != "beep" {
+				t.Errorf("Expected type 'beep', got '%s'", result.Commands[0].Type)
+			}
 
-	if cmd.Lapse != 5 {
-		t.Errorf("Expected lapse 5, got %d", cmd.Lapse)
+			var cmd beepCommand
+			_ = json.Unmarshal(result.Commands[0].Data, &cmd)
+
+			if cmd.Times != tt.expectedTimes {
+				t.Errorf("Expected times %d, got %d", tt.expectedTimes, cmd.Times)
+			}
+
+			if cmd.Lapse != tt.expectedLapse {
+				t.Errorf("Expected lapse %d, got %d", tt.expectedLapse, cmd.Lapse)
+			}
+		})
 	}
 }

@@ -7,10 +7,6 @@ import (
 	"github.com/adcondev/poster/pkg/constants"
 )
 
-// ============================================================================
-// Table Builder Tests
-// ============================================================================
-
 func TestTableBuilder(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
@@ -34,17 +30,68 @@ func TestTableBuilder(t *testing.T) {
 		t.Errorf("Expected 2 columns, got %d", len(cmd.Definition.Columns))
 	}
 
+	if cmd.Definition.Columns[0].Name != "Item" {
+		t.Errorf("Expected column name 'Item', got '%s'", cmd.Definition.Columns[0].Name)
+	}
+
+	if cmd.Definition.Columns[1].Align != string(constants.Right) {
+		t.Errorf("Expected column align 'right', got '%s'", cmd.Definition.Columns[1].Align)
+	}
+
 	if len(cmd.Rows) != 2 {
 		t.Errorf("Expected 2 rows, got %d", len(cmd.Rows))
 	}
+
+	if cmd.Definition.PaperWidth != 48 {
+		t.Errorf("Expected paper width 48, got %d", cmd.Definition.PaperWidth)
+	}
 }
 
-func TestTableBuilderOptions(t *testing.T) {
+func TestTableBuilderDefaults(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
 		Table().
 		Column("Test", 10).
 		Row("Data").
+		End().
+		Build()
+
+	var cmd tableCommand
+	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+
+	if cmd.ShowHeaders != true {
+		t.Error("Expected ShowHeaders to be true by default")
+	}
+
+	if cmd.Options == nil {
+		t.Fatal("Expected Options to be set")
+	}
+
+	if cmd.Options.HeaderBold != true {
+		t.Error("Expected HeaderBold to be true by default")
+	}
+
+	if cmd.Options.WordWrap != true {
+		t.Error("Expected WordWrap to be true by default")
+	}
+
+	if cmd.Options.ColumnSpacing != 0 {
+		t.Errorf("Expected ColumnSpacing 0, got %d", cmd.Options.ColumnSpacing)
+	}
+}
+
+func TestTableBuilderOptions(t *testing.T) {
+	rows := [][]string{
+		{"A", "1"},
+		{"B", "2"},
+	}
+
+	doc := NewDocument().
+		SetProfile("Test", 80, "WPC1252").
+		Table().
+		Column("Letter", 10).
+		Column("Number", 10).
+		Rows(rows).
 		HideHeaders().
 		NoHeaderBold().
 		NoWordWrap().
@@ -55,6 +102,10 @@ func TestTableBuilderOptions(t *testing.T) {
 
 	var cmd tableCommand
 	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+
+	if len(cmd.Rows) != 2 {
+		t.Errorf("Expected 2 rows, got %d", len(cmd.Rows))
+	}
 
 	if cmd.ShowHeaders != false {
 		t.Error("Expected ShowHeaders to be false")
@@ -71,28 +122,8 @@ func TestTableBuilderOptions(t *testing.T) {
 	if cmd.Options.ColumnSpacing != 2 {
 		t.Errorf("Expected ColumnSpacing 2, got %d", cmd.Options.ColumnSpacing)
 	}
-}
 
-func TestTableBuilderRows(t *testing.T) {
-	rows := [][]string{
-		{"A", "1"},
-		{"B", "2"},
-		{"C", "3"},
-	}
-
-	doc := NewDocument().
-		SetProfile("Test", 80, "WPC1252").
-		Table().
-		Column("Letter", 10).
-		Column("Number", 10).
-		Rows(rows).
-		End().
-		Build()
-
-	var cmd tableCommand
-	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
-
-	if len(cmd.Rows) != 3 {
-		t.Errorf("Expected 3 rows, got %d", len(cmd.Rows))
+	if cmd.Options.Align != string(constants.Center) {
+		t.Errorf("Expected Align 'center', got '%s'", cmd.Options.Align)
 	}
 }
