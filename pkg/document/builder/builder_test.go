@@ -24,7 +24,7 @@ func TestNewDocument(t *testing.T) {
 	}
 
 	if doc.version != Release {
-		t.Errorf("Expected version '1. 0', got '%s'", doc.version)
+		t.Errorf("Expected version '1.0', got '%s'", doc.version)
 	}
 
 	if doc.commands == nil {
@@ -157,7 +157,7 @@ func TestBuild(t *testing.T) {
 		Build()
 
 	if doc.Version != Release {
-		t.Errorf("Expected version '1. 0', got '%s'", doc.Version)
+		t.Errorf("Expected version '1.0', got '%s'", doc.Version)
 	}
 
 	if doc.Profile.Model != "EPSON" {
@@ -241,7 +241,7 @@ func TestCompleteReceipt(t *testing.T) {
 		Column("Item", 20, constants.Left).
 		Column("Price", 10, constants.Right).
 		Row("Coffee", "$4.50").
-		Row("Muffin", "$3. 00").
+		Row("Muffin", "$3.00").
 		End().
 		Separator("-").
 		Text("$7.50").Bold().Right().WithLabel("TOTAL").End().
@@ -253,7 +253,7 @@ func TestCompleteReceipt(t *testing.T) {
 
 	// Verify document structure
 	if doc.Version != Release {
-		t.Errorf("Expected version '1. 0', got '%s'", doc.Version)
+		t.Errorf("Expected version '1.0', got '%s'", doc.Version)
 	}
 
 	if doc.Profile.Model != "EPSON TM-T20II" {
@@ -312,7 +312,7 @@ func BenchmarkBuildComplex(b *testing.B) {
 			Table().
 			Column("Item", 20).
 			Column("Price", 10).
-			Row("Item 1", "$10. 00").
+			Row("Item 1", "$10.00").
 			Row("Item 2", "$20.00").
 			End().
 			QR("https://example.com").End().

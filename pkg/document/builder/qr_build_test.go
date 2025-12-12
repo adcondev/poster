@@ -31,7 +31,7 @@ func TestQRBuilder(t *testing.T) {
 	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
 
 	if cmd.Data != "https://example.com" {
-		t.Errorf("Expected data 'https://example. com', got '%s'", cmd.Data)
+		t.Errorf("Expected data 'https://example.com', got '%s'", cmd.Data)
 	}
 
 	if cmd.PixelWidth != 200 {

@@ -44,7 +44,7 @@ func TestTextBuilder(t *testing.T) {
 func TestTextWithLabel(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
-		Text("$100. 00").
+		Text("$100.00").
 		WithLabel("Total").
 		LabelSeparator(": ").
 		Bold().

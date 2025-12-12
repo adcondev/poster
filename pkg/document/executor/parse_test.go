@@ -35,7 +35,7 @@ func TestParseDocument_ValidDocument(t *testing.T) {
 	}
 
 	if doc.Version != constants.DefaultVersion {
-		t.Errorf("Expected version '1. 0', got '%s'", doc.Version)
+		t.Errorf("Expected version '1.0', got '%s'", doc.Version)
 	}
 
 	if doc.Profile.Model != "TestPrinter" {
@@ -89,6 +89,8 @@ func TestParseDocument_AllCommandTypes(t *testing.T) {
 		{"table", `{"definition": {"columns": [{"name": "A", "width": 10}]}, "rows": [["x"]]}`},
 		{"barcode", `{"symbology": "CODE128", "data": "123"}`},
 		{"raw", `{"hex": "1B40"}`},
+		{"pulse", `{"pin": 0, "on_time":  50, "off_time": 100}`}, // ADD THIS
+		{"beep", `{"times": 3, "lapse":  2}`},                    // ADD THIS
 	}
 
 	for _, tc := range commandTypes {
@@ -144,7 +146,7 @@ func TestParseDocument_MissingVersionDefaultsTo1_0(t *testing.T) {
 	}
 
 	if doc.Version != constants.DefaultVersion {
-		t.Errorf("Expected default version '1. 0', got '%s'", doc.Version)
+		t.Errorf("Expected default version '1.0', got '%s'", doc.Version)
 	}
 }
 
@@ -171,7 +173,7 @@ func TestParseDocument_EmptyCommandsArray(t *testing.T) {
 
 func TestParseDocument_MissingCommandsField(t *testing.T) {
 	jsonData := []byte(`{
-		"version": "1. 0",
+		"version": "1.0",
 		"profile": {"model": "Test"}
 	}`)
 
@@ -207,11 +209,11 @@ func TestParseDocument_MalformedJSON(t *testing.T) {
 		name string
 		json string
 	}{
-		{"missing closing brace", `{"version": "1. 0"`},
+		{"missing closing brace", `{"version": "1.0"`},
 		{"invalid syntax", `{version: "1.0"}`},
-		{"trailing comma", `{"version": "1. 0",}`},
+		{"trailing comma", `{"version": "1.0",}`},
 		{"single quotes", `{'version': '1.0'}`},
-		{"unclosed string", `{"version": "1. 0}`},
+		{"unclosed string", `{"version": "1.0}`},
 		{"empty input", ``},
 		{"just whitespace", `   `},
 		{"random text", `not json at all`},
@@ -238,15 +240,15 @@ func TestParseDocument_InvalidFieldTypes(t *testing.T) {
 	}{
 		{
 			"version as number",
-			`{"version": 1. 0, "profile": {"model": "Test"}, "commands": [{"type": "text", "data": {}}]}`,
+			`{"version": 1.0, "profile": {"model": "Test"}, "commands": [{"type": "text", "data": {}}]}`,
 		},
 		{
 			"commands as object",
-			`{"version": "1. 0", "profile": {"model": "Test"}, "commands": {"type": "text"}}`,
+			`{"version": "1.0", "profile": {"model": "Test"}, "commands": {"type": "text"}}`,
 		},
 		{
 			"profile as string",
-			`{"version": "1. 0", "profile": "Test", "commands": [{"type": "text", "data": {}}]}`,
+			`{"version": "1.0", "profile": "Test", "commands": [{"type": "text", "data": {}}]}`,
 		},
 	}
 
@@ -266,7 +268,7 @@ func TestParseDocument_InvalidFieldTypes(t *testing.T) {
 
 func TestParseDocument_ProfileFields(t *testing.T) {
 	jsonData := []byte(`{
-		"version": "1. 0",
+		"version": "1.0",
 		"profile": {
 			"model": "EPSON TM-T20II",
 			"paper_width": 80,
@@ -331,7 +333,7 @@ func TestParseDocument_MinimalProfile(t *testing.T) {
 
 func TestParseDocument_CommandDataPreserved(t *testing.T) {
 	jsonData := []byte(`{
-		"version": "1. 0",
+		"version": "1.0",
 		"profile": {"model": "Test"},
 		"commands": [
 			{
@@ -374,7 +376,7 @@ func TestParseDocument_CommandDataPreserved(t *testing.T) {
 
 func TestParseDocument_DebugLogField(t *testing.T) {
 	jsonData := []byte(`{
-		"version": "1. 0",
+		"version": "1.0",
 		"profile": {"model": "Test"},
 		"debug_log": true,
 		"commands": [{"type": "text", "data": {"content": {"text": "test"}}}]
@@ -419,7 +421,7 @@ func TestParseDocument_LargeDocument(t *testing.T) {
 
 func TestParseDocument_UnicodeContent(t *testing.T) {
 	jsonData := []byte(`{
-		"version": "1. 0",
+		"version": "1.0",
 		"profile": {"model": "Test"},
 		"commands": [
 			{"type": "text", "data": {"content": {"text": "Héllo Wörld 中文 🎉"}}}
