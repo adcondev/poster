@@ -11,6 +11,8 @@ import (
 	"github.com/adcondev/poster/pkg/service"
 )
 
+// TODO: Printer mocking still pending. Heavy refactoring needed to decouple printer hardware from command execution.
+
 // Executor ejecuta documentos de impresión
 type Executor struct {
 	printer  *service.Printer
