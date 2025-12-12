@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/graphics"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 // PrinterActions defines the interface for printer operations used by handlers.
@@ -60,6 +61,9 @@ type PrinterActions interface {
 
 	// Character encoding
 	SetCodeTable(codeTable character.CodeTable) error
+
+	// Profile access - allows handlers to read printer configuration
+	GetProfile() *profile.Escpos
 }
 
 // Ensure service. Printer implements PrinterActions

@@ -5,6 +5,7 @@ import (
 
 	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/graphics"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 var _ PrinterActions = (*MockPrinter)(nil)
@@ -32,6 +33,9 @@ type MockPrinter struct {
 	WrittenBytes   [][]byte
 	PrintedQRs     []string
 	PrintedBitmaps []*graphics.MonochromeBitmap
+
+	// Profile for handlers that need configuration
+	MockProfile profile.Escpos
 }
 
 // MockCall represents a single call to the mock printer
@@ -50,7 +54,22 @@ func NewMockPrinter() *MockPrinter {
 		CurrentFont:      "A",
 		CurrentSize:      "1x1",
 		UnderlineMode:    "none",
+		MockProfile: profile.Escpos{
+			Model:       "MockPrinter",
+			PaperWidth:  80,
+			DotsPerLine: 576,
+			PrintWidth:  48,
+			DPI:         203,
+			HasQR:       true,
+			DebugLog:    false,
+		},
 	}
+}
+
+// GetProfile returns a copy of the mock profile
+func (m *MockPrinter) GetProfile() *profile.Escpos {
+	prof := m.MockProfile
+	return &prof
 }
 
 // record adds a call to the call log

@@ -436,3 +436,9 @@ func (p *Printer) PrintBarcode(cfg graphics.BarcodeConfig, data []byte) error {
 	// Enviamos el bloque atómico a la impresora
 	return p.Write(fullCommand)
 }
+
+// GetProfile returns the printer's profile configuration
+func (p *Printer) GetProfile() *profile.Escpos {
+	prof := p.Profile
+	return &prof
+}

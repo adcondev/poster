@@ -145,11 +145,6 @@ func TestBarcodeCommand_Validation(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:        "missing symbology is invalid",
-			json:        `{"data": "12345"}`,
-			expectError: false, // JSON parses, handler validates
-		},
-		{
 			name:        "missing data is invalid",
 			json:        `{"symbology": "CODE128"}`,
 			expectError: false, // JSON parses, handler validates

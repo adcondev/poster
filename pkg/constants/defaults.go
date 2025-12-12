@@ -109,7 +109,7 @@ const (
 // Feed defaults
 const (
 	// DefaultFeedLines default
-	DefaultFeedLines = 2
+	DefaultFeedLines = 1
 )
 
 // Cut defaults
