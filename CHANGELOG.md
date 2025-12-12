@@ -2,6 +2,39 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [4.1.0](https://github.com/adcondev/pos-printer/compare/v4.0.0...v4.1.0) (2025-12-12)
+
+
+### 📝 Documentation
+
+* **github:** optimize images ([#87](https://github.com/adcondev/pos-printer/issues/87)) ([6ed6dba](https://github.com/adcondev/pos-printer/commit/6ed6dba5a87cdf7ee97a3d0f72116c83e3b289b3))
+
+
+### ♻️ Code Refactoring
+
+* **executor:** implement text styling and formatting functions ([bf334e5](https://github.com/adcondev/pos-printer/commit/bf334e599a0d771364d43977af22907ebf26cfef))
+
+
+### 🐛 Bug Fixes
+
+* **tests:** fix formatting issues in test error messages ([0dadd1c](https://github.com/adcondev/pos-printer/commit/0dadd1c5e99af92cb5cf07bbb7da5840a9f83914))
+
+
+### ✅ Tests
+
+* **builder:** add unit tests for barcode, image, QR, and raw command builders ([883c4c2](https://github.com/adcondev/pos-printer/commit/883c4c20a4bfefa516704dbdfaa213fcaf244d5b))
+* **builder:** enhance barcode and image builder tests with default checks and alignment validation ([0ac2537](https://github.com/adcondev/pos-printer/commit/0ac25377dc71c0e3401bb1ab89df2fd54e3ac52c))
+* **executor:** add barcode command structure and handler tests ([cadf5f7](https://github.com/adcondev/pos-printer/commit/cadf5f7542f85338a448e665116f166ae1d7c1b2))
+
+
+### ✨ Features
+
+* **builder:** add pulse and beep command structures with default values ([411c497](https://github.com/adcondev/pos-printer/commit/411c497a215d306674e996814175476450e1cb4c))
+* **executor:** add pulse and beep command handlers with default values ([53ed6af](https://github.com/adcondev/pos-printer/commit/53ed6af2e6e487b6934c1810c2cfa244398efd16))
+* **executor:** add pulse and beep command handlers with default values ([#88](https://github.com/adcondev/pos-printer/issues/88)) ([8fb04a9](https://github.com/adcondev/pos-printer/commit/8fb04a93a03e3519d61781fbf9b34d1b5de3d77f)), closes [/#diff-70cac1a3fa258e56c51e09b23d54349833efdac2f84859f74226e09850e9c8e4L4-R31](https://github.com/adcondev///issues/diff-70cac1a3fa258e56c51e09b23d54349833efdac2f84859f74226e09850e9c8e4L4-R31) [/#diff-a160129cc08fbc35984cb3a8276694b1635d2940f5fac1c0f024b13311edcff7L117-L134](https://github.com/adcondev///issues/diff-a160129cc08fbc35984cb3a8276694b1635d2940f5fac1c0f024b13311edcff7L117-L134) [/#diff-36043890c52c8201a8bc84238c219be45ce07bf172d89f693c7c54ffe70d046eR384-R400](https://github.com/adcondev///issues/diff-36043890c52c8201a8bc84238c219be45ce07bf172d89f693c7c54ffe70d046eR384-R400) [/#diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5L112-R112](https://github.com/adcondev///issues/diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5L112-R112) [/#diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5R138-R156](https://github.com/adcondev///issues/diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5R138-R156) [/#diff-1158ffa9f9cfd564d24cbdfaf0dbdac24e67d3e25d89d655b20ae0deb3d00a70R1-R170](https://github.com/adcondev///issues/diff-1158ffa9f9cfd564d24cbdfaf0dbdac24e67d3e25d89d655b20ae0deb3d00a70R1-R170) [/#diff-699810127ea3e65eaaac1072424265bc55eb04b1e6e1d16c1fb9ab12f98a3167R1-R110](https://github.com/adcondev///issues/diff-699810127ea3e65eaaac1072424265bc55eb04b1e6e1d16c1fb9ab12f98a3167R1-R110) [/#diff-0b2da2a163d66decd44372f48ba3d56d6be062ac1bf43301cace620e3e4e24d9R1-R102](https://github.com/adcondev///issues/diff-0b2da2a163d66decd44372f48ba3d56d6be062ac1bf43301cace620e3e4e24d9R1-R102) [/#diff-4215faad80ec87078126ed36169d3965bc97d7729f862dcde53f0664757eab02R1-R109](https://github.com/adcondev///issues/diff-4215faad80ec87078126ed36169d3965bc97d7729f862dcde53f0664757eab02R1-R109) [/#diff-ef6fbbead24bab5e7947b465fab0421f836ffd735c1aefea7c0041afdc861f90R1-R98](https://github.com/adcondev///issues/diff-ef6fbbead24bab5e7947b465fab0421f836ffd735c1aefea7c0041afdc861f90R1-R98) [/#diff-c1765478c80d6bd2fc7368a564489ecaf1dd9776c6743a9b5cac12f7702615afL1](https://github.com/adcondev///issues/diff-c1765478c80d6bd2fc7368a564489ecaf1dd9776c6743a9b5cac12f7702615afL1) [/#diff-5a7ba45dd092108eaaf75887b78b7c56c1722fe0dabbab870280da23008306f7R50-R51](https://github.com/adcondev///issues/diff-5a7ba45dd092108eaaf75887b78b7c56c1722fe0dabbab870280da23008306f7R50-R51)
+* **printer:** add profile access to PrinterActions interface and MockPrinter ([6195394](https://github.com/adcondev/pos-printer/commit/61953946467dc3d237aadc2576e9d64b8845e319))
+* **service:** add PrinterActions interface and MockPrinter implementation ([64f2165](https://github.com/adcondev/pos-printer/commit/64f21653de943eed7cf88b65e983c540e3bde448))
+
 ## [4.0.0](https://github.com/adcondev/pos-printer/compare/v3.6.1...v4.0.0) (2025-12-10)
 
 
