@@ -3,6 +3,7 @@ package emulator
 import (
 	"image/color"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/adcondev/poster/pkg/constants"
 )
@@ -34,8 +35,6 @@ type TextRenderer struct {
 	state  *PrinterState
 	black  color.Color
 	white  color.Color
-	// TODO: Si true, interpreta secuencias ESC/POS en el texto
-	// parseEscPos bool
 }
 
 // NewTextRenderer creates a new TextRenderer
@@ -54,6 +53,7 @@ func (tr *TextRenderer) RenderText(text string) {
 	if len(text) == 0 {
 		return
 	}
+
 	// Filter control characters except common ones
 	text = strings.Map(func(r rune) rune {
 		if r < 32 && r != '\t' && r != '\n' && r != '\r' {
@@ -62,12 +62,16 @@ func (tr *TextRenderer) RenderText(text string) {
 		return r
 	}, text)
 
-	metrics := tr.fonts.GetMetrics(tr.state.FontName)
-	charWidth := metrics.GlyphWidth * tr.state.ScaleW
-	charHeight := metrics.GlyphHeight * tr.state.ScaleH
+	// Get scaled metrics for current font and size
+	metrics := tr.fonts.GetScaledMetrics(tr.state.FontName, tr.state.ScaleW, tr.state.ScaleH)
+	charWidth := metrics.GlyphWidth
+	charHeight := metrics.GlyphHeight
 
-	// Calculate text width for alignment
-	textWidth := float64(len(text)) * charWidth
+	// Count actual characters (runes), not bytes - important for UTF-8 text
+	runeCount := utf8.RuneCountInString(text)
+
+	// Calculate text width for alignment using rune count
+	textWidth := float64(runeCount) * charWidth
 
 	// Determine starting X position based on alignment
 	startX := tr.calculateAlignedX(textWidth)
@@ -94,10 +98,20 @@ func (tr *TextRenderer) RenderLine(text string) {
 	tr.NewLine()
 }
 
+// FIXME: The NewLine method now directly manipulates cursor position instead of delegating to PrinterState.NewLine(metrics).
+// This duplicates line height calculation logic.
+// Consider whether the PrinterState.NewLine method should also be updated to use GetScaledMetrics,
+// or if this logic should remain centralized in one place.
+
 // NewLine moves to the beginning of the next line
 func (tr *TextRenderer) NewLine() {
-	metrics := tr.fonts.GetMetrics(tr.state.FontName)
-	tr.state.NewLine(metrics)
+	metrics := tr.fonts.GetScaledMetrics(tr.state.FontName, tr.state.ScaleW, tr.state.ScaleH)
+	lineHeight := metrics.LineHeight
+	if lineHeight < tr.state.LineSpacing {
+		lineHeight = tr.state.LineSpacing
+	}
+	tr.state.CursorY += lineHeight
+	tr.state.CursorX = 0
 }
 
 // Feed advances paper by specified number of lines
@@ -131,11 +145,11 @@ func (tr *TextRenderer) renderChar(char rune, x, y, width, height float64) {
 			int(width)+1, int(height)+1,
 			tr.black,
 		)
-		// Draw white character
-		tr.drawScaledChar(char, x, y, tr.white)
+		// Draw character in white
+		tr.drawChar(char, x, y, tr.white)
 	} else {
 		// Normal:  black on white
-		tr.drawScaledChar(char, x, y, tr.black)
+		tr.drawChar(char, x, y, tr.black)
 	}
 
 	// Handle underline
@@ -145,61 +159,44 @@ func (tr *TextRenderer) renderChar(char rune, x, y, width, height float64) {
 		tr.canvas.DrawLine(int(x), underlineY, int(x+width), thickness, tr.black)
 	}
 
-	// Handle bold (draw twice with offset)
+	// Handle bold (draw twice with offset for extra weight)
 	if tr.state.IsBold {
-		tr.drawScaledChar(char, x+1, y, tr.black)
-	}
-}
-
-// drawScaledChar draws a character with scaling applied.
-// It uses the current state's scale factors and font metrics internally.
-func (tr *TextRenderer) drawScaledChar(char rune, x, y float64, col color.Color) {
-	baseMetrics := tr.fonts.GetMetrics(tr.state.FontName)
-	baseW := int(baseMetrics.GlyphWidth)
-	baseH := int(baseMetrics.GlyphHeight)
-
-	if !tr.state.HasScaling() {
-		// No scaling - direct draw using TrueType font
-		tr.fonts.DrawChar(tr.canvas.Image(), tr.state.FontName, char, int(x), int(y), col)
-		return
-	}
-
-	// With scaling - use bitmap fallback pattern for pixel-perfect scaling
-	scaleX := int(tr.state.ScaleW)
-	scaleY := int(tr.state.ScaleH)
-
-	pattern := getFallbackPattern(char)
-
-	pixelW := baseW / 6
-	pixelH := baseH / 8
-	if pixelW < 1 {
-		pixelW = 1
-	}
-	if pixelH < 1 {
-		pixelH = 1
-	}
-
-	for py := 0; py < 7; py++ {
-		for px := 0; px < 5; px++ {
-			if pattern[py]&(1<<(4-px)) != 0 {
-				// Draw scaled pixel
-				for sy := 0; sy < pixelH*scaleY; sy++ {
-					for sx := 0; sx < pixelW*scaleX; sx++ {
-						drawX := int(x) + px*pixelW*scaleX + sx
-						drawY := int(y) - baseH*scaleY + py*pixelH*scaleY + sy
-						tr.canvas.Set(drawX, drawY, col)
-					}
-				}
-			}
+		if tr.state.IsInverse {
+			tr.drawChar(char, x+1, y, tr.white)
+		} else {
+			tr.drawChar(char, x+1, y, tr.black)
 		}
 	}
 }
 
+// drawChar draws a character using TrueType fonts (scaled or unscaled)
+func (tr *TextRenderer) drawChar(char rune, x, y float64, col color.Color) {
+	if !tr.state.HasScaling() {
+		// No scaling - direct draw using base TrueType font
+		tr.fonts.DrawChar(tr.canvas.Image(), tr.state.FontName, char, int(x), int(y), col)
+		return
+	}
+
+	// With scaling - use cached scaled TrueType font
+	tr.fonts.DrawCharScaled(
+		tr.canvas.Image(),
+		tr.state.FontName,
+		char,
+		int(x),
+		int(y),
+		tr.state.ScaleW,
+		tr.state.ScaleH,
+		col,
+	)
+}
+
+// FIXME: The WrapText method now calculates charsPerLine directly instead of using state.CharsPerLine(charWidth).
+
 // WrapText wraps text to fit within paper width and renders each line
 func (tr *TextRenderer) WrapText(text string) {
-	metrics := tr.fonts.GetMetrics(tr.state.FontName)
-	charWidth := metrics.GlyphWidth * tr.state.ScaleW
-	charsPerLine := tr.state.CharsPerLine(charWidth)
+	metrics := tr.fonts.GetScaledMetrics(tr.state.FontName, tr.state.ScaleW, tr.state.ScaleH)
+	charWidth := metrics.GlyphWidth
+	charsPerLine := int(float64(tr.state.PaperPxWidth) / charWidth)
 
 	if charsPerLine <= 0 {
 		charsPerLine = 1
@@ -215,7 +212,8 @@ func (tr *TextRenderer) WrapText(text string) {
 	currentLen := 0
 
 	for _, word := range words {
-		wordLen := len(word)
+		// Count runes, not bytes - important for UTF-8 text
+		wordLen := utf8.RuneCountInString(word)
 
 		// If word is longer than line, split it
 		if wordLen > charsPerLine {
@@ -225,13 +223,14 @@ func (tr *TextRenderer) WrapText(text string) {
 				currentLine.Reset()
 				currentLen = 0
 			}
-			// Split long word
-			for i := 0; i < wordLen; i += charsPerLine {
+			// Split long word by runes (not bytes)
+			runes := []rune(word)
+			for i := 0; i < len(runes); i += charsPerLine {
 				end := i + charsPerLine
-				if end > wordLen {
-					end = wordLen
+				if end > len(runes) {
+					end = len(runes)
 				}
-				tr.RenderLine(word[i:end])
+				tr.RenderLine(string(runes[i:end]))
 			}
 			continue
 		}

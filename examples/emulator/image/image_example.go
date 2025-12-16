@@ -135,7 +135,7 @@ func buildReceipt(engine *emulator.Engine, logoImg image.Image) {
 	engine.PrintLine("RED2000")
 	engine.SetSize(1, 1)
 	engine.SetBold(false)
-	engine.PrintLine("Coffee & Tech")
+	engine.PrintLine("Stationery & Tech")
 	engine.PrintLine("www.red2000.com")
 	engine.Separator("=", 32)
 
@@ -147,9 +147,9 @@ func buildReceipt(engine *emulator.Engine, logoImg image.Image) {
 	engine.PrintLine("Order #: IMG-00456")
 	engine.Separator("-", 32)
 
-	engine.PrintLine("Latte Grande        $4.50")
-	engine.PrintLine("Croissant           $3.00")
-	engine.PrintLine("Tech Magazine       $8.99")
+	engine.PrintLine("Bookmarks           $4.50")
+	engine.PrintLine("Pencils             $3.00")
+	engine.PrintLine("Nail polish         $8.99")
 	engine.Separator("-", 32)
 
 	engine.SetBold(true)
@@ -184,7 +184,7 @@ func buildReceipt(engine *emulator.Engine, logoImg image.Image) {
 	// ============================================================================
 	engine.Separator("-", 32)
 	engine.PrintLine("Thank you for visiting!")
-	engine.PrintLine("Follow us @red2000coffee")
+	engine.PrintLine("Follow us @red2000Stationery")
 	engine.Feed(1)
 	engine.Cut(true)
 }

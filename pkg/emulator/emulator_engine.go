@@ -106,6 +106,7 @@ func (e *Engine) Reset() {
 	e.applyTopMargin()
 	e.canvas = NewDynamicCanvas(e.config.PaperPxWidth)
 	e.state.Reset()
+	e.fonts.ClearScaledFaceCache() // NEW: Clear cached scaled fonts
 	e.textRenderer = NewTextRenderer(e.canvas, e.fonts, e.state)
 	e.basicRenderer = NewBasicRenderer(e.canvas, e.fonts, e.state)
 	e.imageRenderer = NewImageRenderer(e.canvas, e.state)
