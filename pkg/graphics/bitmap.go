@@ -1,6 +1,11 @@
 // Package graphics provides utilities for handling monochrome bitmaps for ESC/POS printers
 package graphics
 
+import (
+	"image"
+	"image/color"
+)
+
 // MonochromeBitmap represents a black and white bitmap optimized for ESC/POS
 type MonochromeBitmap struct {
 	Width  int
@@ -58,4 +63,25 @@ func (m *MonochromeBitmap) GetRasterData() []byte {
 // GetWidthBytes returns the width in bytes (for ESC/POS commands)
 func (m *MonochromeBitmap) GetWidthBytes() int {
 	return (m.Width + 7) / 8
+}
+
+// ToImage converts the packed monochrome bitmap back to a drawable RGBA image.
+// This is used by the Emulator to preview exactly what will be printed.
+func (m *MonochromeBitmap) ToImage() *image.RGBA {
+	img := image.NewRGBA(image.Rect(0, 0, m.Width, m.Height))
+
+	black := color.RGBA{A: 255}
+	white := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+
+	for y := 0; y < m.Height; y++ {
+		for x := 0; x < m.Width; x++ {
+			if m.GetPixel(x, y) {
+				img.Set(x, y, black)
+			} else {
+				img.Set(x, y, white)
+			}
+		}
+	}
+
+	return img
 }
