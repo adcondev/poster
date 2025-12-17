@@ -2,6 +2,31 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [4.2.0](https://github.com/adcondev/pos-printer/compare/v4.1.0...v4.2.0) (2025-12-17)
+
+
+### 📝 Documentation
+
+* **poster:** Rename project to Poster and expand `LEARNING.md` with detailed technical architecture, new features like the visual emulator, and enhanced ESC/POS command support. ([19157f2](https://github.com/adcondev/pos-printer/commit/19157f2de9f6073f280fca75e62f47764fbb2b4c))
+
+
+### ⚡ Performance
+
+* **emulator:** optimize ToImage method for faster bitmap rendering ([473ba79](https://github.com/adcondev/pos-printer/commit/473ba799864c8c0d0b6df156b624415e050c3b6c))
+
+
+### ✅ Tests
+
+* **emulator:** add tests for AutoAdjustCursorOnScale functionality and image printing methods ([3fd0f80](https://github.com/adcondev/pos-printer/commit/3fd0f80542814a3e2958df74b5dc7f1d1f8eebf1))
+
+
+### ✨ Features
+
+* **config:** add AutoAdjustCursorOnScale option and update default DPI settings ([0a6a3c7](https://github.com/adcondev/pos-printer/commit/0a6a3c711353668fce69615292946301b4430f44))
+* **fonts:** add caching for scaled font faces and clear cache functionality ([9adb600](https://github.com/adcondev/pos-printer/commit/9adb6000dcec23ef34fb7adc6c4a81c78fc62b75))
+* **graphics:** add image rendering capabilities to the emulator ([092b722](https://github.com/adcondev/pos-printer/commit/092b722b3daa5e8748fcf4af685917766e971991))
+* **graphics:** add image rendering capabilities to the emulator ([#89](https://github.com/adcondev/pos-printer/issues/89)) ([6a0c896](https://github.com/adcondev/pos-printer/commit/6a0c8960d27fdb14569e1574751927b4e8233a40)), closes [/#diff-d33d3a77b7fb25f5fa2eb04de161c22a84bc2b3cd8e7ebc4519093f1ba9e077dR1-R294](https://github.com/adcondev///issues/diff-d33d3a77b7fb25f5fa2eb04de161c22a84bc2b3cd8e7ebc4519093f1ba9e077dR1-R294) [/#diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR32](https://github.com/adcondev///issues/diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR32) [/#diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR86](https://github.com/adcondev///issues/diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR86) [/#diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR111](https://github.com/adcondev///issues/diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR111) [/#diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR281-R314](https://github.com/adcondev///issues/diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR281-R314) [/#diff-980eee076fe58ca002f2e7d1970113ad6ca0825c2fb3f29ddbe6bf2d87f02b10R1-R168](https://github.com/adcondev///issues/diff-980eee076fe58ca002f2e7d1970113ad6ca0825c2fb3f29ddbe6bf2d87f02b10R1-R168) [/#diff-980eee076fe58ca002f2e7d1970113ad6ca0825c2fb3f29ddbe6bf2d87f02b10R1-R168](https://github.com/adcondev///issues/diff-980eee076fe58ca002f2e7d1970113ad6ca0825c2fb3f29ddbe6bf2d87f02b10R1-R168) [/#diff-897f07c4bba8e42c7d53c14563f93c9eedd993d316d3173cd33e79df8596c25cL124-R136](https://github.com/adcondev///issues/diff-897f07c4bba8e42c7d53c14563f93c9eedd993d316d3173cd33e79df8596c25cL124-R136) [/#diff-687d92981816c4e009e0729b938d4f7b81aab7da50c3758e4c21c76d6a194cd0R67-R87](https://github.com/adcondev///issues/diff-687d92981816c4e009e0729b938d4f7b81aab7da50c3758e4c21c76d6a194cd0R67-R87) [/#diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR12](https://github.com/adcondev///issues/diff-0cfaec7ad648f145a6bca7504542f19c11ee0ad28fd340d2534f6b51c8f8132cR12) [/#diff-897f07c4bba8e42c7d53c14563f93c9eedd993d316d3173cd33e79df8596c25cL6-L11](https://github.com/adcondev///issues/diff-897f07c4bba8e42c7d53c14563f93c9eedd993d316d3173cd33e79df8596c25cL6-L11)
+
 ## [4.1.0](https://github.com/adcondev/pos-printer/compare/v4.0.0...v4.1.0) (2025-12-12)
 
 
