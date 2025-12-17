@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("Failed to save receipt: %v", err)
 	}
 
-	fmt.Printf("Receipt saved to:  %s\n", fullPath)
+	fmt.Printf("Receipt saved to: %s\n", fullPath)
 
 	// Print dimensions
 	result := engine.RenderWithInfo()
@@ -66,10 +66,10 @@ func main() {
 	// ============================================================================
 	// Part 2: Optional Physical Printing
 	// ============================================================================
-	fmt.Print("\nDo you want to print the receipt?  (y/N): ")
+	fmt.Print("\nDo you want to print the receipt? (y/N): ")
 	var answer string
 	if _, err := fmt.Scanln(&answer); err != nil {
-		fmt.Println("Skipping print.  Goodbye!")
+		fmt.Println("Skipping print. Goodbye!")
 		return
 	}
 
@@ -102,7 +102,7 @@ func loadTestImage() image.Image {
 
 	img, format, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		log.Printf("Warning: Failed to decode image:  %v", err)
+		log.Printf("Warning: Failed to decode image: %v", err)
 		return nil
 	}
 
@@ -143,7 +143,7 @@ func buildReceipt(engine *emulator.Engine, logoImg image.Image) {
 	// Order Details
 	// ============================================================================
 	engine.AlignLeft()
-	engine.PrintLine("Date:  2024-12-16 14:30")
+	engine.PrintLine("Date: 2024-12-16 14:30")
 	engine.PrintLine("Order #: IMG-00456")
 	engine.Separator("-", 32)
 
@@ -249,7 +249,7 @@ func printReceipt(baseDir, fileName, printerName string) error {
 	// ============================================================================
 	img, err := load.ImgFromFile(baseDir, fileName)
 	if err != nil {
-		return fmt.Errorf("load image:  %w", err)
+		return fmt.Errorf("load image: %w", err)
 	}
 	fmt.Printf("Loaded receipt image: %dx%d pixels\n", img.Bounds().Dx(), img.Bounds().Dy())
 
