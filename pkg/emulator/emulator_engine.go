@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/graphics"
 )
 
 // RenderResult contains the output of an emulation render
@@ -28,6 +29,7 @@ type Engine struct {
 	// Renderers
 	textRenderer  *TextRenderer
 	basicRenderer *BasicRenderer
+	imageRenderer *ImageRenderer
 
 	// Logs and debug info
 	debug bool
@@ -61,10 +63,9 @@ func NewEngine(config Config) (*Engine, error) {
 		log.Printf("[Emulator] Warning: Font B failed to load: %v (using fallback)", errB)
 	}
 
+	// Log if using fallback
 	if fonts.UseFallback() {
 		log.Printf("[Emulator] Using bitmap fallback renderer")
-	} else {
-		log.Printf("[Emulator] Using TrueType font renderer")
 	}
 
 	// Create printer state
@@ -81,6 +82,7 @@ func NewEngine(config Config) (*Engine, error) {
 	// Create renderers
 	engine.textRenderer = NewTextRenderer(canvas, fonts, state)
 	engine.basicRenderer = NewBasicRenderer(canvas, fonts, state)
+	engine.imageRenderer = NewImageRenderer(canvas, state)
 
 	// Aplicar margen superior inicial para evitar recorte
 	engine.applyTopMargin()
@@ -95,7 +97,7 @@ func NewDefaultEngine() (*Engine, error) {
 
 // New58mmEngine creates an engine for 58mm paper
 func New58mmEngine() (*Engine, error) {
-	return NewEngine(Config58mm())
+	return NewEngine(ConfigTest58mm())
 }
 
 // Reset resets the engine to initial state (like ESC @)
@@ -103,8 +105,10 @@ func (e *Engine) Reset() {
 	e.applyTopMargin()
 	e.canvas = NewDynamicCanvas(e.config.PaperPxWidth)
 	e.state.Reset()
+	e.fonts.ClearScaledFaceCache() // NEW: Clear cached scaled fonts
 	e.textRenderer = NewTextRenderer(e.canvas, e.fonts, e.state)
 	e.basicRenderer = NewBasicRenderer(e.canvas, e.fonts, e.state)
+	e.imageRenderer = NewImageRenderer(e.canvas, e.state)
 	if e.debug {
 		log.Printf("[Emulator] Engine reset to initial state")
 	}
@@ -220,11 +224,45 @@ func (e *Engine) SetFont(name string) {
 	}
 }
 
-// SetSize sets character size multipliers (1-8 for both width and height)
+// SetSize sets character size multipliers (1-8 for both width and height).
+//
+// This method controls text scaling similar to ESC/POS GS !  command.
+// Valid values are 1-8 for both width and height; values outside this
+// range are clamped automatically.
+//
+// # Automatic Cursor Adjustment
+//
+// By default (Config.AutoAdjustCursorOnScale = true), when scaling UP
+// (increasing height), the cursor Y position is automatically adjusted
+// to prevent the taller text from overlapping with previously rendered
+// content.  This mimics how physical thermal printers handle scaled text.
+//
+// The adjustment amount equals:  baseGlyphHeight * (newScale - oldScale)
+//
+// # Disabling Auto-Adjustment
+//
+// For explicit cursor control, set Config. AutoAdjustCursorOnScale = false
+// when creating the engine.  You'll then need to manually call Feed() or
+// adjust positioning before printing larger text.
 func (e *Engine) SetSize(width, height int) {
+	oldScaleH := e.state.ScaleH
 	e.state.SetSize(float64(width), float64(height))
+
+	// Auto-adjust cursor when scaling UP to prevent overlap with previous content.
+	// This behavior can be disabled via Config.AutoAdjustCursorOnScale.
+	if e.config.AutoAdjustCursorOnScale && e.state.ScaleH > oldScaleH {
+		metrics := e.fonts.GetMetrics(e.state.FontName)
+		extraHeight := metrics.GlyphHeight * (e.state.ScaleH - oldScaleH)
+		e.state.CursorY += extraHeight
+		e.canvas.UpdateMaxY(e.state.CursorY)
+
+		if e.debug {
+			log.Printf("[Emulator] Auto-adjusted cursor by %.1f pixels for scale change", extraHeight)
+		}
+	}
+
 	if e.debug {
-		log.Printf("[Emulator] Character size set to: width=%d, height=%d", width, height)
+		log.Printf("[Emulator] Character size set to:  width=%d, height=%d", width, height)
 	}
 }
 
@@ -262,6 +300,40 @@ func (e *Engine) HorizontalLine(thickness int) {
 	if e.debug {
 		log.Printf("[Emulator] Horizontal line rendered: thickness=%d", thickness)
 	}
+}
+
+// ============================================================================
+// Image Methods
+// ============================================================================
+
+// PrintImage embeds an image at the current cursor position with default options.
+// The image is centered and resized to fit the paper width if necessary.
+func (e *Engine) PrintImage(img image.Image) error {
+	return e.imageRenderer.RenderImage(img, nil)
+}
+
+// PrintImageWithOptions embeds an image with custom options.
+func (e *Engine) PrintImageWithOptions(img image.Image, opts *ImageOptions) error {
+	return e.imageRenderer.RenderImage(img, opts)
+}
+
+// PrintImageAligned embeds an image with specified width and alignment.
+func (e *Engine) PrintImageAligned(img image.Image, width int, align string) error {
+	opts := DefaultImageOptions()
+	opts.PixelWidth = width
+	opts.Align = align
+	return e.imageRenderer.RenderImage(img, opts)
+}
+
+// PrintImageThermalPreview embeds an image processed exactly as it would be
+// for thermal printing, providing 100% fidelity preview.
+func (e *Engine) PrintImageThermalPreview(img image.Image, width int) error {
+	opts := DefaultImageOptions()
+	opts.PixelWidth = width
+	opts.SimulateThermal = true
+	opts.Dithering = graphics.Atkinson
+	opts.Threshold = 128
+	return e.imageRenderer.RenderImage(img, opts)
 }
 
 // ============================================================================

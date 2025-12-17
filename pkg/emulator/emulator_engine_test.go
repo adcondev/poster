@@ -1,8 +1,9 @@
-// engine_test.go - Comprehensive tests for emulator package
 package emulator_test
 
 import (
 	"bytes"
+	"image"
+	"image/color"
 	"image/png"
 	"testing"
 
@@ -295,6 +296,166 @@ func TestSetInverse(t *testing.T) {
 }
 
 // ============================================================================
+// SetSize Auto-Cursor Adjustment Tests
+// ============================================================================
+
+func TestSetSize_AutoAdjustCursor_Enabled(t *testing.T) {
+	// Default config has AutoAdjustCursorOnScale = true
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Print some text first
+	engine.PrintLine("Normal text")
+	cursorAfterText := engine.State().CursorY
+
+	// Scale up
+	engine.SetSize(2, 2)
+	cursorAfterScale := engine.State().CursorY
+
+	// Cursor should have advanced
+	if cursorAfterScale <= cursorAfterText {
+		t.Errorf("Cursor should advance when scaling up with AutoAdjustCursorOnScale=true.  Before: %.1f, After:  %.1f",
+			cursorAfterText, cursorAfterScale)
+	}
+
+	// The advance should be approximately (2-1) * FontAHeight = 24 pixels
+	expectedAdvance := float64(constants.FontAHeight) * (2.0 - 1.0)
+	actualAdvance := cursorAfterScale - cursorAfterText
+
+	if actualAdvance != expectedAdvance {
+		t.Errorf("Cursor advance = %.1f, want %.1f", actualAdvance, expectedAdvance)
+	}
+}
+
+func TestSetSize_AutoAdjustCursor_Disabled(t *testing.T) {
+	config := emulator.DefaultConfig()
+	config.AutoAdjustCursorOnScale = false
+
+	engine, err := emulator.NewEngine(config)
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Print some text first
+	engine.PrintLine("Normal text")
+	cursorAfterText := engine.State().CursorY
+
+	// Scale up
+	engine.SetSize(2, 2)
+	cursorAfterScale := engine.State().CursorY
+
+	// Cursor should NOT have advanced
+	if cursorAfterScale != cursorAfterText {
+		t.Errorf("Cursor should not advance when AutoAdjustCursorOnScale=false. Before: %.1f, After: %.1f",
+			cursorAfterText, cursorAfterScale)
+	}
+}
+
+func TestSetSize_NoAdjustOnScaleDown(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Start with scaled text
+	engine.SetSize(3, 3)
+	engine.PrintLine("Big text")
+	cursorAfterText := engine.State().CursorY
+
+	// Scale down
+	engine.SetSize(1, 1)
+	cursorAfterScale := engine.State().CursorY
+
+	// Cursor should NOT change when scaling down
+	if cursorAfterScale != cursorAfterText {
+		t.Errorf("Cursor should not change when scaling down. Before: %.1f, After: %.1f",
+			cursorAfterText, cursorAfterScale)
+	}
+}
+
+func TestSetSize_NoAdjustOnSameScale(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	engine.SetSize(2, 2)
+	engine.PrintLine("Text")
+	cursorAfterText := engine.State().CursorY
+
+	// Set same size again
+	engine.SetSize(2, 2)
+	cursorAfterScale := engine.State().CursorY
+
+	// Cursor should NOT change
+	if cursorAfterScale != cursorAfterText {
+		t.Errorf("Cursor should not change when setting same scale. Before: %.1f, After: %.1f",
+			cursorAfterText, cursorAfterScale)
+	}
+}
+
+func TestSetSize_MultipleScaleUps(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	engine.PrintLine("Text")
+	cursor1 := engine.State().CursorY
+
+	engine.SetSize(2, 2) // 1 -> 2
+	cursor2 := engine.State().CursorY
+
+	engine.SetSize(4, 4) // 2 -> 4
+	cursor3 := engine.State().CursorY
+
+	// Each scale up should advance cursor
+	if cursor2 <= cursor1 {
+		t.Error("First scale up should advance cursor")
+	}
+	if cursor3 <= cursor2 {
+		t.Error("Second scale up should advance cursor")
+	}
+
+	// Verify the advances are proportional to scale changes
+	advance1to2 := cursor2 - cursor1
+	advance2to4 := cursor3 - cursor2
+
+	// 1->2 advances by 1*24=24, 2->4 advances by 2*24=48
+	expectedAdvance1 := float64(constants.FontAHeight) * 1.0
+	expectedAdvance2 := float64(constants.FontAHeight) * 2.0
+
+	if advance1to2 != expectedAdvance1 {
+		t.Errorf("1->2 advance = %.1f, want %.1f", advance1to2, expectedAdvance1)
+	}
+	if advance2to4 != expectedAdvance2 {
+		t.Errorf("2->4 advance = %.1f, want %.1f", advance2to4, expectedAdvance2)
+	}
+}
+
+func TestSetSize_WidthOnlyChange(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	engine.PrintLine("Text")
+	cursorBefore := engine.State().CursorY
+
+	// Only change width, not height
+	engine.SetSize(3, 1)
+	cursorAfter := engine.State().CursorY
+
+	// No height change means no cursor adjustment
+	if cursorAfter != cursorBefore {
+		t.Errorf("Cursor should not change when only width changes. Before: %.1f, After: %.1f",
+			cursorBefore, cursorAfter)
+	}
+}
+
+// ============================================================================
 // Feed and Paper Control Tests
 // ============================================================================
 
@@ -577,6 +738,528 @@ func TestCharsPerLineForFont(t *testing.T) {
 			t.Errorf("CharsPerLineForFont(%d, %d) = %d, want %d",
 				tt.paperWidth, tt.fontWidth, result, tt.expected)
 		}
+	}
+}
+
+// ============================================================================
+// Image Printing Methods Tests
+// ============================================================================
+
+func TestPrintImage_Basic(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+	initialY := engine.State().CursorY
+
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() error = %v", err)
+	}
+
+	// Cursor should advance
+	if engine.State().CursorY <= initialY {
+		t.Error("PrintImage() should advance CursorY")
+	}
+}
+
+func TestPrintImage_NilImage(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	err = engine.PrintImage(nil)
+	if err == nil {
+		t.Error("PrintImage(nil) should return error")
+	}
+}
+
+func TestPrintImage_CursorAdvanceMatchesHeight(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	imgHeight := 75
+	img := createTestImage(100, imgHeight)
+	initialY := engine.State().CursorY
+
+	// Use options that don't resize
+	opts := emulator.DefaultImageOptions()
+	opts.PixelWidth = 100
+	opts.PreserveAspect = true
+
+	err = engine.PrintImageWithOptions(img, opts)
+	if err != nil {
+		t.Fatalf("PrintImageWithOptions() error = %v", err)
+	}
+
+	expectedY := initialY + float64(imgHeight)
+	if engine.State().CursorY != expectedY {
+		t.Errorf("CursorY = %.1f, want %.1f", engine.State().CursorY, expectedY)
+	}
+}
+
+func TestPrintImageWithOptions_NilOptions(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+
+	// Should use defaults and not panic
+	err = engine.PrintImageWithOptions(img, nil)
+	if err != nil {
+		t.Errorf("PrintImageWithOptions(img, nil) should not error:  %v", err)
+	}
+}
+
+func TestPrintImageWithOptions_CustomWidth(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(200, 100)
+	initialY := engine.State().CursorY
+
+	opts := emulator.DefaultImageOptions()
+	opts.PixelWidth = 100 // Scale down to half
+	opts.PreserveAspect = true
+
+	err = engine.PrintImageWithOptions(img, opts)
+	if err != nil {
+		t.Fatalf("PrintImageWithOptions() error = %v", err)
+	}
+
+	// With 2: 1 aspect ratio scaled to 100px wide, height should be 50
+	expectedAdvance := 50.0
+	actualAdvance := engine.State().CursorY - initialY
+
+	if actualAdvance != expectedAdvance {
+		t.Errorf("Cursor advance = %.1f, want %.1f", actualAdvance, expectedAdvance)
+	}
+}
+
+func TestPrintImageWithOptions_SimulateThermal(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Create gray image
+	img := createGrayTestImage(100, 50, 128)
+
+	opts := emulator.DefaultImageOptions()
+	opts.SimulateThermal = true
+	opts.PixelWidth = 100
+
+	err = engine.PrintImageWithOptions(img, opts)
+	if err != nil {
+		t.Fatalf("PrintImageWithOptions() with SimulateThermal error = %v", err)
+	}
+
+	// Verify output is valid
+	result := engine.Render()
+	if result == nil {
+		t.Error("Render() should not return nil after thermal preview")
+	}
+}
+
+func TestPrintImageAligned_AllAlignments(t *testing.T) {
+	alignments := []string{
+		constants.Left.String(),
+		constants.Center.String(),
+		constants.Right.String(),
+	}
+
+	for _, align := range alignments {
+		t.Run(align, func(t *testing.T) {
+			engine, err := emulator.NewDefaultEngine()
+			if err != nil {
+				t.Fatalf("Failed to create engine: %v", err)
+			}
+
+			img := createTestImage(100, 50)
+
+			err = engine.PrintImageAligned(img, 100, align)
+			if err != nil {
+				t.Errorf("PrintImageAligned(img, 100, %q) error = %v", align, err)
+			}
+		})
+	}
+}
+
+func TestPrintImageAligned_InvalidAlignment(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+
+	// Invalid alignment should fall back to left (not error)
+	err = engine.PrintImageAligned(img, 100, "invalid")
+	if err != nil {
+		t.Errorf("PrintImageAligned with invalid alignment should not error: %v", err)
+	}
+}
+
+func TestPrintImageAligned_ZeroWidth(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+	initialY := engine.State().CursorY
+
+	// Zero width should use original or default
+	err = engine.PrintImageAligned(img, 0, constants.Center.String())
+	if err != nil {
+		t.Errorf("PrintImageAligned with zero width should not error: %v", err)
+	}
+
+	// Should still render
+	if engine.State().CursorY <= initialY {
+		t.Error("Image should still render with zero width")
+	}
+}
+
+func TestPrintImageThermalPreview_Basic(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(200, 100)
+	initialY := engine.State().CursorY
+
+	err = engine.PrintImageThermalPreview(img, 150)
+	if err != nil {
+		t.Fatalf("PrintImageThermalPreview() error = %v", err)
+	}
+
+	if engine.State().CursorY <= initialY {
+		t.Error("PrintImageThermalPreview() should advance cursor")
+	}
+}
+
+func TestPrintImageThermalPreview_OutputIsBW(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Create colored image
+	img := createColorTestImage(100, 50)
+
+	err = engine.PrintImageThermalPreview(img, 100)
+	if err != nil {
+		t.Fatalf("PrintImageThermalPreview() error = %v", err)
+	}
+
+	result := engine.Render()
+
+	// Check that pixels in the image area are pure B&W
+	allBW := true
+	bounds := result.Bounds()
+	for y := 0; y < bounds.Dy() && allBW; y++ {
+		for x := 0; x < bounds.Dx() && allBW; x++ {
+			r, g, b, _ := result.At(x, y).RGBA()
+			r8, g8, b8 := r>>8, g>>8, b>>8
+
+			isWhite := r8 == 255 && g8 == 255 && b8 == 255
+			isBlack := r8 == 0 && g8 == 0 && b8 == 0
+
+			if !isWhite && !isBlack {
+				allBW = false
+			}
+		}
+	}
+
+	if !allBW {
+		t.Error("PrintImageThermalPreview should produce only black and white pixels")
+	}
+}
+
+func TestPrintImage_MultipleImages(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img1 := createTestImage(100, 50)
+	img2 := createTestImage(100, 75)
+
+	err = engine.PrintImage(img1)
+	if err != nil {
+		t.Fatalf("First PrintImage() error = %v", err)
+	}
+	cursor1 := engine.State().CursorY
+
+	err = engine.PrintImage(img2)
+	if err != nil {
+		t.Fatalf("Second PrintImage() error = %v", err)
+	}
+	cursor2 := engine.State().CursorY
+
+	if cursor2 <= cursor1 {
+		t.Error("Second image should be below first image")
+	}
+}
+
+func TestPrintImage_WithTextBefore(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	engine.PrintLine("Header text")
+	cursorAfterText := engine.State().CursorY
+
+	img := createTestImage(100, 50)
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() error = %v", err)
+	}
+
+	if engine.State().CursorY <= cursorAfterText {
+		t.Error("Image should be below text")
+	}
+}
+
+func TestPrintImage_WithTextAfter(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() error = %v", err)
+	}
+	cursorAfterImage := engine.State().CursorY
+
+	engine.PrintLine("Footer text")
+
+	if engine.State().CursorY <= cursorAfterImage {
+		t.Error("Text should be below image")
+	}
+}
+
+func TestPrintImage_WidthCappedToPaper_80mm(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine() // 576px
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Image wider than paper
+	img := createTestImage(800, 100)
+
+	opts := emulator.DefaultImageOptions()
+	opts.PixelWidth = 800 // Request more than paper width
+
+	err = engine.PrintImageWithOptions(img, opts)
+	if err != nil {
+		t.Fatalf("PrintImageWithOptions() error = %v", err)
+	}
+
+	result := engine.Render()
+	if result.Bounds().Dx() != constants.PaperPxWidth80mm {
+		t.Errorf("Output width = %d, want %d", result.Bounds().Dx(), constants.PaperPxWidth80mm)
+	}
+}
+
+func TestPrintImage_WidthCappedToPaper_58mm(t *testing.T) {
+	engine, err := emulator.New58mmEngine() // 384px
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(500, 100)
+
+	opts := emulator.DefaultImageOptions()
+	opts.PixelWidth = 500
+
+	err = engine.PrintImageWithOptions(img, opts)
+	if err != nil {
+		t.Fatalf("PrintImageWithOptions() error = %v", err)
+	}
+
+	result := engine.Render()
+	if result.Bounds().Dx() != constants.PaperPxWidth58mm {
+		t.Errorf("Output width = %d, want %d", result.Bounds().Dx(), constants.PaperPxWidth58mm)
+	}
+}
+
+func TestPrintImage_TransparentImage(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Create transparent image
+	img := createTransparentTestImage(100, 50)
+
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() with transparent image error = %v", err)
+	}
+
+	// Should render without error
+	result := engine.Render()
+	if result == nil {
+		t.Error("Render() should not return nil")
+	}
+}
+
+func TestPrintImage_VerySmallImage(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// 1x1 pixel image
+	img := createTestImage(1, 1)
+
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() with 1x1 image error = %v", err)
+	}
+}
+
+func TestPrintImage_CanvasGrows(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	// Print text to fill canvas
+	for i := 0; i < 40; i++ {
+		engine.PrintLine("Line of text")
+	}
+
+	// Now add a tall image
+	img := createTestImage(200, 800)
+
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() error = %v", err)
+	}
+
+	result := engine.Render()
+	if result.Bounds().Dy() < 800 {
+		t.Error("Canvas should grow to accommodate tall image")
+	}
+}
+
+func TestPrintImage_Reset(t *testing.T) {
+	engine, err := emulator.NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("Failed to create engine: %v", err)
+	}
+
+	img := createTestImage(100, 50)
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() error = %v", err)
+	}
+
+	engine.Reset()
+
+	// After reset, should be able to print image again
+	err = engine.PrintImage(img)
+	if err != nil {
+		t.Fatalf("PrintImage() after Reset() error = %v", err)
+	}
+}
+
+// ============================================================================
+// Image Test Helpers
+// ============================================================================
+
+func createTestImage(width, height int) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	white := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, white)
+		}
+	}
+	return img
+}
+
+func createGrayTestImage(width, height int, gray uint8) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	c := color.RGBA{R: gray, G: gray, B: gray, A: 255}
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, c)
+		}
+	}
+	return img
+}
+
+func createColorTestImage(width, height int) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			// Create rainbow pattern
+			r := uint8((x * 255) / width)  //nolint:gosec
+			g := uint8((y * 255) / height) //nolint:gosec
+			b := uint8(128)
+			img.Set(x, y, color.RGBA{R: r, G: g, B: b, A: 255})
+		}
+	}
+	return img
+}
+
+func createTransparentTestImage(width, height int) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	// Leave pixels as default (transparent black)
+	return img
+}
+
+// ============================================================================
+// Image Printing Benchmark Tests
+// ============================================================================
+
+func BenchmarkPrintImage_Small(b *testing.B) {
+	engine, _ := emulator.NewDefaultEngine()
+	img := createTestImage(100, 100)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		engine.Reset()
+		_ = engine.PrintImage(img)
+	}
+}
+
+func BenchmarkPrintImage_Medium(b *testing.B) {
+	engine, _ := emulator.NewDefaultEngine()
+	img := createTestImage(384, 300)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		engine.Reset()
+		_ = engine.PrintImage(img)
+	}
+}
+
+func BenchmarkPrintImage_ThermalPreview(b *testing.B) {
+	engine, _ := emulator.NewDefaultEngine()
+	img := createTestImage(384, 300)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		engine.Reset()
+		_ = engine.PrintImageThermalPreview(img, 384)
 	}
 }
 

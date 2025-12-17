@@ -40,6 +40,10 @@ executor:
   - changed-files:
       - any-glob-to-any-file: 'pkg/document/executor/**'
 
+schema:
+  - changed-files:
+      - any-glob-to-any-file: 'pkg/document/schema/**'
+
 builder:
   - changed-files:
       - any-glob-to-any-file: 'pkg/document/builder/**'
@@ -100,6 +104,10 @@ printposition:
 qrcode:
   - changed-files:
       - any-glob-to-any-file: 'pkg/commands/qrcode/**'
+
+emulator:
+  - changed-files:
+      - any-glob-to-any-file: 'pkg/emulator/**'
 
 # Other categories
 windows:

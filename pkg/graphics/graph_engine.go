@@ -3,12 +3,8 @@ package graphics
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"log"
 
-	"golang.org/x/image/draw"
-
-	"github.com/adcondev/poster/pkg/commands/common"
 	"github.com/adcondev/poster/pkg/constants"
 )
 
@@ -121,52 +117,24 @@ func (p *Pipeline) Process(img image.Image) (*MonochromeBitmap, error) {
 
 // resize scales (up or down) the image to target width maintaining aspect ratio
 func (p *Pipeline) resize(img image.Image) image.Image {
-	bounds := img.Bounds()
-	srcW, srcH := bounds.Dx(), bounds.Dy()
-
-	// TODO: Look where to define constant for max width
-	if p.opts.PixelWidth > common.Dpl80mm203dpi {
-		// Limit maximum width to 576 pixels for thermal printers (80mm at 203 DPI))
-		p.opts.PixelWidth = common.Dpl80mm203dpi
+	// TODO: ImgOption should have a MaxWidth to cap resizing based on ticket size.
+	maxWidth := constants.PaperPxWidth80mm
+	if p.opts.PixelWidth > maxWidth {
+		p.opts.PixelWidth = maxWidth
 		log.Printf("resize: limiting target width to %d pixels", p.opts.PixelWidth)
 	}
 
-	targetW := p.opts.PixelWidth
-	targetH := srcH
-
-	if p.opts.PreserveAspect {
-		targetH = (srcH * targetW) / srcW
-	}
-
-	// Trade-off: BiLinear is slower than nearest-neighbor, but the quality improvement is usually worth it for printing.
-	dst := image.NewRGBA(image.Rect(0, 0, targetW, targetH))
-
-	switch p.opts.Scaling {
-	case NearestNeighbor:
-		draw.NearestNeighbor.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
-	case BiLinear:
-		draw.BiLinear.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
-	// TODO: Add more scaling algorithms here
-	default:
-		draw.BiLinear.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
-	}
-
-	return dst
+	return ResizeImage(img, &ResizeOptions{
+		TargetWidth:    p.opts.PixelWidth,
+		MaxWidth:       maxWidth,
+		PreserveAspect: p.opts.PreserveAspect,
+		Scaling:        p.opts.Scaling,
+	})
 }
 
 // toGrayscale converts any image to grayscale
 func (p *Pipeline) toGrayscale(img image.Image) *image.Gray {
-	bounds := img.Bounds()
-	gray := image.NewGray(bounds)
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			c := color.GrayModel.Convert(img.At(x, y)).(color.Gray)
-			gray.Set(x, y, c)
-		}
-	}
-
-	return gray
+	return ToGrayscale(img)
 }
 
 // applyThreshold applies simple threshold conversion

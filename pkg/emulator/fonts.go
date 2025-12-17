@@ -34,7 +34,9 @@ type ScaledFont struct {
 
 // FontManager handles font loading and scaling for thermal printer emulation
 type FontManager struct {
-	fonts       map[string]*ScaledFont
+	fonts map[string]*ScaledFont
+	// FIXME: he scaledFaces map is accessed from multiple methods without synchronization.
+	scaledFaces map[string]font.Face // Cache:  "fontName_scaleW_scaleH" -> face
 	useFallback bool
 }
 
@@ -42,6 +44,7 @@ type FontManager struct {
 func NewFontManager() *FontManager {
 	return &FontManager{
 		fonts:       make(map[string]*ScaledFont),
+		scaledFaces: make(map[string]font.Face),
 		useFallback: false,
 	}
 }
@@ -57,7 +60,7 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 
 	f, err := opentype.Parse(ttfData)
 	if err != nil {
-		log.Printf("[FontManager] ERROR: Failed to parse TTF for '%s': %v", name, err)
+		log.Printf("[FontManager] ERROR:  Failed to parse TTF for '%s': %v", name, err)
 		fm.useFallback = true
 		return fmt.Errorf("parsing ttf: %w", err)
 	}
@@ -111,13 +114,17 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 		face:   bestFace,
 		ttFont: f,
 		metrics: FontMetrics{
-			GlyphWidth:  targetWidth, // Use target for consistent grid
+			GlyphWidth:  targetWidth,
 			GlyphHeight: targetHeight,
 			LineHeight:  targetHeight + 6,
 			Ascent:      targetHeight * 0.8,
 			Descent:     targetHeight * 0.2,
 		},
 	}
+
+	// Pre-cache the 1x1 scale for this font
+	cacheKey := fmt.Sprintf("%s_1.0_1.0", name)
+	fm.scaledFaces[cacheKey] = bestFace
 
 	return nil
 }
@@ -154,12 +161,95 @@ func (fm *FontManager) GetMetrics(name string) FontMetrics {
 	}
 }
 
-// DrawChar draws a single character at the specified position
+// GetScaledMetrics returns font metrics adjusted for the given scale factors
+func (fm *FontManager) GetScaledMetrics(name string, scaleW, scaleH float64) FontMetrics {
+	base := fm.GetMetrics(name)
+	return FontMetrics{
+		GlyphWidth:  base.GlyphWidth * scaleW,
+		GlyphHeight: base.GlyphHeight * scaleH,
+		LineHeight:  base.LineHeight * scaleH,
+		Ascent:      base.Ascent * scaleH,
+		Descent:     base.Descent * scaleH,
+	}
+}
+
+// GetOrCreateScaledFace returns a cached scaled font face, creating it if necessary
+func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH float64) (font.Face, error) {
+	// Generate cache key
+	key := fmt.Sprintf("%s_%.1f_%.1f", fontName, scaleW, scaleH)
+
+	// Check cache first
+	if face, ok := fm.scaledFaces[key]; ok {
+		return face, nil
+	}
+
+	// Get the base font
+	sf, err := fm.GetFont(fontName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate target height for the scaled font
+	// Use the larger scale factor to determine the font size
+	scaleFactor := scaleH
+	if scaleW > scaleH {
+		scaleFactor = scaleW
+	}
+	targetHeight := sf.metrics.GlyphHeight * scaleFactor
+
+	// Search for the best matching font size
+	var bestFace font.Face
+	minDiff := math.MaxFloat64
+
+	// Extended range for larger scales (up to 8x means we need larger sizes)
+	maxSize := 72.0 + (scaleFactor * 20.0)
+	if maxSize > 200.0 {
+		maxSize = 200.0
+	}
+
+	for size := 6.0; size <= maxSize; size += 0.5 {
+		opts := &opentype.FaceOptions{
+			Size:    size,
+			DPI:     72.0,
+			Hinting: font.HintingFull,
+		}
+		face, err := opentype.NewFace(sf.ttFont, opts)
+		if err != nil {
+			continue
+		}
+
+		metrics := face.Metrics()
+		currentHeight := float64(metrics.Height) / 64.0
+
+		diff := math.Abs(currentHeight - targetHeight)
+		if diff < minDiff {
+			minDiff = diff
+			bestFace = face
+		}
+
+		// Early exit if we found a very close match
+		if diff < 0.5 {
+			break
+		}
+	}
+
+	if bestFace == nil {
+		return nil, fmt.Errorf("could not create scaled face for %s at %.1fx%.1f", fontName, scaleW, scaleH)
+	}
+
+	// Cache the result
+	fm.scaledFaces[key] = bestFace
+	log.Printf("[FontManager] Created and cached scaled face:  %s at %.1fx%.1f", fontName, scaleW, scaleH)
+
+	return bestFace, nil
+}
+
+// DrawChar draws a single character at the specified position (1x1 scale)
 // Returns the advance width
 func (fm *FontManager) DrawChar(dst draw.Image, fontName string, char rune, x, y int, col color.Color) float64 {
 	sf, err := fm.GetFont(fontName)
 	if err != nil || fm.useFallback {
-		// Fallback: draw a simple rectangle placeholder
+		// Fallback:  draw using bitmap
 		metrics := fm.GetMetrics(fontName)
 		fm.drawFallbackChar(dst, char, x, y, int(metrics.GlyphWidth), int(metrics.GlyphHeight), col)
 		return metrics.GlyphWidth
@@ -180,4 +270,78 @@ func (fm *FontManager) DrawChar(dst draw.Image, fontName string, char rune, x, y
 	d.DrawString(string(char))
 
 	return sf.metrics.GlyphWidth
+}
+
+// DrawCharScaled draws a character with the specified scaling factors
+// Returns the advance width (scaled)
+func (fm *FontManager) DrawCharScaled(dst draw.Image, fontName string, char rune, x, y int, scaleW, scaleH float64, col color.Color) float64 {
+	metrics := fm.GetScaledMetrics(fontName, scaleW, scaleH)
+
+	// If fallback mode, use bitmap fallback
+	if fm.useFallback {
+		fm.drawFallbackCharScaled(dst, char, x, y, int(metrics.GlyphWidth), int(metrics.GlyphHeight), col)
+		return metrics.GlyphWidth
+	}
+
+	// Get or create the scaled font face
+	face, err := fm.GetOrCreateScaledFace(fontName, scaleW, scaleH)
+	if err != nil {
+		// Fallback to bitmap rendering on error
+		fm.drawFallbackCharScaled(dst, char, x, y, int(metrics.GlyphWidth), int(metrics.GlyphHeight), col)
+		return metrics.GlyphWidth
+	}
+
+	// Draw using the scaled font face
+	point := fixed.Point26_6{
+		X: fixed.I(x),
+		Y: fixed.I(y),
+	}
+
+	d := &font.Drawer{
+		Dst:  dst,
+		Src:  image.NewUniform(col),
+		Face: face,
+		Dot:  point,
+	}
+	d.DrawString(string(char))
+
+	return metrics.GlyphWidth
+}
+
+// drawFallbackCharScaled renders a bitmap character scaled to fit the given dimensions
+func (fm *FontManager) drawFallbackCharScaled(dst draw.Image, char rune, x, y, w, h int, col color.Color) {
+	pattern := getFallbackPattern(char)
+
+	// The 5x7 bitmap pattern needs to be scaled to fit w x h
+	pixelW := w / 5 // 5 columns in the pattern
+	pixelH := h / 7 // 7 rows in the pattern
+	if pixelW < 1 {
+		pixelW = 1
+	}
+	if pixelH < 1 {
+		pixelH = 1
+	}
+
+	for py := 0; py < 7; py++ {
+		for px := 0; px < 5; px++ {
+			if pattern[py]&(1<<(4-px)) != 0 {
+				// Draw scaled pixel
+				for sy := 0; sy < pixelH; sy++ {
+					for sx := 0; sx < pixelW; sx++ {
+						drawX := x + px*pixelW + sx
+						drawY := y - h + py*pixelH + sy
+						dst.Set(drawX, drawY, col)
+					}
+				}
+			}
+		}
+	}
+}
+
+// FIXME: ClearScaledFaceCache recreates the map but doesn't close the existing font.Face resources.
+
+// ClearScaledFaceCache clears the cached scaled font faces
+// Useful when resetting the engine or changing fonts
+func (fm *FontManager) ClearScaledFaceCache() {
+	fm.scaledFaces = make(map[string]font.Face)
 }

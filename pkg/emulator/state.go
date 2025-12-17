@@ -100,11 +100,11 @@ func (s *PrinterState) SetSize(w, h float64) {
 // clampScale clamps a scale value to valid range and logs warnings
 func clampScale(value float64, name string) float64 {
 	if value < constants.MinScale {
-		log.Printf("Warning: Character %s scale %.2f too small, clamping to %.1f", name, value, constants.MinScale)
+		log.Printf("[Emulator] Warning: Character %s scale %.2f too small, clamping to %.1f", name, value, constants.MinScale)
 		return constants.MinScale
 	}
 	if value > constants.MaxScale {
-		log.Printf("Warning: Character %s scale %.2f too large, clamping to %.1f", name, value, constants.MaxScale)
+		log.Printf("[Emulator] Warning:  Character %s scale %.2f too large, clamping to %.1f", name, value, constants.MaxScale)
 		return constants.MaxScale
 	}
 	return value

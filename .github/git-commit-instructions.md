@@ -52,6 +52,7 @@ Scope MUST be a noun describing a section of the codebase surrounded by parenthe
 - `(qrcode)` - QR code generation
 - `(bitimage)` - Bitmap image processing
 - `(tables)` - Table formatting and layout
+- `(emulator` - Visual emulator for print preview
 
 ### Formatting
 
@@ -66,6 +67,7 @@ Scope MUST be a noun describing a section of the codebase surrounded by parenthe
 - `(protocol)` - Communication protocols
 - `(config)` - Configuration management
 - `(mechanismcontrol)` - Hardware mechanism control
+- `(constants)` - Constant and default values
 
 ### Infrastructure
 
