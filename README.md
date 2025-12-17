@@ -1,6 +1,6 @@
-# *Poster: Printer Driver & POS Utility*
+# *Poster: Thermal Printer Driver & ESC/POS Utility*
 
-![Go Version](https://img.shields.io/badge/go-1.20+-00ADD8?style=flat&logo=go)
+![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8?style=flat&logo=go)
 ![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -8,25 +8,21 @@
   <img src="assets/images/poster.png" alt="POS Printer Logo" width="576">
 </p>
 
-A professional, production-ready Go library and command-line utility for controlling ESC/POS thermal printers. Designed
-for high-reliability retail and POS environments, it features a robust JSON-based document protocol, native Windows
-Spooler integration, and an advanced graphics engine.
+A professional, production-ready Go library and command-line utility for controlling ESC/POS thermal printers. Designed for high-reliability retail and POS environments, it features a robust JSON-based document protocol, native Windows Spooler integration, an advanced graphics engine, and a **visual emulator** for testing without physical hardware.
 
 ## 🚀 Key Features
 
-- **JSON Document Protocol**: Define print jobs using a clean, versioned JSON schema. Decouples business logic from
-  hardware commands.
-- **Native Windows Integration**: Prints directly via the Windows Print Spooler API (`winspool.drv`), supporting USB,
-  Serial, and Network printers installed in Windows.
+- **JSON Document Protocol**: Define print jobs using a clean, versioned JSON schema (`v1.0`). Decouples business logic from hardware commands with full schema validation.
+- **Native Windows Integration**: Prints directly via the Windows Print Spooler API (`winspool.drv`), supporting USB, Serial, and Network printers installed in Windows.
 - **Advanced Graphics Engine**:
     - High-quality image printing with **Atkinson Dithering**.
-    - Automatic scaling and aspect ratio preservation.
-    - Supports PNG, JPG, BMP.
-- **Smart QR & Barcodes**: Automatically chooses between native printer firmware commands (fastest) or software
-  rendering (maximum compatibility) based on the printer profile.
-- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping and
-  multi-column support.
-- **Hardware Agnostic**: Includes profiles for standard 80mm (Epson-compatible) and 58mm (generic) printers.
+    - Automatic scaling with bilinear interpolation.
+    - Supports PNG, JPG, BMP formats.
+- **Smart QR & Barcodes**: Automatically chooses between native printer firmware commands (fastest) or software rendering (maximum compatibility) based on the printer profile.
+- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping, multi-column support, and configurable spacing.
+- **Visual Emulator**: Render print jobs as PNG images for preview and testing without physical hardware.
+- **Hardware Agnostic**: Includes profiles for standard 80mm (Epson-compatible), 58mm (generic), and PT-210 portable printers.
+- **Raw Command Support**: Send raw ESC/POS bytes when full control is needed.
 
 ## 🏗️ Architecture
 
@@ -42,51 +38,81 @@ graph TD
         Service --> Protocol[ESC/POS Composer]
         Service --> Profile[Device Profile]
         Service --> Graphics[Graphics Engine]
+        Service --> Tables[Table Engine]
     end
 
     Service --> Connector[Connection Interface]
 
-    subgraph Hardware Layer
+    subgraph Output Layer
         Connector --> WinAPI[Windows Spooler API]
+        Connector --> Emulator[Visual Emulator]
         WinAPI --> Device[Physical Printer]
+        Emulator --> PNG[PNG Image]
     end
 ```
+
+### Package Structure
+
+| Package | Description |
+|---------|-------------|
+| `pkg/commands` | ESC/POS command implementations (barcode, character, qrcode, etc.) |
+| `pkg/composer` | ESC/POS byte sequence generation |
+| `pkg/connection` | Connection interfaces (Windows Spooler, Network, Serial, File) |
+| `pkg/constants` | Shared constants and unit conversions |
+| `pkg/document` | Document parsing, building, and execution (schema, builder, executor) |
+| `pkg/emulator` | Visual emulator for rendering print jobs as images |
+| `pkg/graphics` | Image processing, dithering, and bitmap handling |
+| `pkg/profile` | Printer profiles and character encoding tables |
+| `pkg/service` | High-level printer service facade |
+| `pkg/tables` | Dynamic table layout engine |
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- Go 1.20 or higher
+- Go 1.24 or higher
 - Windows OS (for native spooler support)
 
 ### Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/adcondev/pos-printer.git
+git clone https://github.com/adcondev/poster.git
 
 # Navigate to the project directory
-cd pos-printer
+cd poster
 
 # Build the binary
-go build -o pos-printer.exe ./cmd/poster
+go build -o poster.exe ./cmd/poster
 ```
 
 ## 📖 Usage
 
 ### Command Line Interface (CLI)
 
-The `pos-printer` utility takes a JSON document and sends it to a specified printer.
+The `poster` utility takes a JSON document and sends it to a specified printer.
 
 ```bash
 # Print a document to a specific printer
-pos-printer.exe -file receipt.json -printer "EPSON TM-T88V"
+poster.exe -file receipt.json -printer "EPSON TM-T88V"
+
+# Print via network
+poster.exe -t network -network 192.168.1.100:9100 receipt.json
+
+# Print via serial port
+poster.exe -t serial -serial COM1 -baud 115200 receipt.json
+
+# Output to file (for debugging or emulator)
+poster.exe -t file -output receipt.prn receipt.json
 
 # Dry-run (validate JSON without printing)
-pos-printer.exe -file receipt.json -dry-run
+poster.exe -file receipt.json --dry-run
 
-# List available command options
-pos-printer.exe -help
+# Show version
+poster.exe -v
+
+# List available options
+poster.exe -h
 ```
 
 ### JSON Document Example
@@ -98,7 +124,9 @@ Create a file named `ticket.json`:
   "version": "1.0",
   "profile": {
     "model": "Generic 80mm",
-    "paper_width": 80
+    "paper_width": 80,
+    "dpi": 203,
+    "has_qr": true
   },
   "commands": [
     {
@@ -125,27 +153,13 @@ Create a file named `ticket.json`:
       "data": {
         "definition": {
           "columns": [
-            {
-              "name": "Item",
-              "width": 20,
-              "align": "left"
-            },
-            {
-              "name": "Price",
-              "width": 10,
-              "align": "right"
-            }
+            { "name": "Item", "width": 20, "align": "left" },
+            { "name": "Price", "width": 10, "align": "right" }
           ]
         },
         "rows": [
-          [
-            "Coffee",
-            "$3.50"
-          ],
-          [
-            "Sandwich",
-            "$8.00"
-          ]
+          ["Coffee", "$3.50"],
+          ["Sandwich", "$8.00"]
         ]
       }
     },
@@ -175,10 +189,10 @@ You can also use the packages directly in your Go application:
 package main
 
 import (
-	"github.com/adcondev/pos-printer/pkg/composer"
-	"github.com/adcondev/pos-printer/pkg/connection"
-	"github.com/adcondev/pos-printer/pkg/profile"
-	"github.com/adcondev/pos-printer/pkg/service"
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 func main() {
@@ -201,22 +215,62 @@ func main() {
 }
 ```
 
+## 📋 Supported Commands
+
+| Command | Description |
+|---------|-------------|
+| `text` | Print formatted text with styles (bold, underline, inverse, sizing) |
+| `image` | Print images with dithering and scaling options |
+| `barcode` | Generate barcodes (CODE128, EAN13, UPC-A, CODE39, etc.) |
+| `qr` | Generate QR codes with optional logos and human-readable text |
+| `table` | Create formatted tables with column alignment and word wrapping |
+| `separator` | Print separator lines |
+| `feed` | Advance paper by specified lines |
+| `cut` | Perform full or partial paper cut |
+| `raw` | Send raw ESC/POS bytes directly |
+
+For complete documentation, see [api/v1/DOCUMENT_V1.md](api/v1/DOCUMENT_V1.md).
+
 ## ⚙️ Configuration
 
 ### Connection Types
 
-Currently, the primary supported connection is **Windows Spooler**.
-
-- **Windows**: Uses the OS driver. Best for USB/Network printers installed in Windows.
-- *Planned*: Direct Network (Raw TCP/9100) and Serial (COM) support.
+| Type | Description |
+|------|-------------|
+| `windows` | Windows Print Spooler (default). Best for USB/Network printers installed in Windows. |
+| `network` | Direct network connection via Raw TCP/9100 |
+| `serial` | Serial/USB direct connection (COM ports) |
+| `file` | Output to file for debugging or emulator testing |
 
 ### Printer Profiles
 
 The library includes built-in profiles for common hardware:
 
-- `CreateProfile80mm()`: Standard ESC/POS (Epson TM-T88, etc.)
-- `CreateProfile58mm()`: Generic 58mm thermal printers.
-- `CreatePt210()`: Specific tweaks for PT-210 portable printers.
+| Profile | Description |
+|---------|-------------|
+| `CreateProfile80mm()` | Standard ESC/POS 80mm (Epson TM-T88, etc.) |
+| `CreateProfile58mm()` | Generic 58mm thermal printers |
+| `CreatePt210()` | PT-210 portable printer with specific tweaks |
+
+## 🎨 Visual Emulator
+
+The `pkg/emulator` package provides a visual emulator that renders print jobs as PNG images:
+
+```go
+import (
+	"github.com/adcondev/poster/pkg/emulator"
+)
+
+// Create emulator with configuration
+emu := emulator.NewEngine(emulator.Config{
+	PaperWidth: 80,
+	DPI:        203,
+})
+
+// Render document and save as PNG
+img := emu.Render(document)
+emu.SaveImage("receipt_preview.png")
+```
 
 ## 🤝 Contributing
 
