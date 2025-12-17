@@ -38,8 +38,7 @@ type ImageOptions struct {
 // DefaultImageOptions returns sensible defaults for image embedding
 func DefaultImageOptions() *ImageOptions {
 	return &ImageOptions{
-		// TODO: define an appropriate default value
-		PixelWidth:      255,
+		PixelWidth:      constants.DefaultImagePixelWidth,
 		Align:           constants.Center.String(),
 		PreserveAspect:  true,
 		Scaling:         graphics.BiLinear,
@@ -76,7 +75,7 @@ func (ir *ImageRenderer) RenderImage(img image.Image, opts *ImageOptions) error 
 	// Determine target width
 	targetWidth := opts.PixelWidth
 	if targetWidth <= 0 {
-		// TODO: As default, should not use original width if larger than paper, better to define a default width
+		// Use original image width, capped to paper width later
 		targetWidth = img.Bounds().Dx()
 	}
 	if targetWidth > ir.state.PaperPxWidth {

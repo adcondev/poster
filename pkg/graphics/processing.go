@@ -65,8 +65,6 @@ func ResizeImage(img image.Image, opts *ResizeOptions) image.Image {
 	switch opts.Scaling {
 	case NearestNeighbor:
 		scaler = draw.NearestNeighbor
-	case BiLinear:
-		scaler = draw.BiLinear
 	default:
 		scaler = draw.BiLinear
 	}
