@@ -53,7 +53,7 @@ const (
 // Image defaults for processing
 const (
 	// DefaultImagePixelWidth default in pixels (0 - 576 @ 203 DPI)
-	DefaultImagePixelWidth = 128
+	DefaultImagePixelWidth = 256
 	// DefaultImageThreshold default (0-255)
 	DefaultImageThreshold = 128
 	// DefaultImageDithering is the default dithering algorithm

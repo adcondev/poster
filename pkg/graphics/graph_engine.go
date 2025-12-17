@@ -117,6 +117,7 @@ func (p *Pipeline) Process(img image.Image) (*MonochromeBitmap, error) {
 
 // resize scales (up or down) the image to target width maintaining aspect ratio
 func (p *Pipeline) resize(img image.Image) image.Image {
+	// TODO: ImgOption should have a MaxWidth to cap resizing based on ticket size.
 	maxWidth := constants.PaperPxWidth80mm
 	if p.opts.PixelWidth > maxWidth {
 		p.opts.PixelWidth = maxWidth

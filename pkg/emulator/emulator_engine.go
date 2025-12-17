@@ -63,10 +63,9 @@ func NewEngine(config Config) (*Engine, error) {
 		log.Printf("[Emulator] Warning: Font B failed to load: %v (using fallback)", errB)
 	}
 
+	// Log if using fallback
 	if fonts.UseFallback() {
 		log.Printf("[Emulator] Using bitmap fallback renderer")
-	} else {
-		log.Printf("[Emulator] Using TrueType font renderer")
 	}
 
 	// Create printer state
@@ -98,7 +97,7 @@ func NewDefaultEngine() (*Engine, error) {
 
 // New58mmEngine creates an engine for 58mm paper
 func New58mmEngine() (*Engine, error) {
-	return NewEngine(Config58mm())
+	return NewEngine(ConfigTest58mm())
 }
 
 // Reset resets the engine to initial state (like ESC @)
@@ -225,21 +224,45 @@ func (e *Engine) SetFont(name string) {
 	}
 }
 
-// SetSize sets character size multipliers (1-8 for both width and height)
+// SetSize sets character size multipliers (1-8 for both width and height).
+//
+// This method controls text scaling similar to ESC/POS GS !  command.
+// Valid values are 1-8 for both width and height; values outside this
+// range are clamped automatically.
+//
+// # Automatic Cursor Adjustment
+//
+// By default (Config.AutoAdjustCursorOnScale = true), when scaling UP
+// (increasing height), the cursor Y position is automatically adjusted
+// to prevent the taller text from overlapping with previously rendered
+// content.  This mimics how physical thermal printers handle scaled text.
+//
+// The adjustment amount equals:  baseGlyphHeight * (newScale - oldScale)
+//
+// # Disabling Auto-Adjustment
+//
+// For explicit cursor control, set Config. AutoAdjustCursorOnScale = false
+// when creating the engine.  You'll then need to manually call Feed() or
+// adjust positioning before printing larger text.
 func (e *Engine) SetSize(width, height int) {
 	oldScaleH := e.state.ScaleH
 	e.state.SetSize(float64(width), float64(height))
 
-	// Auto-adjust cursor when scaling UP to prevent overlap with previous content
-	if e.state.ScaleH > oldScaleH {
+	// Auto-adjust cursor when scaling UP to prevent overlap with previous content.
+	// This behavior can be disabled via Config.AutoAdjustCursorOnScale.
+	if e.config.AutoAdjustCursorOnScale && e.state.ScaleH > oldScaleH {
 		metrics := e.fonts.GetMetrics(e.state.FontName)
 		extraHeight := metrics.GlyphHeight * (e.state.ScaleH - oldScaleH)
 		e.state.CursorY += extraHeight
 		e.canvas.UpdateMaxY(e.state.CursorY)
+
+		if e.debug {
+			log.Printf("[Emulator] Auto-adjusted cursor by %.1f pixels for scale change", extraHeight)
+		}
 	}
 
 	if e.debug {
-		log.Printf("[Emulator] Character size set to: width=%d, height=%d", width, height)
+		log.Printf("[Emulator] Character size set to:  width=%d, height=%d", width, height)
 	}
 }
 
