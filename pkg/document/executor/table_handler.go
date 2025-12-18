@@ -33,6 +33,8 @@ type TableOptions struct {
 	WordWrap      bool   `json:"word_wrap,omitempty"`
 	ColumnSpacing int    `json:"column_spacing,omitempty"`
 	Align         string `json:"align,omitempty"`
+	// TODO: Setup Font usage
+	Font string `json:"font,omitempty"`
 }
 
 // handleTable manages table commands
@@ -52,11 +54,64 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		return fmt.Errorf("table must have at least one column defined")
 	}
 
-	// Create table options with defaults
+	// Calculate max chars based on printer profile and Font A
+	maxChars := constants.MaxCharsForPaperFontA(printer.Profile.DotsPerLine)
+
+	// Fallback for incomplete profiles (e.g., mock printers in tests)
+	if maxChars == 0 {
+		if printer.Profile.PaperWidth >= 80 {
+			maxChars = tables.Width80mm203dpi // 48 chars
+		} else {
+			maxChars = tables.Width58mm203dpi // 32 chars
+		}
+		log.Printf("DotsPerLine not set, falling back to %d chars based on %.0fmm paper",
+			maxChars, printer.Profile.PaperWidth)
+	}
+
+	// Sum all column widths
+	totalColumnWidth := 0
+	for _, col := range cmd.Definition.Columns {
+		if col.Width <= 0 {
+			return fmt.Errorf("column '%s' has invalid width: %d (must be > 0)",
+				col.Header, col.Width)
+		}
+		totalColumnWidth += col.Width
+	}
+
+	// Calculate gap width (spaces between columns)
+	numberOfGaps := len(cmd.Definition.Columns) - 1
+	if numberOfGaps < 0 {
+		numberOfGaps = 0
+	}
+
+	spacing := constants.DefaultTableColumnSpacing
+	if cmd.Options != nil && cmd.Options.ColumnSpacing > 0 {
+		spacing = cmd.Options.ColumnSpacing
+	}
+
+	// Gaps are on both sides of each column
+	totalGapWidth := numberOfGaps * spacing
+	totalRequiredWidth := totalColumnWidth + totalGapWidth
+
+	if totalRequiredWidth > maxChars {
+		return fmt.Errorf(
+			"table overflow: columns (%d) + gaps (%d) = %d chars, exceeds max %d chars "+
+				"(%.0fmm paper @ %d DPI, Font A)",
+			totalColumnWidth,
+			totalGapWidth,
+			totalRequiredWidth,
+			maxChars,
+			printer.Profile.PaperWidth,
+			printer.Profile.DPI,
+		)
+	}
+
+	// Create options with validated paper width
 	opts := &tables.Options{
+		PaperWidth:    maxChars,
 		ShowHeaders:   constants.DefaultTableShowHeaders,
 		WordWrap:      constants.DefaultTableWordWrap,
-		ColumnSpacing: constants.DefaultTableColumnSpacing,
+		ColumnSpacing: spacing,
 		HeaderStyle:   tables.Style{Bold: constants.DefaultTableHeaderBold},
 	}
 
@@ -66,9 +121,11 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		if cmd.Options.HeaderBold {
 			opts.HeaderStyle.Bold = true
 		}
-		if cmd.Options.ColumnSpacing > 0 {
-			opts.ColumnSpacing = cmd.Options.ColumnSpacing
-		}
+	}
+
+	// Enforce Font A for consistent table rendering
+	if err := printer.FontA(); err != nil {
+		return fmt.Errorf("failed to set Font A for table:  %w", err)
 	}
 
 	// Set paper width

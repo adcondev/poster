@@ -57,9 +57,6 @@ func NewEngine(def *Definition, opts *Options) *TabEngine {
 	if opts.ColumnSpacing <= 0 {
 		opts.ColumnSpacing = 1
 	}
-	if def.PaperWidth > 0 {
-		opts.PaperWidth = def.PaperWidth
-	}
 
 	return &TabEngine{
 		definition: def,
