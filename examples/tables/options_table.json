@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "TEST:  column_spacing=2",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-",
+        "length": 32
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "header": "A",
+              "width": 6,
+              "align": "left"
+            },
+            {
+              "header": "B",
+              "width": 6,
+              "align": "center"
+            },
+            {
+              "header": "C",
+              "width": 6,
+              "align": "right"
+            },
+            {
+              "header": "D",
+              "width": 6,
+              "align": "center"
+            }
+          ]
+        },
+        "show_headers": true,
+        "rows": [
+          [
+            "Ñoño",
+            "Único",
+            "Día",
+            "Año"
+          ],
+          [
+            "café",
+            "piña",
+            "niño",
+            "señor"
+          ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": false,
+          "column_spacing": 2
+        }
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "TEST: show_headers=false",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-",
+        "length": 32
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "header": "",
+              "width": 8,
+              "align": "left"
+            },
+            {
+              "header": "",
+              "width": 8,
+              "align": "center"
+            },
+            {
+              "header": "",
+              "width": 8,
+              "align": "right"
+            }
+          ]
+        },
+        "show_headers": false,
+        "rows": [
+          [
+            "¿Qué? ",
+            "¡Hola!",
+            "@email"
+          ],
+          [
+            "#tag",
+            "&more",
+            "*star"
+          ]
+        ],
+        "options": {
+          "header_bold": false,
+          "word_wrap": false,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

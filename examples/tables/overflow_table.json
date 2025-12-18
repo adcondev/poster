@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58
+  },
+  "commands": [
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "header": "A",
+              "width": 20
+            },
+            {
+              "header": "B",
+              "width": 20
+            }
+          ]
+        },
+        "rows": [
+          [
+            "test",
+            "test"
+          ]
+        ]
+      }
+    }
+  ]
+}
