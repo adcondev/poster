@@ -68,11 +68,7 @@ includes:
     dir: ./pkg/commands/common
     aliases:
       - sh
-  integration-tests:
-    taskfile: ./test/Taskfile.yml
-    dir: ./test
-    aliases:
-      - itest
+
 tasks:
   default:
     cmds:
@@ -92,7 +88,7 @@ tasks:
   test:
     cmds:
       - echo "Running all tests in detail..."
-      - go test {{.TEST_FLAGS}} ./...
+      - go test {{.TEST_FLAGS}} ./pkg/...
   deps:
     cmds:
       - echo "Tidying and downloading dependencies..."

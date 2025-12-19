@@ -307,7 +307,7 @@ func BenchmarkBuildComplex(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewDocument().
 			SetProfile("Test", 80, "WPC1252").
-			Text("Header").Bold().Center().End().
+			Text("Name").Bold().Center().End().
 			Separator("=").
 			Table().
 			Column("Item", 20).

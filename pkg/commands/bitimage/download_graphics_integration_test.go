@@ -1,22 +1,21 @@
-package test_test
+package bitimage
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/adcondev/poster/internal/testutils"
-	"github.com/adcondev/poster/pkg/commands/bitimage"
 	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
-	cmd := bitimage.NewDownloadGraphicsCommands()
+	cmd := NewDownloadGraphicsCommands()
 
 	t.Run("define and print download graphics", func(t *testing.T) {
 		var buffer []byte
 
 		// Step 1: Check remaining capacity
-		capacityCmd, err := cmd.GetDownloadGraphicsRemainingCapacity(bitimage.DLFuncGetRemaining)
+		capacityCmd, err := cmd.GetDownloadGraphicsRemainingCapacity(DLFuncGetRemaining)
 		if err != nil {
 			t.Fatalf("GetDownloadGraphicsRemainingCapacity failed: %v", err)
 		}
@@ -28,15 +27,15 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		widthBytes := (int(width) + 7) / 8
 		dataSize := widthBytes * int(height)
 
-		colorData := []bitimage.DLGraphicsColorData{
+		colorData := []DLGraphicsColorData{
 			{
-				Color: bitimage.Color1,
+				Color: Color1,
 				Data:  testutils.RepeatByte(dataSize, 0xF0),
 			},
 		}
 
 		defineCmd, err := cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'L', 'G',
 			width, height,
 			colorData,
@@ -47,7 +46,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, defineCmd...)
 
 		// Step 3: Print the graphics
-		printCmd, err := cmd.PrintDownloadGraphics('L', 'G', bitimage.NormalScale, bitimage.NormalScale)
+		printCmd, err := cmd.PrintDownloadGraphics('L', 'G', NormalScale, NormalScale)
 		if err != nil {
 			t.Fatalf("PrintDownloadGraphics failed: %v", err)
 		}
@@ -76,15 +75,15 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		dataSize := widthBytes * int(height)
 
 		// Define multiple color groups
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
-			{Color: bitimage.Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
-			{Color: bitimage.Color3, Data: testutils.RepeatByte(dataSize, 0x33)},
-			{Color: bitimage.Color4, Data: testutils.RepeatByte(dataSize, 0x44)},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
+			{Color: Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
+			{Color: Color3, Data: testutils.RepeatByte(dataSize, 0x33)},
+			{Color: Color4, Data: testutils.RepeatByte(dataSize, 0x44)},
 		}
 
 		defineCmd, err := cmd.DefineDownloadGraphics(
-			bitimage.MultipleTone,
+			MultipleTone,
 			'M', 'T',
 			width, height,
 			colorData,
@@ -95,7 +94,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, defineCmd...)
 
 		// Print with double scale
-		printCmd, err := cmd.PrintDownloadGraphics('M', 'T', bitimage.DoubleScale, bitimage.DoubleScale)
+		printCmd, err := cmd.PrintDownloadGraphics('M', 'T', DoubleScale, DoubleScale)
 		if err != nil {
 			t.Fatalf("PrintDownloadGraphics failed: %v", err)
 		}
@@ -116,9 +115,9 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		dataSize := int(width) * heightBytes
 
 		// Column format with colors 1 and 2
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0xAA)},
-			{Color: bitimage.Color2, Data: testutils.RepeatByte(dataSize, 0x55)},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: testutils.RepeatByte(dataSize, 0xAA)},
+			{Color: Color2, Data: testutils.RepeatByte(dataSize, 0x55)},
 		}
 
 		defineCmd, err := cmd.DefineDownloadGraphicsColumn(
@@ -132,8 +131,8 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, defineCmd...)
 
 		// Column format with color 3 only
-		colorData3 := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color3, Data: testutils.RepeatByte(dataSize, 0xFF)},
+		colorData3 := []DLGraphicsColorData{
+			{Color: Color3, Data: testutils.RepeatByte(dataSize, 0xFF)},
 		}
 
 		defineCmd3, err := cmd.DefineDownloadGraphicsColumn(
@@ -165,7 +164,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 
 		defineCmd, err := cmd.DefineBMPDownloadGraphics(
 			'B', 'M',
-			bitimage.Monochrome,
+			Monochrome,
 			bmpData,
 		)
 		if err != nil {
@@ -174,7 +173,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, defineCmd...)
 
 		// Print the BMP graphics
-		printCmd, err := cmd.PrintDownloadGraphics('B', 'M', bitimage.NormalScale, bitimage.NormalScale)
+		printCmd, err := cmd.PrintDownloadGraphics('B', 'M', NormalScale, NormalScale)
 		if err != nil {
 			t.Fatalf("PrintDownloadGraphics BMP failed: %v", err)
 		}
@@ -211,7 +210,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 }
 
 func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
-	cmd := bitimage.NewDownloadGraphicsCommands()
+	cmd := NewDownloadGraphicsCommands()
 
 	t.Run("large raster format exceeding standard size", func(t *testing.T) {
 		// Create data larger than 65535 bytes
@@ -220,15 +219,15 @@ func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
 		widthBytes := (int(width) + 7) / 8
 		dataSize := widthBytes * int(height)
 
-		colorData := []bitimage.DLGraphicsColorData{
+		colorData := []DLGraphicsColorData{
 			{
-				Color: bitimage.Color1,
+				Color: Color1,
 				Data:  testutils.RepeatByte(dataSize, 0xDD),
 			},
 		}
 
 		defineCmd, err := cmd.DefineDownloadGraphicsLarge(
-			bitimage.Monochrome,
+			Monochrome,
 			'L', 'D',
 			width, height,
 			colorData,
@@ -262,9 +261,9 @@ func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
 		dataSize := int(width) * heightBytes
 
 		// Large column data with two colors
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
-			{Color: bitimage.Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
+			{Color: Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
 		}
 
 		defineCmd, err := cmd.DefineDownloadGraphicsColumnLarge(
@@ -288,7 +287,7 @@ func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
 }
 
 func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
-	cmd := bitimage.NewDownloadGraphicsCommands()
+	cmd := NewDownloadGraphicsCommands()
 
 	t.Run("invalid color combinations", func(t *testing.T) {
 		width := uint16(100)
@@ -297,13 +296,13 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		dataSize := widthBytes * int(height)
 
 		// Monochrome with multiple colors - should fail
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
-			{Color: bitimage.Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
+			{Color: Color2, Data: testutils.RepeatByte(dataSize, 0x22)},
 		}
 
 		_, err := cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'E', 'R',
 			width, height,
 			colorData,
@@ -316,9 +315,9 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		heightBytes := (int(height) + 7) / 8
 		columnDataSize := int(width) * heightBytes
 
-		invalidColorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color3, Data: testutils.RepeatByte(columnDataSize, 0x33)},
-			{Color: bitimage.Color1, Data: testutils.RepeatByte(columnDataSize, 0x11)},
+		invalidColorData := []DLGraphicsColorData{
+			{Color: Color3, Data: testutils.RepeatByte(columnDataSize, 0x33)},
+			{Color: Color1, Data: testutils.RepeatByte(columnDataSize, 0x11)},
 		}
 
 		_, err = cmd.DefineDownloadGraphicsColumn(
@@ -344,20 +343,20 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		}
 
 		// Print with invalid key codes
-		_, err = cmd.PrintDownloadGraphics(200, 'X', bitimage.NormalScale, bitimage.NormalScale)
+		_, err = cmd.PrintDownloadGraphics(200, 'X', NormalScale, NormalScale)
 		if err == nil {
 			t.Error("Invalid key code should return error")
 		}
 	})
 
 	t.Run("invalid dimensions", func(t *testing.T) {
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: []byte{0xFF}},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: []byte{0xFF}},
 		}
 
 		// Width exceeds limit
 		_, err := cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'W', 'E',
 			8193, 100,
 			colorData,
@@ -368,7 +367,7 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 
 		// Height exceeds limit
 		_, err = cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'H', 'E',
 			100, 2305,
 			colorData,
@@ -379,7 +378,7 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 
 		// Zero dimensions
 		_, err = cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'Z', 'D',
 			0, 0,
 			colorData,
@@ -394,12 +393,12 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		height := uint16(50)
 		wrongData := []byte{0xFF, 0xFF} // Too small
 
-		colorData := []bitimage.DLGraphicsColorData{
-			{Color: bitimage.Color1, Data: wrongData},
+		colorData := []DLGraphicsColorData{
+			{Color: Color1, Data: wrongData},
 		}
 
 		_, err := cmd.DefineDownloadGraphics(
-			bitimage.Monochrome,
+			Monochrome,
 			'D', 'M',
 			width, height,
 			colorData,
@@ -413,7 +412,7 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		// BMP without proper header
 		invalidBMP := []byte{0xFF, 0xFF, 0xFF}
 
-		_, err := cmd.DefineBMPDownloadGraphics('B', 'X', bitimage.Monochrome, invalidBMP)
+		_, err := cmd.DefineBMPDownloadGraphics('B', 'X', Monochrome, invalidBMP)
 		if err == nil {
 			t.Error("Invalid BMP data should return error")
 		}
@@ -423,7 +422,7 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 		wrongBMP[0] = 'X'
 		wrongBMP[1] = 'Y'
 
-		_, err = cmd.DefineBMPDownloadGraphics('B', 'Y', bitimage.Monochrome, wrongBMP)
+		_, err = cmd.DefineBMPDownloadGraphics('B', 'Y', Monochrome, wrongBMP)
 		if err == nil {
 			t.Error("BMP with wrong signature should return error")
 		}
@@ -431,7 +430,7 @@ func TestIntegration_DownloadGraphics_ErrorHandling(t *testing.T) {
 }
 
 func TestIntegration_DownloadGraphics_ScalingModes(t *testing.T) {
-	cmd := bitimage.NewDownloadGraphicsCommands()
+	cmd := NewDownloadGraphicsCommands()
 
 	// Define testutils graphics once
 	width := uint16(100)
@@ -439,12 +438,12 @@ func TestIntegration_DownloadGraphics_ScalingModes(t *testing.T) {
 	widthBytes := (int(width) + 7) / 8
 	dataSize := widthBytes * int(height)
 
-	colorData := []bitimage.DLGraphicsColorData{
-		{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0xCC)},
+	colorData := []DLGraphicsColorData{
+		{Color: Color1, Data: testutils.RepeatByte(dataSize, 0xCC)},
 	}
 
 	defineCmd, err := cmd.DefineDownloadGraphics(
-		bitimage.Monochrome,
+		Monochrome,
 		'S', 'C',
 		width, height,
 		colorData,
@@ -455,15 +454,15 @@ func TestIntegration_DownloadGraphics_ScalingModes(t *testing.T) {
 
 	scales := []struct {
 		name       string
-		horizontal bitimage.GraphicsScale
-		vertical   bitimage.GraphicsScale
+		horizontal GraphicsScale
+		vertical   GraphicsScale
 		expectedX  byte
 		expectedY  byte
 	}{
-		{"normal", bitimage.NormalScale, bitimage.NormalScale, 1, 1},
-		{"double width", bitimage.DoubleScale, bitimage.NormalScale, 2, 1},
-		{"double height", bitimage.NormalScale, bitimage.DoubleScale, 1, 2},
-		{"quadruple", bitimage.DoubleScale, bitimage.DoubleScale, 2, 2},
+		{"normal", NormalScale, NormalScale, 1, 1},
+		{"double width", DoubleScale, NormalScale, 2, 1},
+		{"double height", NormalScale, DoubleScale, 1, 2},
+		{"quadruple", DoubleScale, DoubleScale, 2, 2},
 	}
 
 	for _, scale := range scales {
@@ -503,7 +502,7 @@ func TestIntegration_DownloadGraphics_ScalingModes(t *testing.T) {
 }
 
 func TestIntegration_DownloadGraphics_DuplicateColors(t *testing.T) {
-	cmd := bitimage.NewDownloadGraphicsCommands()
+	cmd := NewDownloadGraphicsCommands()
 
 	width := uint16(50)
 	height := uint16(50)
@@ -511,13 +510,13 @@ func TestIntegration_DownloadGraphics_DuplicateColors(t *testing.T) {
 	dataSize := widthBytes * int(height)
 
 	// Attempt to define duplicate colors
-	colorData := []bitimage.DLGraphicsColorData{
-		{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
-		{Color: bitimage.Color1, Data: testutils.RepeatByte(dataSize, 0x22)}, // Duplicate
+	colorData := []DLGraphicsColorData{
+		{Color: Color1, Data: testutils.RepeatByte(dataSize, 0x11)},
+		{Color: Color1, Data: testutils.RepeatByte(dataSize, 0x22)}, // Duplicate
 	}
 
 	_, err := cmd.DefineDownloadGraphics(
-		bitimage.MultipleTone,
+		MultipleTone,
 		'D', 'P',
 		width, height,
 		colorData,

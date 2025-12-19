@@ -1,9 +1,0 @@
-# https://taskfile.dev
-
-version: '3'
-
-tasks:
-  all:
-    cmds:
-      - echo "Running integration tests..."
-      - go test

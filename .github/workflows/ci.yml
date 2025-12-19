@@ -74,10 +74,7 @@ jobs:
             builder
             constants
             emulator
-          # NOTE: Changing requireScope from false to true is a breaking change.
-          # This will reject any PR titles without a scope that were previously valid.
           # Please ensure your PR titles follow the "<type>(<scope>): <subject>" format.
-          # For more information, see CONTRIBUTING.md or contact the maintainers.
           requireScope: true
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |
@@ -102,7 +99,7 @@ jobs:
 
       - name: Run All Tests
         shell: bash
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./pkg/...
 
       - name: Upload Coverage
         if: matrix.os == 'ubuntu-latest'

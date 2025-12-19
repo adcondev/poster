@@ -124,7 +124,7 @@ func (e *Executor) setCodeTable(tableName string) error {
 
 // ExecuteJSON ejecuta un documento desde JSON
 func (e *Executor) ExecuteJSON(data []byte) error {
-	doc, err := ParseDocument(data)
+	doc, err := schema.ParseDocument(data)
 	if err != nil {
 		return err
 	}
