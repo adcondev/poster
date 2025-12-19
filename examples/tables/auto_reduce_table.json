@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "AUTO-REDUCE TEST",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "=",
+        "length": 32
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "#",
+              "width": 3,
+              "align": "center"
+            },
+            {
+              "name": "Descripción",
+              "width": 25,
+              "align": "left"
+            },
+            {
+              "name": "Precio",
+              "width": 10,
+              "align": "right"
+            }
+          ]
+        },
+        "show_headers": true,
+        "rows": [
+          [
+            "1",
+            "Café Americano",
+            "$35.00"
+          ],
+          [
+            "2",
+            "Pastel de Chocolate",
+            "$55.00"
+          ],
+          [
+            "3",
+            "Agua Mineral",
+            "$20.00"
+          ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": true,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "Columnas reducidas automáticamente",
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

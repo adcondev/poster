@@ -3,6 +3,7 @@
 version: '3'
 
 vars:
+  POSTER: ./bin/poster.exe
   TEST_FLAGS: -coverprofile=coverage.txt -covermode=atomic
   LINT_FLAGS: --timeout=5m
   BANNER: |
@@ -67,11 +68,7 @@ includes:
     dir: ./pkg/commands/common
     aliases:
       - sh
-  integration-tests:
-    taskfile: ./test/Taskfile.yml
-    dir: ./test
-    aliases:
-      - itest
+
 tasks:
   default:
     cmds:
@@ -83,7 +80,7 @@ tasks:
       - lint
     cmds:
       - echo "Building the project..."
-      - go build -o poster.exe ./cmd/poster
+      - go build -o ./bin/poster.exe ./cmd/poster
   lint:
     cmds:
       - echo "Running linters..."
@@ -91,9 +88,17 @@ tasks:
   test:
     cmds:
       - echo "Running all tests in detail..."
-      - go test {{.TEST_FLAGS}} ./...
+      - go test {{.TEST_FLAGS}} ./pkg/...
   deps:
     cmds:
       - echo "Tidying and downloading dependencies..."
       - go mod tidy
       - go mod download
+  poster:
+    desc: Procesa un archivo existente
+    # Requiere que se pase un argumento Y que el archivo exista
+    preconditions:
+      - sh: test -f {{.CLI_ARGS | q}}
+        msg: "El archivo '{{.CLI_ARGS}}' no existe o no se especificó."
+    cmds:
+      - "{{.POSTER}} {{.CLI_ARGS | q}}"

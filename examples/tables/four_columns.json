@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "¡MENÚ DEL DÍA!",
+          "content_style": {
+            "bold": true,
+            "size": "2x1"
+          },
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "=",
+        "length": 32
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "#",
+              "width": 2,
+              "align": "center"
+            },
+            {
+              "name": "Platillo",
+              "width": 12,
+              "align": "left"
+            },
+            {
+              "name": "Cant",
+              "width": 4,
+              "align": "center"
+            },
+            {
+              "name": "Total",
+              "width": 8,
+              "align": "right"
+            }
+          ]
+        },
+        "show_headers": true,
+        "rows": [
+          [
+            "1",
+            "Tacos Suñiga",
+            "3",
+            "$45.00"
+          ],
+          [
+            "2",
+            "Quesadilla",
+            "2",
+            "$30.00"
+          ],
+          [
+            "3",
+            "Agua Piña",
+            "1",
+            "$15.00"
+          ],
+          [
+            "4",
+            "Café Único",
+            "2",
+            "$20.00"
+          ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": true,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-",
+        "length": 32
+      }
+    },
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "TOTAL: $110.00",
+          "content_style": {
+            "bold": true
+          },
+          "align": "right"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

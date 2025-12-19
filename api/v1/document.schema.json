@@ -567,7 +567,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Column header name"
+          "description": "Column header text"
         },
         "width": {
           "type": "integer",
@@ -601,7 +601,7 @@
         },
         "column_spacing": {
           "type": "integer",
-          "description": "Spaces between columns, for each column side (x2)",
+          "description": "Spaces between columns",
           "minimum": 0,
           "default": 1
         },
@@ -614,6 +614,11 @@
           ],
           "description": "Default table alignment",
           "default": "center"
+        },
+        "auto_reduce": {
+          "type": "boolean",
+          "description": "Automatically reduce column widths to fit paper. When enabled, the system will shrink the widest columns first to preserve smaller columns.",
+          "default": true
         }
       }
     }

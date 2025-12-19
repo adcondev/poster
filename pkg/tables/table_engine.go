@@ -57,9 +57,6 @@ func NewEngine(def *Definition, opts *Options) *TabEngine {
 	if opts.ColumnSpacing <= 0 {
 		opts.ColumnSpacing = 1
 	}
-	if def.PaperWidth > 0 {
-		opts.PaperWidth = def.PaperWidth
-	}
 
 	return &TabEngine{
 		definition: def,
@@ -189,7 +186,7 @@ func (te *TabEngine) wrapRow(row Row, def *Definition) [][]string {
 func (te *TabEngine) makeHeaderRow(def *Definition) []string {
 	headers := make([]string, len(def.Columns))
 	for i, col := range def.Columns {
-		headers[i] = col.Header
+		headers[i] = col.Name
 	}
 	return headers
 }

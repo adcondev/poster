@@ -93,6 +93,46 @@ func TestTableCommand_Parsing(t *testing.T) {
 	}
 }
 
+func TestTableCommand_Parsing_AutoReduceTrue(t *testing.T) {
+	raw := `{
+		"definition": {"columns": [{"name": "Item", "width": 20}, {"name": "Price", "width": 10}]},
+		"rows": [["Coffee", "$4.50"]],
+		"options": {"auto_reduce": true}
+	}`
+
+	var cmd TableCommand
+	if err := json.Unmarshal([]byte(raw), &cmd); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cmd.Options == nil || cmd.Options.AutoReduce == nil {
+		t.Fatalf("expected options.auto_reduce to be parsed")
+	}
+	if *cmd.Options.AutoReduce != true {
+		t.Fatalf("expected auto_reduce=true, got %v", *cmd.Options.AutoReduce)
+	}
+}
+
+func TestTableCommand_Parsing_AutoReduceFalse(t *testing.T) {
+	raw := `{
+		"definition": {"columns": [{"name": "Item", "width": 20}, {"name": "Price", "width": 10}]},
+		"rows": [["Coffee", "$4.50"]],
+		"options": {"auto_reduce": false}
+	}`
+
+	var cmd TableCommand
+	if err := json.Unmarshal([]byte(raw), &cmd); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cmd.Options == nil || cmd.Options.AutoReduce == nil {
+		t.Fatalf("expected options.auto_reduce to be parsed")
+	}
+	if *cmd.Options.AutoReduce != false {
+		t.Fatalf("expected auto_reduce=false, got %v", *cmd.Options.AutoReduce)
+	}
+}
+
 // ============================================================================
 // Table Command Default Value Tests
 // ============================================================================
@@ -140,6 +180,26 @@ func TestTableCommand_Defaults(t *testing.T) {
 				tt.checkFunc(t, cmd)
 			}
 		})
+	}
+}
+
+func TestTableCommand_Parsing_AutoReduceOmitted_IsNil(t *testing.T) {
+	raw := `{
+		"definition": {"columns": [{"name": "Item", "width": 20}, {"name": "Price", "width": 10}]},
+		"rows": [["Coffee", "$4.50"]],
+		"options": {"header_bold": true}
+	}`
+
+	var cmd TableCommand
+	if err := json.Unmarshal([]byte(raw), &cmd); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cmd.Options == nil {
+		t.Fatalf("expected options to be non-nil")
+	}
+	if cmd.Options.AutoReduce != nil {
+		t.Fatalf("expected auto_reduce to be nil when omitted, got %v", *cmd.Options.AutoReduce)
 	}
 }
 

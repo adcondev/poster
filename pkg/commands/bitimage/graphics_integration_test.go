@@ -1,25 +1,24 @@
-package test_test
+package bitimage
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/adcondev/poster/internal/testutils"
-	"github.com/adcondev/poster/pkg/commands/bitimage"
 	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
-	cmd := bitimage.NewGraphicsCommands()
+	cmd := NewGraphicsCommands()
 
 	t.Run("raster graphics printing workflow", func(t *testing.T) {
 		var buffer []byte
 
 		// Step 1: Set dot density to 360x360 for high quality
 		densityCmd, err := cmd.SetGraphicsDotDensity(
-			bitimage.FunctionCodeDensity49,
-			bitimage.Density360x360,
-			bitimage.Density360x360,
+			FunctionCodeDensity49,
+			Density360x360,
+			Density360x360,
 		)
 		if err != nil {
 			t.Fatalf("SetGraphicsDotDensity failed: %v", err)
@@ -34,10 +33,10 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		rasterData := testutils.RepeatByte(dataSize, 0xF0)
 
 		storeCmd, err := cmd.StoreRasterGraphicsInBuffer(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			width,
 			height,
 			rasterData,
@@ -48,7 +47,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, storeCmd...)
 
 		// Step 3: Print the graphics
-		printCmd, err := cmd.PrintBufferedGraphics(bitimage.FunctionCodePrint50)
+		printCmd, err := cmd.PrintBufferedGraphics(FunctionCodePrint50)
 		if err != nil {
 			t.Fatalf("PrintBufferedGraphics failed: %v", err)
 		}
@@ -70,9 +69,9 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 
 		// Step 1: Set density to 180x180
 		densityCmd, err := cmd.SetGraphicsDotDensity(
-			bitimage.FunctionCodeDensity1,
-			bitimage.Density180x180,
-			bitimage.Density180x180,
+			FunctionCodeDensity1,
+			Density180x180,
+			Density180x180,
 		)
 		if err != nil {
 			t.Fatalf("SetGraphicsDotDensity failed: %v", err)
@@ -87,9 +86,9 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		columnData := testutils.RepeatByte(dataSize, 0xAA)
 
 		storeCmd, err := cmd.StoreColumnGraphicsInBuffer(
-			bitimage.DoubleScale,
-			bitimage.NormalScale,
-			bitimage.Color2,
+			DoubleScale,
+			NormalScale,
+			Color2,
 			width,
 			height,
 			columnData,
@@ -100,7 +99,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, storeCmd...)
 
 		// Step 3: Print
-		printCmd, err := cmd.PrintBufferedGraphics(bitimage.FunctionCodePrint2)
+		printCmd, err := cmd.PrintBufferedGraphics(FunctionCodePrint2)
 		if err != nil {
 			t.Fatalf("PrintBufferedGraphics failed: %v", err)
 		}
@@ -120,11 +119,11 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		dataSize := widthBytes * int(height)
 
 		// Store multiple colors for overlay effect
-		colors := []bitimage.GraphicsColor{
-			bitimage.Color1,
-			bitimage.Color2,
-			bitimage.Color3,
-			bitimage.Color4,
+		colors := []GraphicsColor{
+			Color1,
+			Color2,
+			Color3,
+			Color4,
 		}
 
 		for i, color := range colors {
@@ -133,9 +132,9 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 			data := testutils.RepeatByte(dataSize, pattern)
 
 			storeCmd, err := cmd.StoreRasterGraphicsInBuffer(
-				bitimage.MultipleTone,
-				bitimage.NormalScale,
-				bitimage.NormalScale,
+				MultipleTone,
+				NormalScale,
+				NormalScale,
 				color,
 				width,
 				height,
@@ -148,7 +147,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 		}
 
 		// Print combined graphics
-		printCmd, err := cmd.PrintBufferedGraphics(bitimage.FunctionCodePrint50)
+		printCmd, err := cmd.PrintBufferedGraphics(FunctionCodePrint50)
 		if err != nil {
 			t.Fatalf("PrintBufferedGraphics failed: %v", err)
 		}
@@ -163,17 +162,17 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 	t.Run("scaled graphics combinations", func(t *testing.T) {
 		scaleCombinations := []struct {
 			name       string
-			horizontal bitimage.GraphicsScale
-			vertical   bitimage.GraphicsScale
-			tone       bitimage.GraphicsTone
+			horizontal GraphicsScale
+			vertical   GraphicsScale
+			tone       GraphicsTone
 			maxHeight  uint16
 		}{
-			{"monochrome normal", bitimage.NormalScale, bitimage.NormalScale, bitimage.Monochrome, 2400},
-			{"monochrome double width", bitimage.DoubleScale, bitimage.NormalScale, bitimage.Monochrome, 2400},
-			{"monochrome double height", bitimage.NormalScale, bitimage.DoubleScale, bitimage.Monochrome, 1200},
-			{"monochrome quadruple", bitimage.DoubleScale, bitimage.DoubleScale, bitimage.Monochrome, 1200},
-			{"multi-tone normal", bitimage.NormalScale, bitimage.NormalScale, bitimage.MultipleTone, 600},
-			{"multi-tone double", bitimage.DoubleScale, bitimage.DoubleScale, bitimage.MultipleTone, 300},
+			{"monochrome normal", NormalScale, NormalScale, Monochrome, 2400},
+			{"monochrome double width", DoubleScale, NormalScale, Monochrome, 2400},
+			{"monochrome double height", NormalScale, DoubleScale, Monochrome, 1200},
+			{"monochrome quadruple", DoubleScale, DoubleScale, Monochrome, 1200},
+			{"multi-tone normal", NormalScale, NormalScale, MultipleTone, 600},
+			{"multi-tone double", DoubleScale, DoubleScale, MultipleTone, 300},
 		}
 
 		for _, sc := range scaleCombinations {
@@ -192,7 +191,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 					sc.tone,
 					sc.horizontal,
 					sc.vertical,
-					bitimage.Color1,
+					Color1,
 					width,
 					height,
 					data,
@@ -214,7 +213,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 }
 
 func TestIntegration_Graphics_LargeDataHandling(t *testing.T) {
-	cmd := bitimage.NewGraphicsCommands()
+	cmd := NewGraphicsCommands()
 
 	t.Run("large raster data requiring extended format", func(t *testing.T) {
 		// Create data exceeding standard command size limit
@@ -230,10 +229,10 @@ func TestIntegration_Graphics_LargeDataHandling(t *testing.T) {
 		largeData := testutils.RepeatByte(dataSize, 0x55)
 
 		storeCmd, err := cmd.StoreRasterGraphicsInBufferLarge(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			width,
 			height,
 			largeData,
@@ -275,9 +274,9 @@ func TestIntegration_Graphics_LargeDataHandling(t *testing.T) {
 		largeData := testutils.RepeatByte(dataSize, 0xCC)
 
 		storeCmd, err := cmd.StoreColumnGraphicsInBufferLarge(
-			bitimage.NormalScale,
-			bitimage.DoubleScale,
-			bitimage.Color3,
+			NormalScale,
+			DoubleScale,
+			Color3,
 			width,
 			height,
 			largeData,
@@ -294,14 +293,14 @@ func TestIntegration_Graphics_LargeDataHandling(t *testing.T) {
 }
 
 func TestIntegration_Graphics_ErrorRecovery(t *testing.T) {
-	cmd := bitimage.NewGraphicsCommands()
+	cmd := NewGraphicsCommands()
 
 	t.Run("invalid density settings recovery", func(t *testing.T) {
 		// Try invalid density combination
 		_, err := cmd.SetGraphicsDotDensity(
-			bitimage.FunctionCodeDensity1,
-			bitimage.Density180x180,
-			bitimage.Density360x360,
+			FunctionCodeDensity1,
+			Density180x180,
+			Density360x360,
 		)
 		if err == nil {
 			t.Error("Mismatched densities should return error")
@@ -309,9 +308,9 @@ func TestIntegration_Graphics_ErrorRecovery(t *testing.T) {
 
 		// Should be able to set valid density after error
 		densityCmd, err := cmd.SetGraphicsDotDensity(
-			bitimage.FunctionCodeDensity1,
-			bitimage.Density180x180,
-			bitimage.Density180x180,
+			FunctionCodeDensity1,
+			Density180x180,
+			Density180x180,
 		)
 		if err != nil {
 			t.Fatalf("Valid density setting failed after error: %v", err)
@@ -329,10 +328,10 @@ func TestIntegration_Graphics_ErrorRecovery(t *testing.T) {
 		// Try with wrong data size
 		wrongData := []byte{0xFF}
 		_, err := cmd.StoreRasterGraphicsInBuffer(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			width,
 			height,
 			wrongData,
@@ -346,10 +345,10 @@ func TestIntegration_Graphics_ErrorRecovery(t *testing.T) {
 		correctData := testutils.RepeatByte(widthBytes*int(height), 0xAA)
 
 		storeCmd, err := cmd.StoreRasterGraphicsInBuffer(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			width,
 			height,
 			correctData,
@@ -365,7 +364,7 @@ func TestIntegration_Graphics_ErrorRecovery(t *testing.T) {
 }
 
 func TestIntegration_Graphics_ColorRestrictions(t *testing.T) {
-	cmd := bitimage.NewGraphicsCommands()
+	cmd := NewGraphicsCommands()
 
 	t.Run("column format color restrictions", func(t *testing.T) {
 		width := uint16(100)
@@ -375,16 +374,16 @@ func TestIntegration_Graphics_ColorRestrictions(t *testing.T) {
 		data := testutils.RepeatByte(dataSize, 0xFF)
 
 		// Colors 1-3 should work for column format
-		validColors := []bitimage.GraphicsColor{
-			bitimage.Color1,
-			bitimage.Color2,
-			bitimage.Color3,
+		validColors := []GraphicsColor{
+			Color1,
+			Color2,
+			Color3,
 		}
 
 		for _, color := range validColors {
 			_, err := cmd.StoreColumnGraphicsInBuffer(
-				bitimage.NormalScale,
-				bitimage.NormalScale,
+				NormalScale,
+				NormalScale,
 				color,
 				width,
 				height,
@@ -397,9 +396,9 @@ func TestIntegration_Graphics_ColorRestrictions(t *testing.T) {
 
 		// Color 4 should not work for column format
 		_, err := cmd.StoreColumnGraphicsInBuffer(
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color4,
+			NormalScale,
+			NormalScale,
+			Color4,
 			width,
 			height,
 			data,
@@ -417,18 +416,18 @@ func TestIntegration_Graphics_ColorRestrictions(t *testing.T) {
 		data := testutils.RepeatByte(dataSize, 0xFF)
 
 		// All colors should work for raster format
-		allColors := []bitimage.GraphicsColor{
-			bitimage.Color1,
-			bitimage.Color2,
-			bitimage.Color3,
-			bitimage.Color4,
+		allColors := []GraphicsColor{
+			Color1,
+			Color2,
+			Color3,
+			Color4,
 		}
 
 		for _, color := range allColors {
 			_, err := cmd.StoreRasterGraphicsInBuffer(
-				bitimage.MultipleTone,
-				bitimage.NormalScale,
-				bitimage.NormalScale,
+				MultipleTone,
+				NormalScale,
+				NormalScale,
 				color,
 				width,
 				height,
@@ -442,7 +441,7 @@ func TestIntegration_Graphics_ColorRestrictions(t *testing.T) {
 }
 
 func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
-	cmd := bitimage.NewGraphicsCommands()
+	cmd := NewGraphicsCommands()
 
 	t.Run("raster format dimension limits", func(t *testing.T) {
 		// Test maximum width
@@ -452,10 +451,10 @@ func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
 		data := testutils.RepeatByte(widthBytes*int(height), 0xFF)
 
 		_, err := cmd.StoreRasterGraphicsInBuffer(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			maxWidth,
 			height,
 			data,
@@ -467,10 +466,10 @@ func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
 		// Test width exceeding limit
 		exceedWidth := uint16(2401)
 		_, err = cmd.StoreRasterGraphicsInBuffer(
-			bitimage.Monochrome,
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			Monochrome,
+			NormalScale,
+			NormalScale,
+			Color1,
 			exceedWidth,
 			height,
 			data,
@@ -488,9 +487,9 @@ func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
 		data := testutils.RepeatByte(int(maxWidth)*heightBytes, 0xFF)
 
 		_, err := cmd.StoreColumnGraphicsInBuffer(
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			NormalScale,
+			NormalScale,
+			Color1,
 			maxWidth,
 			maxHeight,
 			data,
@@ -501,9 +500,9 @@ func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
 
 		// Test exceeding width
 		_, err = cmd.StoreColumnGraphicsInBuffer(
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			NormalScale,
+			NormalScale,
+			Color1,
 			2049,
 			maxHeight,
 			data,
@@ -514,9 +513,9 @@ func TestIntegration_Graphics_DimensionLimits(t *testing.T) {
 
 		// Test exceeding height
 		_, err = cmd.StoreColumnGraphicsInBuffer(
-			bitimage.NormalScale,
-			bitimage.NormalScale,
-			bitimage.Color1,
+			NormalScale,
+			NormalScale,
+			Color1,
 			maxWidth,
 			129,
 			data,

@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "code_table": "PC850",
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "Clave",
+              "width": 10,
+              "align": "left"
+            },
+            {
+              "name": "Valor",
+              "width": 20,
+              "align": "left"
+            }
+          ]
+        },
+        "show_headers": true,
+        "rows": [
+          [
+            "Nombre",
+            "José Ñúñez García"
+          ],
+          [
+            "Teléfono",
+            "(55) 1234-5678"
+          ],
+          [
+            "Email",
+            "jose@correo.mx"
+          ],
+          [
+            "Código",
+            "MX-ÑÑ-2024"
+          ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": true,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

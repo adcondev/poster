@@ -2,83 +2,11 @@
 package tables
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/adcondev/poster/pkg/constants"
 )
-
-// Column defines a table column configuration
-type Column struct {
-	Header string              `json:"header"`
-	Width  int                 `json:"width"`
-	Align  constants.Alignment `json:"align"`
-}
-
-// Definition defines the structure of a table
-type Definition struct {
-	Columns    []Column `json:"columns"`
-	PaperWidth int      `json:"paper_width,omitempty"`
-}
-
-// ValidateWidths checks if the total column widths fit within the paper width
-func (d *Definition) ValidateWidths() error {
-	total := 0
-	for _, col := range d.Columns {
-		total += col.Width
-	}
-	gaps := (len(d.Columns) - 1) * 1 // ColumnSpacing default
-	if total+gaps > d.PaperWidth {
-		return fmt.Errorf("columns too wide: %d chars (max %d)",
-			total+gaps, d.PaperWidth)
-	}
-	return nil
-}
-
-// Row represents a single row of data
-type Row []string
-
-// Data holds the complete table data
-type Data struct {
-	Definition  Definition `json:"definition"`
-	ShowHeaders bool       `json:"show_headers,omitempty"`
-	Rows        []Row      `json:"rows"`
-}
-
-// Validate checks if the table data is valid
-func (dt *Data) Validate() error {
-	if len(dt.Definition.Columns) == 0 {
-		return fmt.Errorf("table must have at least one column")
-	}
-
-	// Validate each row has correct number of cells
-	expectedCells := len(dt.Definition.Columns)
-	for i, row := range dt.Rows {
-		if len(row) != expectedCells {
-			return fmt.Errorf("row %d has %d cells, expected %d", i, len(row), expectedCells)
-		}
-	}
-
-	return nil
-}
-
-// Validate checks if the table definition is valid
-func (d *Definition) Validate() error {
-	totalWidth := 0
-	for _, col := range d.Columns {
-		totalWidth += col.Width
-	}
-
-	// Add space for column spacing
-	totalWidth += (len(d.Columns) - 1) * 1 // Default spacing
-
-	if totalWidth > d.PaperWidth {
-		return fmt.Errorf("total column width (%d) exceeds paper width (%d)",
-			totalWidth, d.PaperWidth)
-	}
-	return nil
-}
 
 // WrapText wraps text to fit within the specified width
 func WrapText(text string, width int) []string {

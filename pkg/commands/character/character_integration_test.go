@@ -1,29 +1,28 @@
-package test_test
+package character
 
 import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/commands/common"
 )
 
 func TestIntegration_Character_BasicFormatting(t *testing.T) {
-	cmd := character.NewCommands()
+	cmd := NewCommands()
 
 	t.Run("receipt header formatting", func(t *testing.T) {
 		var buffer []byte
 
 		// Title formatting
-		titleSize, _ := character.NewSize(2, 3)
+		titleSize, _ := NewSize(2, 3)
 		buffer = append(buffer, cmd.SelectCharacterSize(titleSize)...)
-		buffer = append(buffer, cmd.SetEmphasizedMode(character.OnEm)...)
+		buffer = append(buffer, cmd.SetEmphasizedMode(OnEm)...)
 
 		// Subtitle formatting
-		normalSize, _ := character.NewSize(1, 1)
+		normalSize, _ := NewSize(1, 1)
 		buffer = append(buffer, cmd.SelectCharacterSize(normalSize)...)
-		buffer = append(buffer, cmd.SetEmphasizedMode(character.OffEm)...)
-		underlineCmd, _ := cmd.SetUnderlineMode(character.OneDot)
+		buffer = append(buffer, cmd.SetEmphasizedMode(OffEm)...)
+		underlineCmd, _ := cmd.SetUnderlineMode(OneDot)
 		buffer = append(buffer, underlineCmd...)
 
 		if len(buffer) < 15 {
@@ -33,10 +32,10 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 
 	t.Run("print modes combination", func(t *testing.T) {
 		// All effects combined
-		modes := character.EmphasizedOnPm |
-			character.DoubleHeightOnPm |
-			character.DoubleWidthOnPm |
-			character.UnderlineOnPm
+		modes := EmphasizedOnPm |
+			DoubleHeightOnPm |
+			DoubleWidthOnPm |
+			UnderlineOnPm
 
 		result := cmd.SelectPrintModes(modes)
 
@@ -49,10 +48,10 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 	t.Run("character transformations", func(t *testing.T) {
 		var buffer []byte
 
-		rotationCmd, _ := cmd.Set90DegreeClockwiseRotationMode(character.On90Dot1)
+		rotationCmd, _ := cmd.Set90DegreeClockwiseRotationMode(On90Dot1)
 		buffer = append(buffer, rotationCmd...)
-		buffer = append(buffer, cmd.SetUpsideDownMode(character.OnUdm)...)
-		buffer = append(buffer, cmd.SetWhiteBlackReverseMode(character.OnRm)...)
+		buffer = append(buffer, cmd.SetUpsideDownMode(OnUdm)...)
+		buffer = append(buffer, cmd.SetWhiteBlackReverseMode(OnRm)...)
 
 		if len(buffer) != 9 { // 3 commands × 3 bytes each
 			t.Errorf("Buffer length = %d, want 9", len(buffer))
@@ -61,7 +60,7 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 }
 
 func TestIntegration_Character_ErrorHandling(t *testing.T) {
-	cmd := character.NewCommands()
+	cmd := NewCommands()
 
 	// Test invalid parameters cascade
 	_, err := cmd.SetUnderlineMode(99)
@@ -69,7 +68,7 @@ func TestIntegration_Character_ErrorHandling(t *testing.T) {
 		t.Error("Invalid underline mode should return error")
 	}
 
-	_, err = character.NewSize(0, 1)
+	_, err = NewSize(0, 1)
 	if err == nil {
 		t.Error("Invalid character size should return error")
 	}

@@ -19,7 +19,9 @@ A professional, production-ready Go library and command-line utility for control
     - Automatic scaling with bilinear interpolation.
     - Supports PNG, JPG, BMP formats.
 - **Smart QR & Barcodes**: Automatically chooses between native printer firmware commands (fastest) or software rendering (maximum compatibility) based on the printer profile.
-- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping, multi-column support, and configurable spacing.
+- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping, multi-column
+  support, configurable spacing, **automatic overflow detection**, and **smart column auto-reduction** that preserves
+  small columns while shrinking larger ones to fit paper width.
 - **Visual Emulator**: Render print jobs as PNG images for preview and testing without physical hardware.
 - **Hardware Agnostic**: Includes profiles for standard 80mm (Epson-compatible), 58mm (generic), and PT-210 portable printers.
 - **Raw Command Support**: Send raw ESC/POS bytes when full control is needed.
@@ -53,18 +55,18 @@ graph TD
 
 ### Package Structure
 
-| Package | Description |
-|---------|-------------|
-| `pkg/commands` | ESC/POS command implementations (barcode, character, qrcode, etc.) |
-| `pkg/composer` | ESC/POS byte sequence generation |
-| `pkg/connection` | Connection interfaces (Windows Spooler, Network, Serial, File) |
-| `pkg/constants` | Shared constants and unit conversions |
-| `pkg/document` | Document parsing, building, and execution (schema, builder, executor) |
-| `pkg/emulator` | Visual emulator for rendering print jobs as images |
-| `pkg/graphics` | Image processing, dithering, and bitmap handling |
-| `pkg/profile` | Printer profiles and character encoding tables |
-| `pkg/service` | High-level printer service facade |
-| `pkg/tables` | Dynamic table layout engine |
+| Package          | Description                                                                                                                         |
+|------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `pkg/commands`   | ESC/POS command implementations (barcode, character, qrcode, etc.)                                                                  |
+| `pkg/composer`   | ESC/POS byte sequence generation                                                                                                    |
+| `pkg/connection` | Connection interfaces (Windows Spooler, Network, Serial, File)                                                                      |
+| `pkg/constants`  | Shared constants and unit conversions                                                                                               |
+| `pkg/document`   | Document parsing, building, and execution (schema, builder, executor)                                                               |
+| `pkg/emulator`   | Visual emulator for rendering print jobs as images                                                                                  |
+| `pkg/graphics`   | Image processing, dithering, and bitmap handling                                                                                    |
+| `pkg/profile`    | Printer profiles and character encoding tables                                                                                      |
+| `pkg/service`    | High-level printer service facade                                                                                                   |
+| `pkg/table`      | Create formatted tables with column alignment, word wrapping, header styling, and automatic width reduction for overflow protection |                                         |
 
 ## 📦 Installation
 
@@ -153,14 +155,21 @@ Create a file named `ticket.json`:
       "data": {
         "definition": {
           "columns": [
-            { "name": "Item", "width": 20, "align": "left" },
-            { "name": "Price", "width": 10, "align": "right" }
+            { "header": "Item", "width": 20, "align":  "left" },
+            { "header":  "Price", "width": 10, "align": "right" }
           ]
         },
+        "show_headers": true,
         "rows": [
           ["Coffee", "$3.50"],
           ["Sandwich", "$8.00"]
-        ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": true,
+          "column_spacing": 1,
+          "auto_reduce": true
+        }
       }
     },
     {
@@ -217,17 +226,17 @@ func main() {
 
 ## 📋 Supported Commands
 
-| Command | Description |
-|---------|-------------|
-| `text` | Print formatted text with styles (bold, underline, inverse, sizing) |
-| `image` | Print images with dithering and scaling options |
-| `barcode` | Generate barcodes (CODE128, EAN13, UPC-A, CODE39, etc.) |
-| `qr` | Generate QR codes with optional logos and human-readable text |
-| `table` | Create formatted tables with column alignment and word wrapping |
-| `separator` | Print separator lines |
-| `feed` | Advance paper by specified lines |
-| `cut` | Perform full or partial paper cut |
-| `raw` | Send raw ESC/POS bytes directly |
+| Command     | Description                                                         |
+|-------------|---------------------------------------------------------------------|
+| `text`      | Print formatted text with styles (bold, underline, inverse, sizing) |
+| `image`     | Print images with dithering and scaling options                     |
+| `barcode`   | Generate barcodes (CODE128, EAN13, UPC-A, CODE39, etc.)             |
+| `qr`        | Generate QR codes with optional logos and human-readable text       |
+| `table`     | Create formatted tables with column alignment and word wrapping     |
+| `separator` | Print separator lines                                               |
+| `feed`      | Advance paper by specified lines                                    |
+| `cut`       | Perform full or partial paper cut                                   |
+| `raw`       | Send raw ESC/POS bytes directly                                     |
 
 For complete documentation, see [api/v1/DOCUMENT_V1.md](api/v1/DOCUMENT_V1.md).
 
@@ -235,22 +244,22 @@ For complete documentation, see [api/v1/DOCUMENT_V1.md](api/v1/DOCUMENT_V1.md).
 
 ### Connection Types
 
-| Type | Description |
-|------|-------------|
+| Type      | Description                                                                          |
+|-----------|--------------------------------------------------------------------------------------|
 | `windows` | Windows Print Spooler (default). Best for USB/Network printers installed in Windows. |
-| `network` | Direct network connection via Raw TCP/9100 |
-| `serial` | Serial/USB direct connection (COM ports) |
-| `file` | Output to file for debugging or emulator testing |
+| `network` | Direct network connection via Raw TCP/9100                                           |
+| `serial`  | Serial/USB direct connection (COM ports)                                             |
+| `file`    | Output to file for debugging or emulator testing                                     |
 
 ### Printer Profiles
 
 The library includes built-in profiles for common hardware:
 
-| Profile | Description |
-|---------|-------------|
-| `CreateProfile80mm()` | Standard ESC/POS 80mm (Epson TM-T88, etc.) |
-| `CreateProfile58mm()` | Generic 58mm thermal printers |
-| `CreatePt210()` | PT-210 portable printer with specific tweaks |
+| Profile               | Description                                  |
+|-----------------------|----------------------------------------------|
+| `CreateProfile80mm()` | Standard ESC/POS 80mm (Epson TM-T88, etc.)   |
+| `CreateProfile58mm()` | Generic 58mm thermal printers                |
+| `CreatePt210()`       | PT-210 portable printer with specific tweaks |
 
 ## 🎨 Visual Emulator
 

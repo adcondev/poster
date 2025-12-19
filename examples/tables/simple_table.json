@@ -1,0 +1,117 @@
+{
+  "version": "1.0",
+  "profile": {
+    "model": "58mm PT-210",
+    "paper_width": 58,
+    "dpi": 203
+  },
+  "commands": [
+    {
+      "type": "text",
+      "data": {
+        "content": {
+          "text": "=== RECIBO ===",
+          "content_style": {
+            "bold": true
+          },
+          "align": "center"
+        },
+        "new_line": true
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "Articulo",
+              "width": 12,
+              "align": "left"
+            },
+            {
+              "name": "Precio",
+              "width": 10,
+              "align": "right"
+            }
+          ]
+        },
+        "show_headers": true,
+        "rows": [
+          [
+            "Cafe",
+            "$3.50"
+          ],
+          [
+            "Sandwich",
+            "$8.00"
+          ],
+          [
+            "Galleta",
+            "$2.25"
+          ]
+        ],
+        "options": {
+          "header_bold": true,
+          "word_wrap": true,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "feed",
+      "data": {
+        "lines": 1
+      }
+    },
+    {
+      "type": "separator",
+      "data": {
+        "char": "-",
+        "length": 26
+      }
+    },
+    {
+      "type": "table",
+      "data": {
+        "definition": {
+          "columns": [
+            {
+              "name": "",
+              "width": 12,
+              "align": "left"
+            },
+            {
+              "name": "",
+              "width": 10,
+              "align": "right"
+            }
+          ]
+        },
+        "show_headers": false,
+        "rows": [
+          [
+            "TOTAL",
+            "$13.75"
+          ]
+        ],
+        "options": {
+          "header_bold": false,
+          "column_spacing": 1
+        }
+      }
+    },
+    {
+      "type": "cut",
+      "data": {
+        "mode": "partial"
+      }
+    }
+  ]
+}

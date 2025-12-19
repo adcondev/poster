@@ -134,6 +134,11 @@ const (
 	DefaultTableAlignment = Center
 	// DefaultTableColumnAlignment default font for table columns
 	DefaultTableColumnAlignment = Center
+
+	// MinTableColumnWidth is the minimum width a column can be reduced to
+	MinTableColumnWidth = 3
+	// DefaultTableAutoReduce enables automatic column width reduction by default
+	DefaultTableAutoReduce = true
 )
 
 // Pulse (Cash Drawer) defaults

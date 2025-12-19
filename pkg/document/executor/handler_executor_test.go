@@ -40,7 +40,7 @@ func TestParseDocument_ValidatesCommandTypes(t *testing.T) {
 				"commands": [{"type": "` + cmdType + `", "data": {}}]
 			}`)
 
-			doc, err := ParseDocument(jsonData)
+			doc, err := schema.ParseDocument(jsonData)
 			if err != nil {
 				t.Fatalf("ParseDocument failed for %s: %v", cmdType, err)
 			}
@@ -72,7 +72,7 @@ func TestParseDocument_PreservesRawData(t *testing.T) {
 		]
 	}`)
 
-	doc, err := ParseDocument(jsonData)
+	doc, err := schema.ParseDocument(jsonData)
 	if err != nil {
 		t.Fatalf("ParseDocument error: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestDocument_CompleteStructure(t *testing.T) {
 		]
 	}`)
 
-	doc, err := ParseDocument(jsonData)
+	doc, err := schema.ParseDocument(jsonData)
 	if err != nil {
 		t.Fatalf("ParseDocument error: %v", err)
 	}
@@ -373,7 +373,7 @@ func TestParseDocument_ErrorMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseDocument([]byte(tt.json))
+			_, err := schema.ParseDocument([]byte(tt.json))
 			if err == nil {
 				t.Fatal("Expected error, got nil")
 			}
@@ -556,7 +556,7 @@ func BenchmarkParseDocument_Minimal(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = ParseDocument(data)
+		_, _ = schema.ParseDocument(data)
 	}
 }
 
@@ -579,7 +579,7 @@ func BenchmarkParseDocument_Receipt(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = ParseDocument(data)
+		_, _ = schema.ParseDocument(data)
 	}
 }
 

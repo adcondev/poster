@@ -1,20 +1,18 @@
 /*
 Package emulator provides a high-fidelity thermal printer emulation engine for Go.
 
-It allows generating images (PNG) that accurately represent how a receipt would look
+It generates images (PNG) that accurately represent how a receipt would look
 when printed on standard ESC/POS thermal printers (58mm and 80mm).
 
 # Core Features
 
-  - Dynamic Canvas: Auto-growing canvas that adapts to content length.
-  - Font Calibration: Heuristic engine that scales TrueType fonts to match exact physical dot pitches (e.g., 12x24 dots for Font A).
-  - ESC/POS Styling: Supports Bold, Underline, Inverse, Double Width/Height, and Justification.
-  - Fidelity: Includes a bitmap fallback renderer to mimic the dot-matrix look of thermal heads when scaling or when fonts are missing.
+  - Dynamic Canvas:  Auto-growing canvas that adapts to content length
+  - TrueType Font Rendering: Scales fonts to match thermal printer dot pitches (12x24 for Font A, 9x17 for Font B)
+  - ESC/POS Styling: Bold, Underline, Inverse, Double Width/Height (1x-8x), and Justification
+  - Image Embedding: Embed images with optional thermal preview simulation
+  - Bitmap Fallback: Basic 5x7 bitmap font when TrueType fonts are unavailable
 
 # Basic Usage
-
-To use the emulator, create an engine instance (usually with default 80mm config),
-issue print commands, and finally render the output to an image.
 
 	package main
 
@@ -24,35 +22,84 @@ issue print commands, and finally render the output to an image.
 	)
 
 	func main() {
-		// 1. Create a default 80mm engine
+		// Create engine (80mm default or 58mm)
 		eng, _ := emulator.NewDefaultEngine()
 
-		// 2. Issue commands (simulating printer instructions)
-		eng.SetAlign("center")
+		// Text with styling
+		eng.AlignCenter()
 		eng.SetBold(true)
+		eng.SetSize(2, 2)
 		eng.PrintLine("STORE NAME")
+		eng.SetSize(1, 1)
 		eng.SetBold(false)
-		eng.PrintLine("--------------------------------")
-		eng.SetAlign("left")
-		eng.PrintLine("Item 1 ................. $10.00")
-		eng.PrintLine("Item 2 ................. $25.50")
-		eng.Feed(2)
-		eng.Cut(true)
 
-		// 3. Render to PNG
-		f, _ := os.Create("receipt.png")
+		// Content
+		eng.AlignLeft()
+		eng.PrintLine("Item 1 ................ . $10.00")
+		eng. Separator("-", 48)
+
+		// Images (normal or thermal preview)
+		img, _ := loadImage("logo.png")
+		eng.PrintImage(img)
+		eng.PrintImageThermalPreview(img, 200) // B&W dithered
+
+		// Output
+		eng.Cut(true)
+		f, _ := os. Create("receipt.png")
 		defer f.Close()
 		eng.WritePNG(f)
 	}
 
 # Configuration
 
-The engine can be customized for different paper widths (58mm/80mm) and DPI settings via the Config struct.
-Embedded fonts (JetBrains Mono recommended) are used to simulate Font A and Font B, ensuring consistent character columns (48 cols for 80mm Font A).
+	// 80mm paper (576px width)
+	eng, _ := emulator.NewDefaultEngine()
 
-# Architecture
+	// 58mm paper (384px width)
+	eng, _ := emulator.New58mmEngine()
 
-The package is built around an Engine struct that maintains the virtual PrinterState (cursor position, active styles).
-Rendering is delegated to specialized sub-renderers that draw onto a DynamicCanvas. This canvas manages memory efficiently, growing only as needed and cropping the final image to the exact content height.
+	// Custom configuration
+	config := emulator.Config{
+		PaperPxWidth:            576,
+		DPI:                     203,
+		AutoAdjustCursorOnScale: true, // Auto-adjust cursor when scaling up
+	}
+	eng, _ := emulator.NewEngine(config)
+
+# Image Embedding
+
+The emulator supports two image preview modes:
+
+Normal Preview (default): Resizes and composites over white, preserving colors.
+Ideal for digital receipts.
+
+	eng.PrintImage(img)
+
+Thermal Preview: Processes through the same pipeline as physical printing
+(grayscale → dithering → monochrome). Shows exactly how it will print.
+
+	eng. PrintImageThermalPreview(img, 256)
+
+	// Or with full control:
+	opts := emulator.DefaultImageOptions()
+	opts.SimulateThermal = true
+	opts. Dithering = graphics.Atkinson
+	opts. Threshold = 128
+	eng.PrintImageWithOptions(img, opts)
+
+# Text Scaling
+
+Text can be scaled 1x-8x in both dimensions.  By default, the cursor auto-adjusts
+when scaling up to prevent overlap with previous content.
+
+	eng. SetSize(2, 2) // Double size, cursor adjusts automatically
+	eng.PrintLine("BIG TEXT")
+	eng.SetSize(1, 1) // Back to normal
+
+Disable auto-adjustment for manual cursor control:
+
+	config := emulator.DefaultConfig()
+	config.AutoAdjustCursorOnScale = false
+	eng, _ := emulator.NewEngine(config)
 */
 package emulator

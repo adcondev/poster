@@ -1,6 +1,7 @@
 package tables_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/adcondev/poster/pkg/constants"
@@ -215,67 +216,96 @@ func TestPadString(t *testing.T) {
 // Tests para Definition. ValidateWidths - Validación de anchos de columna
 // ============================================================================
 
-func TestDefinition_ValidateWidths(t *testing.T) {
+func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 	tests := []struct {
-		name       string
-		definition tables.Definition
-		wantErr    bool
+		name          string
+		columns       []tables.Column
+		maxChars      int
+		columnSpacing int
+		wantErr       bool
+		errContains   string
 	}{
 		{
-			name: "columns fit within paper width",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 10}, {Width: 10}},
-				PaperWidth: 48,
+			name: "valid table for 58mm printer",
+			columns: []tables.Column{
+				{Name: "Item", Width: 15},
+				{Name: "Price", Width: 15},
 			},
-			wantErr: false,
+			maxChars:      32,
+			columnSpacing: 1,
+			wantErr:       false,
+			// 15 + 15 + 1 gap = 31 chars <= 32 max ✓
 		},
 		{
-			name: "columns exceed paper width",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 25}, {Width: 25}},
-				PaperWidth: 48, // 25 + 25 + 1 gap = 51 > 48
+			name: "overflow on 58mm printer",
+			columns: []tables.Column{
+				{Name: "Product", Width: 20},
+				{Name: "Qty", Width: 10},
+				{Name: "Price", Width: 10},
 			},
-			wantErr: true,
+			maxChars:      32,
+			columnSpacing: 1,
+			wantErr:       true,
+			errContains:   "columns too wide",
+			// 20 + 10 + 10 + 2 gaps = 42 chars > 32 max ✗
 		},
 		{
-			name: "exact fit including gap",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 23}, {Width: 24}},
-				PaperWidth: 48, // 23 + 24 + 1 = 48
+			name: "exact fit on 80mm printer",
+			columns: []tables.Column{
+				{Name: "A", Width: 15},
+				{Name: "B", Width: 15},
+				{Name: "C", Width: 16},
 			},
-			wantErr: false,
+			maxChars:      48,
+			columnSpacing: 1,
+			wantErr:       false,
+			// 15 + 15 + 16 + 2 gaps = 48 chars = 48 max ✓
 		},
 		{
-			name: "single column no gap",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 48}},
-				PaperWidth: 48,
+			name: "single column uses full width",
+			columns: []tables.Column{
+				{Name: "Full Width Column", Width: 32},
 			},
-			wantErr: false,
+			maxChars:      32,
+			columnSpacing: 1,
+			wantErr:       false,
+			// No gaps for single column, 32 = 32 ✓
 		},
 		{
-			name: "three columns with gaps",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 15}, {Width: 15}, {Width: 15}},
-				PaperWidth: 48, // 15*3 + 2 gaps = 47 <= 48
+			name: "rejects zero width column",
+			columns: []tables.Column{
+				{Name: "Bad Column", Width: 0},
 			},
-			wantErr: false,
+			maxChars:      32,
+			columnSpacing: 1,
+			wantErr:       true,
+			errContains:   "invalid width",
 		},
 		{
-			name: "three columns exceed with gaps",
-			definition: tables.Definition{
-				Columns:    []tables.Column{{Width: 16}, {Width: 16}, {Width: 16}},
-				PaperWidth: 48, // 16*3 + 2 gaps = 50 > 48
+			name: "rejects negative width column",
+			columns: []tables.Column{
+				{Name: "Negative", Width: -5},
 			},
-			wantErr: true,
+			maxChars:      32,
+			columnSpacing: 1,
+			wantErr:       true,
+			errContains:   "invalid width",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.definition.ValidateWidths()
+			def := tables.Definition{Columns: tt.columns}
+			err := def.ValidateWidths(tt.maxChars, tt.columnSpacing)
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateWidths() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && tt.errContains != "" {
+				if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("ValidateWidths() error = %q, should contain %q",
+						err.Error(), tt.errContains)
+				}
 			}
 		})
 	}
@@ -285,7 +315,7 @@ func TestDefinition_ValidateWidths(t *testing.T) {
 // Tests para Data.Validate - Validación de datos de tabla
 // ============================================================================
 
-func TestData_validate(t *testing.T) {
+func TestData_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
 		data    tables.Data

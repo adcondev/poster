@@ -344,7 +344,7 @@ func (c *Commands) PrintQRCode() []byte {
 //   - In Standard mode, use this function when the printer is "at the beginning of a line" or
 //     "there is no data in the print buffer"
 //   - The printer response follows this format:
-//   - Header: 1 byte (0x37, decimal 55)
+//   - Name: 1 byte (0x37, decimal 55)
 //   - Identifier: 1 byte (0x36, decimal 54)
 //   - Horizontal size: 1-5 bytes (ASCII digits 0-9)
 //   - Separator: 1 byte (0x1F, decimal 31)
