@@ -218,17 +218,17 @@ jobs:
           
           # Extract performance metrics
           if grep -q "ns/op" /tmp/current-benchmark.txt; then
-            AVG_NS=$(grep "ns/op" /tmp/current-benchmark.txt | awk '{sum+=$3; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            AVG_NS=$(grep "ns/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "ns/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
             echo "- **Average Speed:** ${AVG_NS} ns/op"
           fi
           
           if grep -q "B/op" /tmp/current-benchmark.txt; then
-            AVG_MEM=$(grep "B/op" /tmp/current-benchmark.txt | awk '{sum+=$5; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            AVG_MEM=$(grep "B/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "B/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
             echo "- **Average Memory:** ${AVG_MEM} B/op"
           fi
           
           if grep -q "allocs/op" /tmp/current-benchmark.txt; then
-            AVG_ALLOCS=$(grep "allocs/op" /tmp/current-benchmark.txt | awk '{sum+=$7; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            AVG_ALLOCS=$(grep "allocs/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "allocs/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
             echo "- **Average Allocations:** ${AVG_ALLOCS} allocs/op"
           fi
           EOFSCRIPT
