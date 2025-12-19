@@ -2,6 +2,13 @@
 
 All notable changes to the POS Printer library will be documented in this file.
 
+## [4.3.0](https://github.com/adcondev/pos-printer/compare/v4.2.0...v4.3.0) (2025-12-19)
+
+
+### ✨ Features
+
+* **tables:** implement automatic column width reduction for table overflow ([#90](https://github.com/adcondev/pos-printer/issues/90)) ([1e70d00](https://github.com/adcondev/pos-printer/commit/1e70d009a9fe228760c06467d25f1b9d601c4ec1))
+
 ## [4.2.0](https://github.com/adcondev/pos-printer/compare/v4.1.0...v4.2.0) (2025-12-17)
 
 
