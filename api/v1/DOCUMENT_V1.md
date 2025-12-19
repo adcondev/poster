@@ -272,7 +272,7 @@ Crea tablas formateadas:
 
 | Campo   | Tipo    | Requerido | Descripción          | Default | Valores             |
 |---------|---------|-----------|----------------------|---------|---------------------|
-| `name`  | string  | ✓         | Texto del encabezado |         |                     |
+| `name`  | string  | ✓         | Nombre de la columna |         |                     |
 | `width` | integer | ✓         | Ancho en caracteres  |         | Mínimo: 1           |
 | `align` | string  |           | Alineación del texto | center  | left, center, right |
 

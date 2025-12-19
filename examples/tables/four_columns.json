@@ -34,22 +34,22 @@
         "definition": {
           "columns": [
             {
-              "header": "#",
+              "name": "#",
               "width": 2,
               "align": "center"
             },
             {
-              "header": "Platillo",
+              "name": "Platillo",
               "width": 12,
               "align": "left"
             },
             {
-              "header": "Cant",
+              "name": "Cant",
               "width": 4,
               "align": "center"
             },
             {
-              "header": "Total",
+              "name": "Total",
               "width": 8,
               "align": "right"
             }

@@ -33,17 +33,17 @@
         "definition": {
           "columns": [
             {
-              "header": "#",
+              "name": "#",
               "width": 3,
               "align": "center"
             },
             {
-              "header": "Descripción",
+              "name": "Descripción",
               "width": 25,
               "align": "left"
             },
             {
-              "header": "Precio",
+              "name": "Precio",
               "width": 10,
               "align": "right"
             }

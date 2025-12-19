@@ -33,22 +33,22 @@
         "definition": {
           "columns": [
             {
-              "header": "A",
+              "name": "A",
               "width": 6,
               "align": "left"
             },
             {
-              "header": "B",
+              "name": "B",
               "width": 6,
               "align": "center"
             },
             {
-              "header": "C",
+              "name": "C",
               "width": 6,
               "align": "right"
             },
             {
-              "header": "D",
+              "name": "D",
               "width": 6,
               "align": "center"
             }
@@ -108,17 +108,17 @@
         "definition": {
           "columns": [
             {
-              "header": "",
+              "name": "",
               "width": 8,
               "align": "left"
             },
             {
-              "header": "",
+              "name": "",
               "width": 8,
               "align": "center"
             },
             {
-              "header": "",
+              "name": "",
               "width": 8,
               "align": "right"
             }

@@ -31,12 +31,12 @@
         "definition": {
           "columns": [
             {
-              "header": "Articulo",
+              "name": "Articulo",
               "width": 12,
               "align": "left"
             },
             {
-              "header": "Precio",
+              "name": "Precio",
               "width": 10,
               "align": "right"
             }
@@ -83,12 +83,12 @@
         "definition": {
           "columns": [
             {
-              "header": "",
+              "name": "",
               "width": 12,
               "align": "left"
             },
             {
-              "header": "",
+              "name": "",
               "width": 10,
               "align": "right"
             }

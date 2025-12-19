@@ -33,12 +33,12 @@
         "definition": {
           "columns": [
             {
-              "header": "Tipo",
+              "name": "Tipo",
               "width": 10,
               "align": "left"
             },
             {
-              "header": "Chars",
+              "name": "Chars",
               "width": 18,
               "align": "left"
             }

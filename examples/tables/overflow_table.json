@@ -11,11 +11,11 @@
         "definition": {
           "columns": [
             {
-              "header": "A",
+              "name": "A",
               "width": 20
             },
             {
-              "header": "B",
+              "name": "B",
               "width": 20
             }
           ]

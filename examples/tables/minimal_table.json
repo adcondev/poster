@@ -13,12 +13,12 @@
         "definition": {
           "columns": [
             {
-              "header": "Clave",
+              "name": "Clave",
               "width": 10,
               "align": "left"
             },
             {
-              "header": "Valor",
+              "name": "Valor",
               "width": 20,
               "align": "left"
             }
