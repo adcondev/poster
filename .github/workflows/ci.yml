@@ -17,12 +17,13 @@ permissions:
   security-events: write
 
 jobs:
-  validate:
-    name: Validate Commits
+  pr-validation:
+    name: PR Validation
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -44,6 +45,7 @@ jobs:
             chore
             deps
             revert
+          # TODO: Reduce amount of scopes if necessary
           scopes: |
             composer
             connection
@@ -89,7 +91,8 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -97,71 +100,193 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run All Tests
+      - name: Run tests with race detection
         shell: bash
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./pkg/...
 
-      - name: Upload Coverage
+      - name: Generate coverage report
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          go tool cover -func=coverage.txt -o=coverage.txt
+          echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -n 1 coverage.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.txt
           fail_ci_if_error: false
+          flags: unittests
 
   benchmark:
-    name: Benchmarks
+    name: ⚡ Performance Benchmarks
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: 'true'
+          cache: true
 
-      - name: Run Benchmarks
+      - name: Run benchmarks (base)
         run: |
-          go test -bench=. -benchmem ./... | tee benchmark.txt
-          echo "## 📊 Benchmark Results" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat benchmark.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          git checkout ${{ github.event.pull_request.base.sha }}
+          go test -bench=. -benchmem -run=^$ ./...  > /tmp/base-benchmark.txt 2>&1 || true
+
+      - name: Run benchmarks (current)
+        run: |
+          git checkout ${{ github.event. pull_request.head.sha }}
+          go test -bench=. -benchmem -run=^$ ./... > /tmp/current-benchmark.txt 2>&1 || true
+
+      - name: Compare benchmarks
+        id: compare
+        run: |
+          cat > compare.sh << 'EOFSCRIPT'
+          #!/bin/bash
+          
+          echo "## ⚡ Benchmark Results"
+          echo ""
+          echo "### 📈 Performance Comparison"
+          echo ""
+          
+          # Check if benchmarks exist
+          if !  grep -q "^Benchmark" /tmp/current-benchmark.txt; then
+            echo "⚠️ No benchmarks found in current branch"
+            exit 0
+          fi
+          
+          echo "<details>"
+          echo "<summary>📊 Click to expand detailed results</summary>"
+          echo ""
+          echo "#### Current Branch Results"
+          echo '```'
+          grep "^Benchmark" /tmp/current-benchmark.txt | head -20
+          echo '```'
+          echo ""
+          
+          if [ -f /tmp/base-benchmark.txt ] && grep -q "^Benchmark" /tmp/base-benchmark.txt; then
+            echo "#### Base Branch Results"
+            echo '```'
+            grep "^Benchmark" /tmp/base-benchmark.txt | head -20
+            echo '```'
+            echo ""
+            echo "💡 **Note:** Use \`benchstat\` for statistical comparison"
+          fi
+          
+          echo "</details>"
+          echo ""
+          echo "### 🎯 Summary"
+          
+          BENCH_COUNT=$(grep -c "^Benchmark" /tmp/current-benchmark.txt)
+          echo "- **Total Benchmarks:** $BENCH_COUNT"
+          
+          # Extract performance metrics
+          if grep -q "ns/op" /tmp/current-benchmark.txt; then
+            AVG_NS=$(grep "ns/op" /tmp/current-benchmark.txt | awk '{sum+=$3; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            echo "- **Average Speed:** ${AVG_NS} ns/op"
+          fi
+          
+          if grep -q "B/op" /tmp/current-benchmark.txt; then
+            AVG_MEM=$(grep "B/op" /tmp/current-benchmark.txt | awk '{sum+=$5; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            echo "- **Average Memory:** ${AVG_MEM} B/op"
+          fi
+          
+          if grep -q "allocs/op" /tmp/current-benchmark.txt; then
+            AVG_ALLOCS=$(grep "allocs/op" /tmp/current-benchmark.txt | awk '{sum+=$7; count++} END {if(count>0) print int(sum/count); else print "N/A"}')
+            echo "- **Average Allocations:** ${AVG_ALLOCS} allocs/op"
+          fi
+          EOFSCRIPT
+          
+          chmod +x compare.sh
+          ./compare.sh > benchmark-comment.md
+
+      - name: Post benchmark results to PR
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync('benchmark-comment.md', 'utf8');
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && 
+              c.body.includes('⚡ Benchmark Results')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number:  context.issue.number,
+                body: comment
+              });
+            }
+
+      - name: Add to job summary
+        run: cat benchmark-comment.md >> $GITHUB_STEP_SUMMARY
 
   security:
-    name: Security Scan
+    name: 🔒 Security Scan
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-      - name: Run Trivy Vulnerability Scanner
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy Results To GitHub Security Tab
+      - name: Upload results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
 
   lint:
-    name: Go Linters
+    name: 🔍 Linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-      - name: Setup Go
+      - name: Setup Go ${{ env.GO_VERSION }}
         uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
-          args: --config=.golangci.yml
+          args: --config=.golangci.yml --timeout=5m
