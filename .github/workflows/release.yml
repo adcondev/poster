@@ -1,10 +1,9 @@
-name: Release Notes
+name: Release
 
 on:
   workflow_run:
     workflows: [ "CI" ]
-    types:
-      - completed
+    types: [ completed ]
     branches: [ main, master ]
 
 permissions:
@@ -12,21 +11,23 @@ permissions:
   packages: write
   issues: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Create Release
+    name: 🚀 Create Release
     runs-on: ubuntu-latest
     concurrency:
       group: release-${{ github.ref }}
       cancel-in-progress: false
     if: |
       github.event.workflow_run.conclusion == 'success' &&
-      !contains(github.event.workflow_run.head_commit.message, 'chore(release)') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip ci]') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip release]')
+      ! contains(github.event.workflow_run.head_commit.message, '[skip release]')
 
     steps:
-      - name: Generate token
+      - name: Generate GitHub App token
         id: generate_token
         uses: tibdex/github-app-token@v2
         with:
@@ -34,7 +35,7 @@ jobs:
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
         continue-on-error: true
 
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -51,14 +52,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
@@ -70,76 +63,72 @@ jobs:
       - name: Analyze commits
         id: analyze
         run: |
-          # Get the latest tag
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-
-          # More robust breaking change detection
+          
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
-
-          # Enhanced detection for breaking changes
-          if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
+          
+          # Detect release type
+          if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!: "; then
             RELEASE_TYPE="major"
-            echo "🔥 Breaking change detected!"
+            EMOJI="💥"
+            DESC="Breaking changes detected"
           elif echo "$COMMITS" | grep -q "^feat"; then
             RELEASE_TYPE="minor"
-            echo "✨ New features detected!"
+            EMOJI="✨"
+            DESC="New features added"
           elif echo "$COMMITS" | grep -qE "^(fix|perf|deps)"; then
             RELEASE_TYPE="patch"
-            echo "🐛 Fixes detected!"
+            EMOJI="🐛"
+            DESC="Bug fixes and improvements"
           else
             RELEASE_TYPE=""
-            echo "📝 No releasable changes"
+            EMOJI="📝"
+            DESC="No releasable changes"
           fi
-
+          
           if [ -n "$RELEASE_TYPE" ]; then
             echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
             echo "should_release=true" >> $GITHUB_OUTPUT
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
+          
+          # ✨ CHANGE: Enhanced summary with visual indicators
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 📊 Release Analysis
+          
+          | Metric | Value |
+          |--------|-------|
+          | $EMOJI **Status** | $DESC |
+          | 🏷️ **Current Version** | \`$LATEST_TAG\` |
+          | 📦 **Release Type** | ${RELEASE_TYPE:-none} |
+          | 📝 **Commits Since Last Release** | $(echo "$COMMITS" | wc -l) |
+          EOF
 
-          # Generate summary
-          echo "## 📊 Release Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "- Current version: $LATEST_TAG" >> $GITHUB_STEP_SUMMARY
-          echo "- Release type: ${RELEASE_TYPE:-none}" >> $GITHUB_STEP_SUMMARY
-          echo "- Next version: $([ -n "$RELEASE_TYPE" ] && echo "Will calculate..." || echo "No release")" >> $GITHUB_STEP_SUMMARY
-
-      - name: Generate Release Notes
+      - name: Generate release
         if: steps.analyze.outputs.should_release == 'true'
         id: release
         run: |
-          set -e  # Exit on error
+          set -e
           
-          # Run standard-version
-          if ! npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}; then
-            echo "❌ standard-version failed"
-            exit 1
-          fi
+          npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}
           
-          # Get the new version from the git tag
           NEW_VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           
-          # Push changes with error handling
-          if ! git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}; then
-            echo "❌ Failed to push tags"
-            git tag -d "v${NEW_VERSION}"  # Cleanup local tag
-            exit 1
-          fi
+          git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}
 
-      - name: Extract Release Notes
+      - name: Extract release notes
         if: steps.analyze.outputs.should_release == 'true'
-        id: extract_notes
         run: |
-          # Extract only the latest version's changelog
           awk '/^## \[/{if (++count == 2) exit} count == 1' CHANGELOG.md > RELEASE_NOTES.md
 
-      - name: Create GitHub Release
+      - name: Create GitHub release
         if: steps.analyze.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
@@ -149,36 +138,50 @@ jobs:
           generate_release_notes: true
           make_latest: true
 
-      - name: Warm up Go Proxy
+      - name: Notify Go module proxy
         if: steps.analyze.outputs.should_release == 'true'
         run: |
-          # Give GitHub a moment to process the tag
           sleep 10
+          
+          VERSION="v${{ steps.release.outputs.new_version }}"
+          MODULE="github.com/${{ github.repository }}"
+          
+          echo "🔄 Warming up Go module proxy..."
+          curl -f "https://proxy.golang.org/${MODULE}/@v/${VERSION}.info" || true
+          curl -f "https://sum.golang.org/lookup/${MODULE}@${VERSION}" || true
+          
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 📦 Go Module Published
+          
+          \`\`\`bash
+          go get ${MODULE}@${VERSION}
+          \`\`\`
+          
+          [📖 View on pkg.go.dev](https://pkg.go.dev/${MODULE}@${VERSION})
+          EOF
 
-          # Trigger proxy.golang.org to fetch the new version
-          curl -f "https://proxy.golang.org/github.com/${{ github.repository }}/@v/v${{ steps.release.outputs.new_version }}.info" || true
-
-          echo "✅ Go module proxy notified" >> $GITHUB_STEP_SUMMARY
-
-      - name: Generate Go Module Release Info
-        if: steps.analyze.outputs.should_release == 'true'
-        run: |
-          echo "📦 Go Module Release Information" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "```bash" >> $GITHUB_STEP_SUMMARY
-          echo "go get github.com/${{ github.repository }}@v${{ steps.release.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "```" >> $GITHUB_STEP_SUMMARY
-
-      - name: Summary
+      - name: Generate final summary
         if: always()
         run: |
           if [ "${{ steps.analyze.outputs.should_release }}" == "true" ]; then
-            echo "## 🚀 Release v${{ steps.release.outputs.new_version }} Published!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Install:** \`go get github.com/${{ github.repository }}@v${{ steps.release.outputs.new_version }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.release.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
+            VERSION="v${{ steps.release.outputs.new_version }}"
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          
+          ---
+          
+          ## 🎉 Release $VERSION Published! 
+          
+          **Installation:**
+          \`\`\`bash
+          go get github.com/${{ github.repository }}@$VERSION
+          \`\`\`
+          
+          **Links:**
+          - 📋 [Release Notes](https://github.com/${{ github.repository }}/releases/tag/$VERSION)
+          - 📦 [pkg.go.dev](https://pkg.go.dev/github.com/${{ github.repository }}@$VERSION)
+          - 📝 [CHANGELOG. md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          EOF
           else
-            echo "## ℹ️ No Release Created" >> $GITHUB_STEP_SUMMARY
-            echo "No releasable changes detected." >> $GITHUB_STEP_SUMMARY
+            echo "## ℹ️ No Release Required" >> $GITHUB_STEP_SUMMARY
+            echo "No releasable changes detected in this push." >> $GITHUB_STEP_SUMMARY
           fi
