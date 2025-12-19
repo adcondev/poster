@@ -147,8 +147,8 @@ jobs:
             echo "⚠️ Warning: Base branch benchmarks failed. This is non-critical." >&2
             echo "Error details:" >&2
             cat /tmp/base-benchmark.txt >&2
-            # Create empty file to indicate failure but continue
-            echo "# Base benchmark execution failed" > /tmp/base-benchmark.txt
+            # Prepend marker to indicate failure but preserve error details
+            sed -i '1i# Base benchmark execution failed' /tmp/base-benchmark.txt
           fi
 
       - name: Run benchmarks (current)
