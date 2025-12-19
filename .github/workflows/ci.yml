@@ -143,12 +143,31 @@ jobs:
       - name: Run benchmarks (base)
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
-          go test -bench=. -benchmem -run=^$ ./...  > /tmp/base-benchmark.txt 2>&1 || true
+          if ! go test -bench=. -benchmem -run=^$ ./... > /tmp/base-benchmark.txt 2>&1; then
+            echo "⚠️ Warning: Base branch benchmarks failed. This is non-critical." >&2
+            echo "Error details:" >&2
+            cat /tmp/base-benchmark.txt >&2
+            # Create empty file to indicate failure but continue
+            echo "# Base benchmark execution failed" > /tmp/base-benchmark.txt
+          fi
 
       - name: Run benchmarks (current)
         run: |
           git checkout ${{ github.event.pull_request.head.sha }}
-          go test -bench=. -benchmem -run=^$ ./... > /tmp/current-benchmark.txt 2>&1 || true
+          if ! go test -bench=. -benchmem -run=^$ ./... > /tmp/current-benchmark.txt 2>&1; then
+            echo "❌ Error: Current branch benchmarks failed." >&2
+            echo "Error details:" >&2
+            cat /tmp/current-benchmark.txt >&2
+            echo "Benchmark execution failed. Please fix the errors above." >&2
+            exit 1
+          fi
+          # Verify benchmarks were actually found
+          if ! grep -q "^Benchmark" /tmp/current-benchmark.txt; then
+            echo "⚠️ Warning: No benchmarks found in current branch test output."
+            echo "This may indicate that no benchmark tests exist or they were not executed."
+            # Create a minimal report
+            echo "No benchmarks found" > /tmp/current-benchmark.txt
+          fi
 
       - name: Compare benchmarks
         id: compare
@@ -183,6 +202,11 @@ jobs:
             echo '```'
             echo ""
             echo "💡 **Note:** Use \`benchstat\` for statistical comparison"
+          elif [ -f /tmp/base-benchmark.txt ] && grep -q "# Base benchmark execution failed" /tmp/base-benchmark.txt; then
+            echo "#### ⚠️ Base Branch Benchmarks Failed"
+            echo ""
+            echo "The base branch benchmarks could not be executed (possibly due to compilation errors)."
+            echo "Comparison with base branch is not available."
           fi
           
           echo "</details>"
