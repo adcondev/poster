@@ -147,7 +147,7 @@ jobs:
 
       - name: Run benchmarks (current)
         run: |
-          git checkout ${{ github.event. pull_request.head.sha }}
+          git checkout ${{ github.event.pull_request.head.sha }}
           go test -bench=. -benchmem -run=^$ ./... > /tmp/current-benchmark.txt 2>&1 || true
 
       - name: Compare benchmarks
