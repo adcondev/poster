@@ -162,7 +162,7 @@ jobs:
           echo ""
           
           # Check if benchmarks exist
-          if !  grep -q "^Benchmark" /tmp/current-benchmark.txt; then
+          if ! grep -q "^Benchmark" /tmp/current-benchmark.txt; then
             echo "⚠️ No benchmarks found in current branch"
             exit 0
           fi
