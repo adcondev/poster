@@ -107,10 +107,10 @@ jobs:
       - name: Generate coverage report
         if: matrix.os == 'ubuntu-latest'
         run: |
-          go tool cover -func=coverage.txt -o=coverage.txt
+          go tool cover -func=coverage.txt -o=coverage-summary.txt
           echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          tail -n 1 coverage.txt >> $GITHUB_STEP_SUMMARY
+          tail -n 1 coverage-summary.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage to Codecov
