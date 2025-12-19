@@ -8,9 +8,9 @@ import (
 
 // Column defines a table column configuration
 type Column struct {
-	Header string              `json:"header"`
-	Width  int                 `json:"width"`
-	Align  constants.Alignment `json:"align"`
+	Name  string              `json:"name"`
+	Width int                 `json:"width"`
+	Align constants.Alignment `json:"align"`
 }
 
 // Definition defines the structure of a table
@@ -48,7 +48,7 @@ func (d *Definition) ValidateWidths(maxChars, columnSpacing int) error {
 	total := 0
 	for _, col := range d.Columns {
 		if col.Width <= 0 {
-			return fmt.Errorf("column '%s' has invalid width: %d", col.Header, col.Width)
+			return fmt.Errorf("column '%s' has invalid width: %d", col.Name, col.Width)
 		}
 		total += col.Width
 	}

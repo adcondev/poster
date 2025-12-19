@@ -1,4 +1,4 @@
-# LEARNING.md: Poster - Thermal Printer Driver & Utility
+# Poster - Thermal Printer Driver & Utility
 
 ## Project Overview
 
@@ -95,10 +95,10 @@ Defines Go structures that map directly to the JSON document format with validat
 ### 4. Data Structures & Algorithms
 
 - **Dynamic Table Engine**: Created a layout engine (`pkg/tables`) that:
-    - Calculates column widths based on content and configuration
-    - Handles word wrapping with proper alignment
-    - Manages column spacing and padding
-    - Supports header formatting
+  - **Hardware-aware validation**: Calculates max characters from `DotsPerLine / FontWidth`
+  - **Auto-reduction algorithm**: "Reduce longest first" strategy that shrinks oversized columns while preserving small
+    ones (ID, Qty columns stay intact)
+  - **Overflow protection**: Rejects tables exceeding paper width with clear error messages
 
 - **JSON Schema Validation**: Integrated strict schema validation to prevent runtime errors on the physical device.
 - **Registry Pattern**: Map-based command registry for extensible command handling.
@@ -149,13 +149,23 @@ The `Executor` uses a map-based registry for command handlers. This makes the sy
 - **Serial**: COM port support for USB/Serial printers
 - **File**: Output capture for debugging and emulator input
 
-### 📊 Table Engine
+### 📊 Smart Table Engine
 
-- Automatic column width calculation
-- Word wrapping with alignment preservation
-- Configurable column spacing
-- Header styling options
-- ASCII-based formatting for thermal printers
+The table system goes beyond simple formatting to provide hardware-aware rendering:
+
+- **Automatic Width Calculation**: Derives character limits from printer profile (`DotsPerLine / FontAWidth`)
+- **Overflow Protection**: Validates `Σ(columns) + (n-1) × spacing ≤ maxChars` before rendering
+- **Auto-Reduction**: When tables exceed paper width, automatically shrinks the widest columns first
+  - Preserves small columns (like "#" or "Qty") at minimum width (default:  3 chars)
+  - Configurable via `auto_reduce` option in JSON
+- **Font A Enforcement**: Consistent 12-dot character width for predictable layouts
+- **Paper Support**: 58mm (32 chars) and 80mm (48 chars) at 203 DPI
+
+```go
+// Example:  Table that would overflow gets auto-reduced
+// Original: [20, 5, 12] = 39 chars (exceeds 32 max for 58mm)
+// After:     [13, 5, 12] = 32 chars (fits perfectly)
+// Log:  "Table auto-reduced:  39 → 32 chars (7 reductions applied)"
 
 ## Module Dependencies
 

@@ -30,6 +30,7 @@ type tableOptions struct {
 	WordWrap      bool   `json:"word_wrap,omitempty"`
 	ColumnSpacing int    `json:"column_spacing,omitempty"`
 	Align         string `json:"align,omitempty"`
+	AutoReduce    *bool  `json:"auto_reduce,omitempty"`
 }
 
 type tableCommand struct {
@@ -38,6 +39,8 @@ type tableCommand struct {
 	Rows        [][]string      `json:"rows"`
 	Options     *tableOptions   `json:"options,omitempty"`
 }
+
+// TODO: Use constants and defaults to ensure consistent behavior
 
 func newTableBuilder(parent *DocumentBuilder) *TableBuilder {
 	return &TableBuilder{
@@ -89,6 +92,18 @@ func (tb *TableBuilder) HideHeaders() *TableBuilder {
 	return tb
 }
 
+// ShowHeaders shows the table headers
+func (tb *TableBuilder) ShowHeaders() *TableBuilder {
+	tb.showHeaders = true
+	return tb
+}
+
+// HeaderBold enables bold headers
+func (tb *TableBuilder) HeaderBold() *TableBuilder {
+	tb.options.HeaderBold = true
+	return tb
+}
+
 // NoHeaderBold disables bold headers
 func (tb *TableBuilder) NoHeaderBold() *TableBuilder {
 	tb.options.HeaderBold = false
@@ -98,6 +113,12 @@ func (tb *TableBuilder) NoHeaderBold() *TableBuilder {
 // NoWordWrap disables word wrapping
 func (tb *TableBuilder) NoWordWrap() *TableBuilder {
 	tb.options.WordWrap = false
+	return tb
+}
+
+// WordWrap enables word wrapping
+func (tb *TableBuilder) WordWrap() *TableBuilder {
+	tb.options.WordWrap = true
 	return tb
 }
 
@@ -113,6 +134,23 @@ func (tb *TableBuilder) ColumnSpacing(spacing int) *TableBuilder {
 // Align sets table alignment
 func (tb *TableBuilder) Align(align constants.Alignment) *TableBuilder {
 	tb.options.Align = string(align)
+	return tb
+}
+
+// AutoReduce enables automatic column width reduction when table exceeds paper width.
+// When enabled, the system will shrink the widest columns first to preserve smaller columns.
+// This is enabled by default.
+func (tb *TableBuilder) AutoReduce() *TableBuilder {
+	autoReduce := true
+	tb.options.AutoReduce = &autoReduce
+	return tb
+}
+
+// NoAutoReduce disables automatic column width reduction.
+// When disabled, tables that exceed paper width will return an error instead of being reduced.
+func (tb *TableBuilder) NoAutoReduce() *TableBuilder {
+	autoReduce := false
+	tb.options.AutoReduce = &autoReduce
 	return tb
 }
 

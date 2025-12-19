@@ -228,8 +228,8 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "valid table for 58mm printer",
 			columns: []tables.Column{
-				{Header: "Item", Width: 15},
-				{Header: "Price", Width: 15},
+				{Name: "Item", Width: 15},
+				{Name: "Price", Width: 15},
 			},
 			maxChars:      32,
 			columnSpacing: 1,
@@ -239,9 +239,9 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "overflow on 58mm printer",
 			columns: []tables.Column{
-				{Header: "Product", Width: 20},
-				{Header: "Qty", Width: 10},
-				{Header: "Price", Width: 10},
+				{Name: "Product", Width: 20},
+				{Name: "Qty", Width: 10},
+				{Name: "Price", Width: 10},
 			},
 			maxChars:      32,
 			columnSpacing: 1,
@@ -252,9 +252,9 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "exact fit on 80mm printer",
 			columns: []tables.Column{
-				{Header: "A", Width: 15},
-				{Header: "B", Width: 15},
-				{Header: "C", Width: 16},
+				{Name: "A", Width: 15},
+				{Name: "B", Width: 15},
+				{Name: "C", Width: 16},
 			},
 			maxChars:      48,
 			columnSpacing: 1,
@@ -264,7 +264,7 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "single column uses full width",
 			columns: []tables.Column{
-				{Header: "Full Width Column", Width: 32},
+				{Name: "Full Width Column", Width: 32},
 			},
 			maxChars:      32,
 			columnSpacing: 1,
@@ -274,7 +274,7 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "rejects zero width column",
 			columns: []tables.Column{
-				{Header: "Bad Column", Width: 0},
+				{Name: "Bad Column", Width: 0},
 			},
 			maxChars:      32,
 			columnSpacing: 1,
@@ -284,7 +284,7 @@ func TestDefinition_ValidateWidths_WithMaxChars(t *testing.T) {
 		{
 			name: "rejects negative width column",
 			columns: []tables.Column{
-				{Header: "Negative", Width: -5},
+				{Name: "Negative", Width: -5},
 			},
 			maxChars:      32,
 			columnSpacing: 1,

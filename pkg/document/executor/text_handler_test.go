@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
 
 // ============================================================================
@@ -161,5 +162,71 @@ func TestTextCommand_Validation(t *testing.T) {
 				t.Errorf("Unexpected error: %v", err)
 			}
 		})
+	}
+}
+
+// ============================================================================
+// Command Data Parsing Tests
+// ============================================================================
+
+func TestParseDocument_CommandDataPreserved(t *testing.T) {
+	jsonData := []byte(`{
+		"version": "1.0",
+		"profile": {"model": "Test"},
+		"commands": [
+			{
+				"type": "text",
+				"data": {
+					"content": {
+						"text": "Hello World",
+						"content_style": {"bold": true}
+					},
+					"new_line": true
+				}
+			}
+		]
+	}`)
+
+	doc, err := schema.ParseDocument(jsonData)
+	if err != nil {
+		t.Fatalf("ParseDocument() error: %v", err)
+	}
+
+	// Verify raw JSON data is preserved
+	if doc.Commands[0].Data == nil {
+		t.Fatal("Command data is nil")
+	}
+
+	// Try to unmarshal the preserved data
+	var textCmd TextCommand
+	if err := json.Unmarshal(doc.Commands[0].Data, &textCmd); err != nil {
+		t.Fatalf("Failed to unmarshal command data: %v", err)
+	}
+
+	if textCmd.Content.Text != "Hello World" {
+		t.Errorf("Expected text 'Hello World', got '%s'", textCmd.Content.Text)
+	}
+}
+
+func TestParseDocument_UnicodeContent(t *testing.T) {
+	jsonData := []byte(`{
+		"version": "1.0",
+		"profile": {"model": "Test"},
+		"commands": [
+			{"type": "text", "data": {"content": {"text": "Héllo Wörld 中文 🎉"}}}
+		]
+	}`)
+
+	doc, err := schema.ParseDocument(jsonData)
+	if err != nil {
+		t.Fatalf("ParseDocument() error: %v", err)
+	}
+
+	var textCmd TextCommand
+	_ = json.Unmarshal(doc.Commands[0].Data, &textCmd)
+
+	expected := "Héllo Wörld 中文 🎉"
+	if textCmd.Content.Text != expected {
+		t.Errorf("Expected text '%s', got '%s'", expected, textCmd.Content.Text)
 	}
 }

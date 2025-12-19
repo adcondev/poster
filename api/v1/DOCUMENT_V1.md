@@ -228,8 +228,7 @@ Crea tablas formateadas:
           "width": 10,
           "align": "right"
         }
-      ],
-      "paper_width": 48
+      ]
     },
     "show_headers": true,
     "rows": [
@@ -246,7 +245,8 @@ Crea tablas formateadas:
       "header_bold": true,
       "word_wrap": true,
       "column_spacing": 1,
-      "align": "center"
+      "align": "center",
+      "auto_reduce": true
     }
   }
 }
@@ -263,27 +263,28 @@ Crea tablas formateadas:
 
 **TableDefinition:**
 
-| Campo         | Tipo          | Requerido | Descripción                               |
-|---------------|---------------|-----------|-------------------------------------------|
-| `columns`     | TableColumn[] | ✓         | Definición de columnas (mínimo 1)         |
-| `paper_width` | integer       |           | Ancho del papel en caracteres (mínimo: 1) |
+| Campo         | Tipo          | Requerido | Descripción                                |
+|---------------|---------------|-----------|--------------------------------------------|
+| `columns`     | TableColumn[] | ✓         | Definición de columnas (mínimo 1)          |
+| `paper_width` | integer       |           | Ancho del papel en caracteres (mínimo:  1) |
 
 **TableColumn:**
 
-| Campo   | Tipo    | Requerido | Descripción           | Default | Valores             |
-|---------|---------|-----------|-----------------------|---------|---------------------|
-| `name`  | string  | ✓         | Nombre del encabezado |         |                     |
-| `width` | integer | ✓         | Ancho en caracteres   |         | Mínimo: 1           |
-| `align` | string  |           | Alineación del texto  | center  | left, center, right |
+| Campo   | Tipo    | Requerido | Descripción          | Default | Valores             |
+|---------|---------|-----------|----------------------|---------|---------------------|
+| `name`  | string  | ✓         | Texto del encabezado |         |                     |
+| `width` | integer | ✓         | Ancho en caracteres  |         | Mínimo: 1           |
+| `align` | string  |           | Alineación del texto | center  | left, center, right |
 
 **TableOptions:**
 
-| Campo            | Tipo    | Requerido | Descripción                                | Default | Valores             |
-|------------------|---------|-----------|--------------------------------------------|---------|---------------------|
-| `header_bold`    | boolean |           | Encabezados en negrita                     | true    |                     |
-| `word_wrap`      | boolean |           | Ajuste automático de texto                 |         |                     |
-| `column_spacing` | integer |           | Espacios entre columnas (por cada lado x2) | 1       | Mínimo: 0           |
-| `align`          | string  |           | Alineación de la tabla                     | center  | left, center, right |
+| Campo            | Tipo    | Requerido | Descripción                                                     | Default | Valores             |
+|------------------|---------|-----------|-----------------------------------------------------------------|---------|---------------------|
+| `header_bold`    | boolean |           | Encabezados en negrita                                          | true    |                     |
+| `word_wrap`      | boolean |           | Ajuste automático de texto                                      | true    |                     |
+| `column_spacing` | integer |           | Espacios entre columnas                                         | 1       | Mínimo:  0          |
+| `align`          | string  |           | Alineación de la tabla                                          | center  | left, center, right |
+| `auto_reduce`    | boolean |           | Reducir automáticamente anchos de columna para ajustar al papel | true    |                     |
 
 ### 6. Separator Command
 

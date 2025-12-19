@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/service"
@@ -13,7 +12,7 @@ import (
 
 // TODO: Consider upper_separator y lower_separator for tables
 
-// TODO: Implementar Header con TextStyle sin alineación
+// TODO: Add TextStyle support for column names without alignmentón
 
 // TODO: Manage text_under and text_above options instead of human_text
 
@@ -34,8 +33,11 @@ type TableOptions struct {
 	ColumnSpacing int    `json:"column_spacing,omitempty"`
 	Align         string `json:"align,omitempty"`
 	// TODO: Setup Font usage
-	Font string `json:"font,omitempty"`
+	Font       string `json:"font,omitempty"`
+	AutoReduce *bool  `json:"auto_reduce,omitempty"`
 }
+
+// TODO: Reducir código duplicado entre handlers
 
 // handleTable manages table commands
 func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) error {
@@ -44,14 +46,21 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		return fmt.Errorf("failed to parse table command: %w", err)
 	}
 
+	// Normalize options
 	if cmd.Options != nil && cmd.Options.ColumnSpacing < 0 {
-		// Validar que ColumnSpacing no sea negativo
 		cmd.Options.ColumnSpacing = 0
 		log.Printf("ColumnSpacing cannot be negative, using 0")
 	}
-	// Validate table command
+
+	// Validate columns exist
 	if len(cmd.Definition.Columns) == 0 {
 		return fmt.Errorf("table must have at least one column defined")
+	}
+
+	// Sum all column widths
+	totalColumnWidth, err := ValidateColumns(cmd.Definition.Columns)
+	if err != nil {
+		return fmt.Errorf("invalid table definition: %w", err)
 	}
 
 	// Calculate max chars based on printer profile and Font A
@@ -68,14 +77,9 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 			maxChars, printer.Profile.PaperWidth)
 	}
 
-	// Sum all column widths
-	totalColumnWidth := 0
-	for _, col := range cmd.Definition.Columns {
-		if col.Width <= 0 {
-			return fmt.Errorf("column '%s' has invalid width: %d (must be > 0)",
-				col.Header, col.Width)
-		}
-		totalColumnWidth += col.Width
+	spacing := constants.DefaultTableColumnSpacing
+	if cmd.Options != nil && cmd.Options.ColumnSpacing > 0 {
+		spacing = cmd.Options.ColumnSpacing
 	}
 
 	// Calculate gap width (spaces between columns)
@@ -84,26 +88,53 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		numberOfGaps = 0
 	}
 
-	spacing := constants.DefaultTableColumnSpacing
-	if cmd.Options != nil && cmd.Options.ColumnSpacing > 0 {
-		spacing = cmd.Options.ColumnSpacing
-	}
-
 	// Gaps are on both sides of each column
 	totalGapWidth := numberOfGaps * spacing
 	totalRequiredWidth := totalColumnWidth + totalGapWidth
 
 	if totalRequiredWidth > maxChars {
-		return fmt.Errorf(
-			"table overflow: columns (%d) + gaps (%d) = %d chars, exceeds max %d chars "+
-				"(%.0fmm paper @ %d DPI, Font A)",
-			totalColumnWidth,
-			totalGapWidth,
-			totalRequiredWidth,
-			maxChars,
-			printer.Profile.PaperWidth,
-			printer.Profile.DPI,
-		)
+		// Check if AutoReduce is enabled (default is true)
+		shouldReduce := constants.DefaultTableAutoReduce
+		if cmd.Options != nil && cmd.Options.AutoReduce != nil {
+			shouldReduce = *cmd.Options.AutoReduce
+		}
+
+		if shouldReduce {
+			log.Printf("Table overflow detected (%d > %d). Attempting auto-reduction...",
+				totalRequiredWidth, maxChars)
+
+			result, err := tables.ReduceToFit(
+				cmd.Definition.Columns,
+				maxChars,
+				spacing,
+				constants.MinTableColumnWidth,
+			)
+
+			if err == nil && result.Success {
+				// Update the definition with reduced columns
+				cmd.Definition.Columns = result.Columns
+				log.Printf("Table auto-reduced:  %d → %d chars (%d reductions applied)",
+					result.OriginalWidth, result.ReducedWidth, result.Reductions)
+			} else {
+				// Auto-reduction failed
+				return fmt.Errorf(
+					"table overflow: required %d chars > max %d; auto-reduction failed:  %v",
+					totalRequiredWidth, maxChars, err,
+				)
+			}
+		} else {
+			// AutoReduce disabled by user
+			return fmt.Errorf(
+				"table overflow: columns (%d) + gaps (%d) = %d chars, exceeds max %d chars "+
+					"(%.0fmm paper @ %d DPI, Font A)",
+				totalColumnWidth,
+				totalGapWidth,
+				totalRequiredWidth,
+				maxChars,
+				printer.Profile.PaperWidth,
+				printer.Profile.DPI,
+			)
+		}
 	}
 
 	// Create options with validated paper width
@@ -142,24 +173,8 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		}
 	}
 
-	// Create table engine
-	engine := tables.NewEngine(&cmd.Definition, opts)
-
-	// Prepare table data
-	tableData := &tables.Data{
-		Definition:  cmd.Definition,
-		ShowHeaders: cmd.ShowHeaders,
-		Rows:        make([]tables.Row, len(cmd.Rows)),
-	}
-
-	// Convert rows
-	for i, row := range cmd.Rows {
-		tableData.Rows[i] = row
-	}
-
-	// Render table to string
-	var buf strings.Builder
-	if err := engine.Render(&buf, tableData); err != nil {
+	finalTable, err := RenderTable(&cmd, opts)
+	if err != nil {
 		return fmt.Errorf("failed to render table: %w", err)
 	}
 
@@ -168,25 +183,13 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 	if cmd.Options != nil && cmd.Options.Align != "" {
 		align = cmd.Options.Align
 	}
-	switch strings.ToLower(align) {
-	case constants.Center.String():
-		err := printer.AlignCenter()
-		if err != nil {
-			return err
-		}
-	case constants.Right.String():
-		err := printer.AlignRight()
-		if err != nil {
-			return err
-		}
-	default:
-		err := printer.AlignLeft()
-		if err != nil {
-			return err
-		}
+
+	err = ApplyAlignment(printer, align)
+	if err != nil {
+		return err
 	}
 
-	err := printer.Print(buf.String())
+	err = printer.Print(finalTable)
 	if err != nil {
 		return err
 	}
@@ -197,6 +200,6 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 		return err
 	}
 
-	// Send the raw output (includes ESC/POS commands for bold)
+	// Send the raw output
 	return nil
 }

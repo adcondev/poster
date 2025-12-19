@@ -47,7 +47,7 @@ func TestTableBuilder(t *testing.T) {
 	}
 }
 
-func TestTableBuilderDefaults(t *testing.T) {
+func TestTableBuilder_Defaults(t *testing.T) {
 	doc := NewDocument().
 		SetProfile("Test", 80, "WPC1252").
 		Table().
@@ -80,7 +80,7 @@ func TestTableBuilderDefaults(t *testing.T) {
 	}
 }
 
-func TestTableBuilderOptions(t *testing.T) {
+func TestTableBuilder_Options(t *testing.T) {
 	rows := [][]string{
 		{"A", "1"},
 		{"B", "2"},
@@ -125,5 +125,77 @@ func TestTableBuilderOptions(t *testing.T) {
 
 	if cmd.Options.Align != string(constants.Center) {
 		t.Errorf("Expected Align 'center', got '%s'", cmd.Options.Align)
+	}
+}
+
+func TestTableBuilder_AutoReduce_ExplicitTrue(t *testing.T) {
+	doc := NewDocument().
+		SetProfile("Test", 58, "PC850").
+		Table().
+		Column("Item", 20, constants.Left).
+		Column("Price", 15, constants.Right).
+		Row("Coffee", "$3.50").
+		AutoReduce().
+		End().
+		Build()
+
+	var cmd tableCommand
+	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+
+	if cmd.Options == nil {
+		t.Fatal("expected options to be set")
+	}
+	if cmd.Options.AutoReduce == nil {
+		t.Fatal("expected auto_reduce to be set")
+	}
+	if *cmd.Options.AutoReduce != true {
+		t.Fatalf("expected auto_reduce=true, got %v", *cmd.Options.AutoReduce)
+	}
+}
+
+func TestTableBuilder_AutoReduce_ExplicitFalse(t *testing.T) {
+	doc := NewDocument().
+		SetProfile("Test", 58, "PC850").
+		Table().
+		Column("Item", 20, constants.Left).
+		Column("Price", 15, constants.Right).
+		Row("Coffee", "$3.50").
+		NoAutoReduce().
+		End().
+		Build()
+
+	var cmd tableCommand
+	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+
+	if cmd.Options == nil {
+		t.Fatal("expected options to be set")
+	}
+	if cmd.Options.AutoReduce == nil {
+		t.Fatal("expected auto_reduce to be set")
+	}
+	if *cmd.Options.AutoReduce != false {
+		t.Fatalf("expected auto_reduce=false, got %v", *cmd.Options.AutoReduce)
+	}
+}
+
+func TestTableBuilder_AutoReduce_DefaultNil(t *testing.T) {
+	// If user doesn't call AutoReduce/NoAutoReduce, the builder should NOT force a value,
+	// so the field should be omitted => AutoReduce stays nil.
+	doc := NewDocument().
+		SetProfile("Test", 58, "PC850").
+		Table().
+		Column("Item", 10).
+		Row("Coffee").
+		End().
+		Build()
+
+	var cmd tableCommand
+	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
+
+	if cmd.Options == nil {
+		t.Fatal("expected options to be set")
+	}
+	if cmd.Options.AutoReduce != nil {
+		t.Fatalf("expected auto_reduce to be nil (omitted), got %v", *cmd.Options.AutoReduce)
 	}
 }

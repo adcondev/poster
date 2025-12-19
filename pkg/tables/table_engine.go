@@ -186,7 +186,7 @@ func (te *TabEngine) wrapRow(row Row, def *Definition) [][]string {
 func (te *TabEngine) makeHeaderRow(def *Definition) []string {
 	headers := make([]string, len(def.Columns))
 	for i, col := range def.Columns {
-		headers[i] = col.Header
+		headers[i] = col.Name
 	}
 	return headers
 }
