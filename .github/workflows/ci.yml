@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   pr-validation:
-    name: PR Validation
+    name: 📋 PR Validation
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -45,7 +45,6 @@ jobs:
             chore
             deps
             revert
-          # TODO: Reduce amount of scopes if necessary
           scopes: |
             composer
             connection
@@ -76,14 +75,13 @@ jobs:
             builder
             constants
             emulator
-          # Please ensure your PR titles follow the "<type>(<scope>): <subject>" format.
           requireScope: true
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |
             The subject must start with lowercase letter.
 
   test-coverage:
-    name: Test and Coverage
+    name: 🧪 Test and Coverage
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -113,13 +111,19 @@ jobs:
           tail -n 1 coverage-summary.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets. CODECOV_TOKEN }}
           files: ./coverage.txt
+          flags: unittests,${{ matrix.os }}
+          name: codecov-${{ matrix.os }}
           fail_ci_if_error: false
-          flags: unittests
+          verbose: true
+          os: ${{ matrix.os }}
+          env_vars: OS
+        env:
+          OS: ${{ matrix.os }}
 
   benchmark:
     name: ⚡ Performance Benchmarks
@@ -147,7 +151,6 @@ jobs:
             echo "⚠️ Warning: Base branch benchmarks failed. This is non-critical." >&2
             echo "Error details:" >&2
             cat /tmp/base-benchmark.txt >&2
-            # Prepend marker to indicate failure but preserve error details
             sed -i '1i# Base benchmark execution failed' /tmp/base-benchmark.txt
           fi
 
@@ -161,11 +164,9 @@ jobs:
             echo "Benchmark execution failed. Please fix the errors above." >&2
             exit 1
           fi
-          # Verify benchmarks were actually found
           if ! grep -q "^Benchmark" /tmp/current-benchmark.txt; then
             echo "⚠️ Warning: No benchmarks found in current branch test output."
             echo "This may indicate that no benchmark tests exist or they were not executed."
-            # Create a minimal report
             echo "No benchmarks found" > /tmp/current-benchmark.txt
           fi
 
@@ -180,8 +181,7 @@ jobs:
           echo "### 📈 Performance Comparison"
           echo ""
           
-          # Check if benchmarks exist
-          if ! grep -q "^Benchmark" /tmp/current-benchmark.txt; then
+          if !  grep -q "^Benchmark" /tmp/current-benchmark.txt; then
             echo "⚠️ No benchmarks found in current branch"
             exit 0
           fi
@@ -216,19 +216,57 @@ jobs:
           BENCH_COUNT=$(grep -c "^Benchmark" /tmp/current-benchmark.txt)
           echo "- **Total Benchmarks:** $BENCH_COUNT"
           
-          # Extract performance metrics
           if grep -q "ns/op" /tmp/current-benchmark.txt; then
-            AVG_NS=$(grep "ns/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "ns/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
+            AVG_NS=$(grep "ns/op" /tmp/current-benchmark.txt | awk '{
+              for (i = 1; i < NF; i++) {
+                if ($(i+1) == "ns/op") {
+                  sum += $i
+                  count++
+                  break
+                }
+              }
+            } END {
+              if (count > 0)
+                print int(sum / count)
+              else
+                print "N/A"
+            }')
             echo "- **Average Speed:** ${AVG_NS} ns/op"
           fi
           
           if grep -q "B/op" /tmp/current-benchmark.txt; then
-            AVG_MEM=$(grep "B/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "B/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
+            AVG_MEM=$(grep "B/op" /tmp/current-benchmark.txt | awk '{
+              for (i = 1; i < NF; i++) {
+                if ($(i+1) == "B/op") {
+                  sum += $i
+                  count++
+                  break
+                }
+              }
+            } END {
+              if (count > 0)
+                print int(sum / count)
+              else
+                print "N/A"
+            }')
             echo "- **Average Memory:** ${AVG_MEM} B/op"
           fi
           
           if grep -q "allocs/op" /tmp/current-benchmark.txt; then
-            AVG_ALLOCS=$(grep "allocs/op" /tmp/current-benchmark.txt | awk '{for (i = 1; i < NF; i++) { if ($(i+1) == "allocs/op") { sum += $i; count++ } } } END { if (count > 0) print int(sum / count); else print "N/A" }')
+            AVG_ALLOCS=$(grep "allocs/op" /tmp/current-benchmark.txt | awk '{
+              for (i = 1; i < NF; i++) {
+                if ($(i+1) == "allocs/op") {
+                  sum += $i
+                  count++
+                  break
+                }
+              }
+            } END {
+              if (count > 0)
+                print int(sum / count)
+              else
+                print "N/A"
+            }')
             echo "- **Average Allocations:** ${AVG_ALLOCS} allocs/op"
           fi
           EOFSCRIPT
@@ -243,7 +281,6 @@ jobs:
             const fs = require('fs');
             const comment = fs.readFileSync('benchmark-comment.md', 'utf8');
             
-            // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,

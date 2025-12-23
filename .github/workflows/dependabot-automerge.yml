@@ -56,7 +56,6 @@ jobs:
           PR_NUMBER="${{ github.event.pull_request.number }}"
           DEPENDENCY="${{ steps.metadata.outputs.dependency-names }}"
           
-          # Always add dependencies label
           gh pr edit $PR_NUMBER --add-label "dependencies"
           
           if [[ "$UPDATE_TYPE" == "version-update:semver-major" ]]; then

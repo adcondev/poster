@@ -19,9 +19,6 @@ jobs:
   release:
     name: 🚀 Create Release
     runs-on: ubuntu-latest
-    concurrency:
-      group: release-${{ github.ref }}
-      cancel-in-progress: false
     if: |
       github.event.workflow_run.conclusion == 'success' &&
       ! contains(github.event.workflow_run.head_commit.message, '[skip release]')
@@ -51,6 +48,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
@@ -72,7 +70,6 @@ jobs:
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # Detect release type
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!: "; then
             RELEASE_TYPE="major"
             EMOJI="💥"
@@ -98,7 +95,6 @@ jobs:
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
           
-          # ✨ CHANGE: Enhanced summary with visual indicators
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 📊 Release Analysis
           
@@ -179,7 +175,7 @@ jobs:
           **Links:**
           - 📋 [Release Notes](https://github.com/${{ github.repository }}/releases/tag/$VERSION)
           - 📦 [pkg.go.dev](https://pkg.go.dev/github.com/${{ github.repository }}@$VERSION)
-          - 📝 [CHANGELOG. md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          - 📝 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
           EOF
           else
             echo "## ℹ️ No Release Required" >> $GITHUB_STEP_SUMMARY
