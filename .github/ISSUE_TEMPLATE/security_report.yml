@@ -1,0 +1,78 @@
+name: 🔒 Security Vulnerability Report
+description: Report a security vulnerability (privately if needed)
+title: "[Security]: "
+labels: [ "security", "triage" ]
+assignees:
+  - adcondev
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Security Vulnerability Report
+        
+        **Please do NOT publicly disclose security vulnerabilities.**
+        
+        If this is a critical security issue, please report it privately by:
+        1. Going to the Security tab
+        2. Clicking "Report a vulnerability"
+        3. Or email: [ad_con.reload@proton.me](mailto:ad_con.reload@proton.me)
+        
+        For non-critical security improvements, you can use this form.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 🔒 Vulnerability Description
+      description: Describe the security issue
+      placeholder: A clear description of the vulnerability
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 📊 Severity Assessment
+      description: Your assessment of the severity
+      options:
+        - Critical - Immediate action required
+        - High - Should be fixed soon
+        - Medium - Should be addressed
+        - Low - Minor security improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 💥 Impact
+      description: What is the potential impact of this vulnerability?
+      placeholder: An attacker could...
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: How can this vulnerability be reproduced?
+      placeholder: |
+        1. Configure printer with...
+        2. Send malicious input...
+        3. Observe behavior...
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: 🛡️ Suggested Mitigation
+      description: Do you have suggestions for how to fix this?
+      placeholder: The code could be improved by...
+
+  - type: checkboxes
+    id: responsible-disclosure
+    attributes:
+      label: ✅ Responsible Disclosure
+      description: Please confirm
+      options:
+        - label: I agree to responsible disclosure practices
+          required: true
+        - label: I will not publicly disclose this until a fix is available
+          required: true
