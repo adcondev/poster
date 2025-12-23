@@ -248,7 +248,6 @@ func (c *DownloadGraphicsCommands) DeleteDownloadGraphicsByKeyCode(kc1, kc2 byte
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -355,7 +354,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -460,7 +458,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -563,7 +560,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, w
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumnLarge(kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}

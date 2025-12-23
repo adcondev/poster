@@ -186,7 +186,6 @@ func (c *GraphicsCommands) PrintBufferedGraphics(fn FunctionCode) ([]byte, error
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizontalScale, verticalScale GraphicsScale,
 	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -302,7 +301,6 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizo
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, horizontalScale, verticalScale GraphicsScale,
 	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -408,7 +406,6 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, h
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, verticalScale GraphicsScale,
 	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
-
 	if err := ValidateGraphicsScale(horizontalScale); err != nil {
 		return nil, err
 	}
@@ -513,7 +510,6 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, vertical
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *GraphicsCommands) StoreColumnGraphicsInBufferLarge(horizontalScale, verticalScale GraphicsScale,
 	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
-
 	if err := ValidateGraphicsScale(horizontalScale); err != nil {
 		return nil, err
 	}

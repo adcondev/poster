@@ -301,7 +301,6 @@ func (c *NvGraphicsCommands) DeleteNVGraphicsByKeyCode(kc1, kc2 byte) ([]byte, e
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *NvGraphicsCommands) DefineNVRasterGraphics(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []NVGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -418,7 +417,6 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphics(tone GraphicsTone, kc1, kc2 
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *NvGraphicsCommands) DefineNVRasterGraphicsLarge(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []NVGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -527,7 +525,6 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphicsLarge(tone GraphicsTone, kc1,
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *NvGraphicsCommands) DefineNVColumnGraphics(kc1, kc2 byte, width, height uint16,
 	colorData []NVGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -635,7 +632,6 @@ func (c *NvGraphicsCommands) DefineNVColumnGraphics(kc1, kc2 byte, width, height
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *NvGraphicsCommands) DefineNVColumnGraphicsLarge(kc1, kc2 byte, width, height uint16,
 	colorData []NVGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}

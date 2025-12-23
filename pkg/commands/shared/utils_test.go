@@ -45,6 +45,5 @@ func TestUtils_LengthLowHigh_ValidInput(t *testing.T) {
 		if dL != tt.wantDL || dH != tt.wantDH {
 			t.Errorf("ToLittleEndian(%d) = (%#x,%#x); want (%#x,%#x)", tt.length, dL, dH, tt.wantDL, tt.wantDH)
 		}
-
 	}
 }
