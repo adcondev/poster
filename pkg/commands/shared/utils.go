@@ -1,3 +1,4 @@
+//nolint:revive,nolintlint
 package shared
 
 import "errors"
