@@ -1,8 +1,19 @@
-# *Poster: Thermal Printer Driver & ESC/POS Utility*
+# ***Poster: Thermal Printer Driver & ESC/POS Utility***
 
 ![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8?style=flat&logo=go)
 ![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![CI](https://github.com/adcondev/poster/actions/workflows/ci.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/ci.yml)
+
+[![CodeQL](https://github.com/adcondev/poster/actions/workflows/codeql.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/codeql.yml)
+[![Release](https://github.com/adcondev/poster/actions/workflows/release.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/release.yml)
+
+[![codecov](https://codecov.io/github/adcondev/poster/graph/badge.svg?token=X9KVG99DDZ)](https://codecov.io/github/adcondev/poster)
+[![Go Report Card](https://goreportcard.com/badge/github.com/adcondev/poster)](https://goreportcard.com/report/github.com/adcondev/poster)
+[![Go Reference](https://pkg.go.dev/badge/github.com/adcondev/poster.svg)](https://pkg.go.dev/github.com/adcondev/poster)
+
+[![Dependabot Status](https://flat.badgen.net/github/dependabot/adcondev/poster)](https://github.com/adcondev/poster/network/updates)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
 
 <p align="center">
   <img src="assets/images/poster.png" alt="POS Printer Logo" width="576">
@@ -280,6 +291,15 @@ emu := emulator.NewEngine(emulator.Config{
 img := emu.Render(document)
 emu.SaveImage("receipt_preview.png")
 ```
+
+## 📊 Code Coverage
+
+<details>
+<summary>📈 Coverage Trends</summary>
+
+[![Coverage Graph](https://codecov.io/github/adcondev/poster/graphs/sunburst.svg?token=X9KVG99DDZ
+)](https://codecov.io/gh/adcondev/poster)
+</details>
 
 ## 🤝 Contributing
 
