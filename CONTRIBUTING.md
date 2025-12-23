@@ -278,4 +278,4 @@ Your contributions make Poster better for everyone!
 
 ---
 
-**Happy coding! ** 🚀
+**Happy coding!** 🚀

@@ -1,10 +1,10 @@
-<!-- Help reviewers understand your changes, you don't have to fulfill everything -->
+<!-- Help reviewers understand your changes -->
 
-## Description
+## 📝 Description
 
 <!-- What does this PR change? Please provide a clear and concise description -->
 
-## Type of Change
+## 🎯 Type of Change
 
 - [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
 - [ ] ✨ New feature (non-breaking change which adds functionality)
@@ -16,21 +16,23 @@
 - [ ] ⚡ Performance improvement
 - [ ] 🧪 Test addition/modification
 
-## Component(s) Affected
+## 🎯 Component(s) Affected
 
 <!-- Check all that apply -->
 
 - [ ] `composer` - ESC/POS protocol composer
 - [ ] `connection` - Printer connections
 - [ ] `commands` - ESC/POS command implementations
-- [ ] `document` - Document processing
+- [ ] `builder` - Document builder
+- [ ] `executor` - Document processing
 - [ ] `graphics` - Image processing
-- [ ] `printer` - Barcode generation
+- [ ] `tables` - Table formatting and layout
+- [ ] `emulator` - Visual emulator
 - [ ] `profile` - Printer profiles
 - [ ] `service` - High-level printer service
 - [ ] `github` - GitHub related files and workflows
 
-## How Has This Been Tested?
+## 🧪 How Has This Been Tested?
 
 <!-- Please describe the tests that you ran to verify your changes -->
 
@@ -38,6 +40,7 @@
 - [ ] Integration tests pass
 - [ ] Manual testing with physical printer
 - [ ] Examples built and run successfully
+- [ ] Benchmarks show no regression (or improvement)
 - [ ] N/A (documentation/configuration only)
 
 ### Test Configuration
@@ -46,7 +49,20 @@
 - **OS:**
 - **Printer Model (if applicable):**
 
-## Checklist
+## 🤖 Automated Checks
+
+The following automated workflows will run on this PR:
+
+- [ ] **📋 PR Validation** - Validates commit message format
+- [ ] **🧪 Tests** - Runs on Ubuntu, Windows, macOS
+- [ ] **⚡ Benchmarks** - Compares performance with base branch
+- [ ] **🔒 Security Scan** - Trivy vulnerability scanner
+- [ ] **🔍 Linting** - golangci-lint with custom config
+- [ ] **🔐 CodeQL** - Advanced security analysis
+
+> 💡 **Tip:** You can view detailed results in the "Checks" tab above or in the job summary after completion.
+
+## ✅ Checklist
 
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review of my own code
@@ -56,18 +72,46 @@
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published
+- [ ] My PR title follows [Conventional Commits](https://conventionalcommits.org/) format
 
-## Screenshots/Examples
+## 📸 Screenshots/Examples
 
 <!-- If applicable, add screenshots or code examples to help explain your changes -->
 
-## Breaking Changes
+<details>
+<summary>Click to expand</summary>
 
-<!-- If this PR introduces breaking changes, please describe: -->
-<!-- - What breaks -->
-<!-- - Migration path for users -->
-<!-- - Why this breaking change is necessary -->
+```go
+// Example code here
+```
 
-## Additional Notes
+</details>
+
+## 💥 Breaking Changes
+
+<!-- If this PR introduces breaking changes, please describe:  -->
+
+- **What breaks:**
+- **Migration path for users:**
+- **Why this breaking change is necessary:**
+
+## 🔗 Related Issues
+
+<!-- Link related issues here -->
+
+- Closes #
+- Relates to #
+- Depends on #
+
+## 📝 Additional Notes
 
 <!-- Any additional information that reviewers should know -->
+
+
+---
+
+## 📚 Resources:
+
+- [Contributing Guidelines](../CONTRIBUTING.md)
+- [Commit Message Guidelines](../.github/git-commit-instructions.md)
+- [Workflow Documentation](../README.md)
