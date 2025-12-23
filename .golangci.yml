@@ -7,11 +7,12 @@ run:
   tests: true
   build-tags:
     - integration
-  skip-dirs:
+  skip-dirs-use-default: true
+  exclude-dirs:
     - vendor
     - examples
     - testdata
-  skip-files:
+  exclude-files:
     - ".*_test.go$"  # Skip test files for some linters
   modules-download-mode: readonly
 
@@ -178,5 +179,10 @@ issues:
   fix: false
 
 severity:
-  default-severity: error
-  case-sensitive: false
+  default: error
+  rules:
+    - linters:
+        - errcheck
+        - govet
+        - staticcheck
+      severity: error

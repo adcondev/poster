@@ -133,7 +133,7 @@ body:
       description: If this bug occurs in CI/CD, paste relevant workflow logs or link to the run
       placeholder: |
         Link to failed workflow run: 
-        https://github.com/adcondev/pos-printer/actions/runs/XXXXX
+        https://github.com/adcondev/poster/actions/runs/XXXXX
         
         Or paste relevant logs here...
       render: shell

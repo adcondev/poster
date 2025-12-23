@@ -1,42 +1,76 @@
 {
-  "name": "@adcondev/pos-printer",
+  "name": "@adcondev/poster",
   "version": "4.3.0",
   "private": true,
-  "description": "A modular Go library for thermal printer communication",
+  "description": "A professional, production-ready Go library for controlling ESC/POS thermal printers",
   "keywords": [
     "pos",
     "printer",
     "escpos",
     "thermal",
     "receipt",
-    "golang"
+    "golang",
+    "go",
+    "esc-pos",
+    "thermal-printer",
+    "receipt-printer",
+    "barcode",
+    "qrcode",
+    "windows",
+    "spooler"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adcondev/pos-printer.git"
+    "url": "git+https://github.com/adcondev/poster.git"
   },
-  "author": "adcondev",
+  "author": {
+    "name": "adcondev",
+    "url": "https://github.com/adcondev"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/adcondev/pos-printer/issues"
+    "url": "https://github.com/adcondev/poster/issues"
   },
-  "homepage": "https://github.com/adcondev/pos-printer#readme",
+  "homepage": "https://github.com/adcondev/poster#readme",
   "scripts": {
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:patch": "standard-version --release-as patch",
-    "release:major": "standard-version --release-as major",
-    "postinstall": "husky install",
-    "prepare": "husky install"
+    "release: major": "standard-version --release-as major",
+    "release: dry-run": "standard-version --dry-run",
+    "release: first": "standard-version --first-release",
+    "changelog": "standard-version --skip.bump --skip.tag",
+    "postinstall": "husky install || true",
+    "prepare": "husky install || true",
+    "lint": "npx commitlint --from=HEAD~1",
+    "lint:fix": "npx prettier --write *.json *.md",
+    "test": "echo 'JavaScript tests not applicable for Go project'",
+    "preversion": "echo 'Preparing version bump...'",
+    "postversion": "echo 'Version bumped successfully'"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "husky": "^9.0.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
     "standard-version": "^9.5.0"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
