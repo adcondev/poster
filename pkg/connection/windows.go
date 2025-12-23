@@ -100,7 +100,7 @@ func (s *RealPrinterService) AbortDoc(handle uintptr) error {
 
 // Write writes data to the printer.
 func (s *RealPrinterService) Write(handle uintptr, data []byte) (uint32, error) {
-	//nolint:gosec // Necesario para interactuar con la API de Windows
+	// Necesario para interactuar con la API de Windows
 	var bytesWritten uint32
 	r1, _, err := procWritePrinter.Call(
 		handle,

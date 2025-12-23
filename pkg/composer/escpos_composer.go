@@ -9,12 +9,12 @@ import (
 	"github.com/adcondev/poster/pkg/commands/barcode"
 	"github.com/adcondev/poster/pkg/commands/bitimage"
 	"github.com/adcondev/poster/pkg/commands/character"
-	"github.com/adcondev/poster/pkg/commands/common"
 	"github.com/adcondev/poster/pkg/commands/linespacing"
 	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
 	"github.com/adcondev/poster/pkg/commands/print"
 	"github.com/adcondev/poster/pkg/commands/printposition"
 	"github.com/adcondev/poster/pkg/commands/qrcode"
+	"github.com/adcondev/poster/pkg/commands/shared"
 	"github.com/adcondev/poster/pkg/graphics"
 )
 
@@ -102,7 +102,7 @@ func NewEscpos() *EscposProtocol {
 //
 //	This function is safe and does not return errors
 func (c *EscposProtocol) InitializePrinter() []byte {
-	return []byte{common.ESC, '@'}
+	return []byte{shared.ESC, '@'}
 }
 
 // ============================================================================

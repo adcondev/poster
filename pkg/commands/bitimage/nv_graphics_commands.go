@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // GetNVGraphicsCapacity transmits the entire capacity of the NV graphics area.
@@ -47,7 +47,7 @@ func (c *NvGraphicsCommands) GetNVGraphicsCapacity(fn NVFunctionCode) ([]byte, e
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
+	return []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
 }
 
 // GetNVGraphicsRemainingCapacity transmits the remaining capacity (unused area) in the NV graphics area.
@@ -93,7 +93,7 @@ func (c *NvGraphicsCommands) GetNVGraphicsRemainingCapacity(fn NVFunctionCode) (
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
+	return []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
 }
 
 // GetNVGraphicsKeyCodeList transmits the list of key codes for defined NV graphics.
@@ -142,7 +142,7 @@ func (c *NvGraphicsCommands) GetNVGraphicsRemainingCapacity(fn NVFunctionCode) (
 //
 //	This function is safe and does not return errors.
 func (c *NvGraphicsCommands) GetNVGraphicsKeyCodeList() []byte {
-	return []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x40, 'K', 'C'}
+	return []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x40, 'K', 'C'}
 }
 
 // DeleteAllNVGraphics deletes all NV graphics data from non-volatile memory.
@@ -183,7 +183,7 @@ func (c *NvGraphicsCommands) GetNVGraphicsKeyCodeList() []byte {
 //
 //	This function is safe and does not return errors.
 func (c *NvGraphicsCommands) DeleteAllNVGraphics() []byte {
-	return []byte{common.GS, '(', 'L', 0x05, 0x00, 0x30, 0x41, 'C', 'L', 'R'}
+	return []byte{shared.GS, '(', 'L', 0x05, 0x00, 0x30, 0x41, 'C', 'L', 'R'}
 }
 
 // DeleteNVGraphicsByKeyCode deletes the specified NV graphics data identified by key codes.
@@ -229,7 +229,7 @@ func (c *NvGraphicsCommands) DeleteNVGraphicsByKeyCode(kc1, kc2 byte) ([]byte, e
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, kc1, kc2}, nil
+	return []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, kc1, kc2}, nil
 }
 
 // DefineNVRasterGraphics defines NV graphics data in raster format in the printer's non-volatile memory
@@ -334,10 +334,10 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphics(tone GraphicsTone, kc1, kc2 
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x43, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x43, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -449,11 +449,11 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphicsLarge(tone GraphicsTone, kc1,
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x43, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x43, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -557,10 +557,10 @@ func (c *NvGraphicsCommands) DefineNVColumnGraphics(kc1, kc2 byte, width, height
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x44, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x44, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -663,11 +663,11 @@ func (c *NvGraphicsCommands) DefineNVColumnGraphicsLarge(kc1, kc2 byte, width, h
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x44, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x44, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -749,7 +749,7 @@ func (c *NvGraphicsCommands) PrintNVGraphics(kc1, kc2 byte, horizontalScale, ver
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, kc1, kc2, byte(horizontalScale), byte(verticalScale)}, nil
+	return []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, kc1, kc2, byte(horizontalScale), byte(verticalScale)}, nil
 }
 
 // DefineWindowsBMPNVGraphics converts a Windows BMP file to NV graphics data and stores it
@@ -816,7 +816,7 @@ func (c *NvGraphicsCommands) DefineWindowsBMPNVGraphics(kc1, kc2 byte, tone Grap
 		return nil, err
 	}
 
-	cmd := []byte{common.GS, 'D', 0x30, 0x43, 0x30, kc1, kc2, byte(tone), 0x31}
+	cmd := []byte{shared.GS, 'D', 0x30, 0x43, 0x30, kc1, kc2, byte(tone), 0x31}
 	cmd = append(cmd, bmpData...)
 
 	return cmd, nil

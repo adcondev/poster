@@ -1,10 +1,10 @@
-package common_test
+package shared_test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestUtils_IsBufOk_ValidInput(t *testing.T) {
@@ -13,14 +13,14 @@ func TestUtils_IsBufOk_ValidInput(t *testing.T) {
 		buf     []byte
 		wantErr error
 	}{
-		{"empty buffer", []byte{}, common.ErrEmptyBuffer},
+		{"empty buffer", []byte{}, shared.ErrEmptyBuffer},
 		{"valid buffer", []byte{1, 2, 3}, nil},
-		{"max buffer", make([]byte, common.MaxBuf), nil},
-		{"overflow buffer", make([]byte, common.MaxBuf+1), common.ErrBufferOverflow},
+		{"max buffer", make([]byte, shared.MaxBuf), nil},
+		{"overflow buffer", make([]byte, shared.MaxBuf+1), shared.ErrBufferOverflow},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := common.IsBufLenOk(tt.buf)
+			err := shared.IsBufLenOk(tt.buf)
 			if !errors.Is(tt.wantErr, err) {
 				t.Errorf("IsBufLenOk len=%d error = %v; want %v", len(tt.buf), err, tt.wantErr)
 			}
@@ -40,7 +40,7 @@ func TestUtils_LengthLowHigh_ValidInput(t *testing.T) {
 		{0xFFFF, 0xFF, 0xFF},
 	}
 	for _, tt := range tests {
-		dL, dH := common.ToLittleEndian(tt.length)
+		dL, dH := shared.ToLittleEndian(tt.length)
 
 		if dL != tt.wantDL || dH != tt.wantDH {
 			t.Errorf("ToLittleEndian(%d) = (%#x,%#x); want (%#x,%#x)", tt.length, dL, dH, tt.wantDL, tt.wantDH)

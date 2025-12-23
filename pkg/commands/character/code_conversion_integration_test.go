@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestIntegration_CodeConversion_MultiLanguageSupport(t *testing.T) {
@@ -41,7 +41,7 @@ func TestIntegration_CodeConversion_MultiLanguageSupport(t *testing.T) {
 		buffer = append(buffer, japanesePriority...)
 
 		// Verify commands were generated
-		if !bytes.Contains(buffer, []byte{common.FS, '(', 'C'}) {
+		if !bytes.Contains(buffer, []byte{shared.FS, '(', 'C'}) {
 			t.Error("Buffer should contain encoding commands")
 		}
 

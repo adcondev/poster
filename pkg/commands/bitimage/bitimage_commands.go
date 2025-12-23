@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SelectBitImageMode stores bit image data in the print buffer with the specified mode.
@@ -68,9 +68,9 @@ func (c *Commands) SelectBitImageMode(mode Mode, width uint16, data []byte) ([]b
 		return nil, ErrDataLength
 	}
 
-	nL, nH := common.ToLittleEndian(width)
+	nL, nH := shared.ToLittleEndian(width)
 
-	cmd := []byte{common.ESC, '*', byte(mode), nL, nH}
+	cmd := []byte{shared.ESC, '*', byte(mode), nL, nH}
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -132,7 +132,7 @@ func (c *Commands) PrintNVBitImage(n byte, mode PrintMode) ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte{common.FS, 'p', n, byte(mode)}, nil
+	return []byte{shared.FS, 'p', n, byte(mode)}, nil
 }
 
 // DefineNVBitImage defines non-volatile bit images in the NV graphics area.
@@ -196,7 +196,7 @@ func (c *Commands) DefineNVBitImage(n byte, images []NVBitImageData) ([]byte, er
 		return nil, ErrInvalidImageCount
 	}
 
-	cmd := []byte{common.FS, 'q', n}
+	cmd := []byte{shared.FS, 'q', n}
 
 	for _, img := range images {
 		if err := ValidateNVImageDimensions(img.Width, img.Height); err != nil {
@@ -208,8 +208,8 @@ func (c *Commands) DefineNVBitImage(n byte, images []NVBitImageData) ([]byte, er
 			return nil, ErrInvalidDataLength
 		}
 
-		xL, xH := common.ToLittleEndian(img.Width)
-		yL, yH := common.ToLittleEndian(img.Height)
+		xL, xH := shared.ToLittleEndian(img.Width)
+		yL, yH := shared.ToLittleEndian(img.Height)
 
 		cmd = append(cmd, xL, xH, yL, yH)
 		cmd = append(cmd, img.Data...)
@@ -274,7 +274,7 @@ func (c *Commands) DefineDownloadedBitImage(x, y byte, data []byte) ([]byte, err
 		return nil, ErrInvalidDataLength
 	}
 
-	cmd := []byte{common.GS, '*', x, y}
+	cmd := []byte{shared.GS, '*', x, y}
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -332,7 +332,7 @@ func (c *Commands) PrintDownloadedBitImage(mode PrintMode) ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte{common.GS, '/', byte(mode)}, nil
+	return []byte{shared.GS, '/', byte(mode)}, nil
 }
 
 // PrintVariableVerticalSizeBitImage prints a bit image with variable vertical size.
@@ -401,10 +401,10 @@ func (c *Commands) PrintVariableVerticalSizeBitImage(mode PrintMode, width, heig
 		return nil, ErrInvalidDataLength
 	}
 
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, 'Q', 0x30, byte(mode), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, 'Q', 0x30, byte(mode), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -479,10 +479,10 @@ func (c *Commands) PrintRasterBitImage(mode PrintMode, width, height uint16, dat
 		return nil, ErrInvalidDataLength
 	}
 
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, 'v', 0x30, byte(mode), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, 'v', 0x30, byte(mode), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 
 	return cmd, nil

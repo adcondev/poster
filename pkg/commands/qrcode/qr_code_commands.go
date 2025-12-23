@@ -3,7 +3,7 @@ package qrcode
 import (
 	"fmt"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SelectQRCodeModel selects the QR Code model to be used for encoding.
@@ -56,7 +56,7 @@ func (c *Commands) SelectQRCodeModel(n1 Model, n2 byte) ([]byte, error) {
 
 	// Build command
 	return []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		0x04, 0x00, // pL, pH
 		0x31,     // cn = 49
 		65,       // fn = 65
@@ -108,7 +108,7 @@ func (c *Commands) SetQRCodeModuleSize(n ModuleSize) ([]byte, error) {
 
 	// Build command
 	return []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		0x03, 0x00, // pL, pH
 		0x31,    // cn = 49
 		67,      // fn = 67
@@ -164,7 +164,7 @@ func (c *Commands) SetQRCodeErrorCorrectionLevel(n ErrorCorrection) ([]byte, err
 
 	// Build command
 	return []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		0x03, 0x00, // pL, pH
 		0x31,    // cn = 49
 		69,      // fn = 69
@@ -231,7 +231,7 @@ func (c *Commands) StoreQRCodeData(data []byte) ([]byte, error) {
 
 	// Build command header
 	cmd := []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		pL, pH, // length bytes
 		0x31, // cn = 49
 		80,   // fn = 80
@@ -308,7 +308,7 @@ func (c *Commands) StoreQRCodeData(data []byte) ([]byte, error) {
 func (c *Commands) PrintQRCode() []byte {
 	// Build command
 	return []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		0x03, 0x00, // pL, pH
 		0x31, // cn = 49
 		81,   // fn = 81
@@ -380,7 +380,7 @@ func (c *Commands) PrintQRCode() []byte {
 func (c *Commands) GetQRCodeSize() []byte {
 	// Build command
 	return []byte{
-		common.GS, '(', 'k',
+		shared.GS, '(', 'k',
 		0x03, 0x00, // pL, pH
 		0x31, // cn = 49
 		82,   // fn = 82

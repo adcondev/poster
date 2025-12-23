@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/common"
 	"github.com/adcondev/poster/pkg/commands/print"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -29,7 +29,7 @@ func TestUtility_Formatting_CharacterReplacement(t *testing.T) {
 		{
 			name: "replaces tab with HT",
 			data: []byte("Col1\tCol2"),
-			want: []byte{'C', 'o', 'l', '1', common.HT, 'C', 'o', 'l', '2'},
+			want: []byte{'C', 'o', 'l', '1', shared.HT, 'C', 'o', 'l', '2'},
 		},
 		{
 			name: "replaces carriage return with CR",
@@ -39,7 +39,7 @@ func TestUtility_Formatting_CharacterReplacement(t *testing.T) {
 		{
 			name: "handles multiple replacements",
 			data: []byte("A\nB\tC\rD"),
-			want: []byte{'A', print.LF, 'B', common.HT, 'C', print.CR, 'D'},
+			want: []byte{'A', print.LF, 'B', shared.HT, 'C', print.CR, 'D'},
 		},
 		{
 			name: "preserves regular characters",
@@ -90,7 +90,7 @@ func TestCommands_Text(t *testing.T) {
 		{
 			name:    "text with tab",
 			text:    "A\tB",
-			want:    []byte{'A', common.HT, 'B'},
+			want:    []byte{'A', shared.HT, 'B'},
 			wantErr: false,
 		},
 		{
@@ -109,7 +109,7 @@ func TestCommands_Text(t *testing.T) {
 			name: "buffer overflow",
 			// FIXME: change anonymous func to utils helpers
 			text: func() string {
-				overflow := make([]byte, common.MaxBuf+1)
+				overflow := make([]byte, shared.MaxBuf+1)
 				return string(overflow)
 			}(),
 			want:    nil,
@@ -167,17 +167,17 @@ func TestCommands_PrintAndFeedPaper(t *testing.T) {
 		{
 			name:  "minimum feed (0 units)",
 			units: 0,
-			want:  []byte{common.ESC, 'J', 0},
+			want:  []byte{shared.ESC, 'J', 0},
 		},
 		{
 			name:  "typical feed (30 units)",
 			units: 30,
-			want:  []byte{common.ESC, 'J', 30},
+			want:  []byte{shared.ESC, 'J', 30},
 		},
 		{
 			name:  "maximum feed (255 units)",
 			units: 255,
-			want:  []byte{common.ESC, 'J', 255},
+			want:  []byte{shared.ESC, 'J', 255},
 		},
 	}
 
@@ -228,7 +228,7 @@ func TestCommands_PrintAndLineFeed(t *testing.T) {
 func TestCommands_PrintDataInPageMode(t *testing.T) {
 	pp := print.NewCommands()
 	got := pp.PrintDataInPageMode()
-	want := []byte{common.ESC, print.FF}
+	want := []byte{shared.ESC, print.FF}
 
 	if !bytes.Equal(got, want) {
 		t.Errorf("PrintDataInPageMode() = %#v, want %#v", got, want)
@@ -257,19 +257,19 @@ func TestCommands_PrintAndReverseFeed(t *testing.T) {
 		{
 			name:    "minimum reverse feed (0 units)",
 			reverse: 0,
-			want:    []byte{common.ESC, 'K', 0},
+			want:    []byte{shared.ESC, 'K', 0},
 			wantErr: false,
 		},
 		{
 			name:    "typical reverse feed (10 units)",
 			reverse: 10,
-			want:    []byte{common.ESC, 'K', 10},
+			want:    []byte{shared.ESC, 'K', 10},
 			wantErr: false,
 		},
 		{
 			name:    "maximum allowed reverse feed",
 			reverse: print.MaxReverseMotionUnits,
-			want:    []byte{common.ESC, 'K', print.MaxReverseMotionUnits},
+			want:    []byte{shared.ESC, 'K', print.MaxReverseMotionUnits},
 			wantErr: false,
 		},
 		{
@@ -319,19 +319,19 @@ func TestCommands_PrintAndReverseFeedLines(t *testing.T) {
 		{
 			name:    "minimum lines (0)",
 			lines:   0,
-			want:    []byte{common.ESC, 'e', 0},
+			want:    []byte{shared.ESC, 'e', 0},
 			wantErr: false,
 		},
 		{
 			name:    "single line reverse",
 			lines:   1,
-			want:    []byte{common.ESC, 'e', 1},
+			want:    []byte{shared.ESC, 'e', 1},
 			wantErr: false,
 		},
 		{
 			name:    "maximum allowed lines",
 			lines:   print.MaxReverseFeedLines,
-			want:    []byte{common.ESC, 'e', print.MaxReverseFeedLines},
+			want:    []byte{shared.ESC, 'e', print.MaxReverseFeedLines},
 			wantErr: false,
 		},
 		{
@@ -381,17 +381,17 @@ func TestPagePrint_PrintAndFeedLines(t *testing.T) {
 		{
 			name:  "no feed (0 lines)",
 			lines: 0,
-			want:  []byte{common.ESC, 'd', 0},
+			want:  []byte{shared.ESC, 'd', 0},
 		},
 		{
 			name:  "typical feed (5 lines)",
 			lines: 5,
-			want:  []byte{common.ESC, 'd', 5},
+			want:  []byte{shared.ESC, 'd', 5},
 		},
 		{
 			name:  "maximum feed (255 lines)",
 			lines: 255,
-			want:  []byte{common.ESC, 'd', 255},
+			want:  []byte{shared.ESC, 'd', 255},
 		},
 	}
 

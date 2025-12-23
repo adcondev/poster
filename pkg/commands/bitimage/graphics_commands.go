@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SetGraphicsDotDensity sets the reference dot density for graphics and bit image data.
@@ -64,7 +64,7 @@ func (c *GraphicsCommands) SetGraphicsDotDensity(fn FunctionCode, x, y DotDensit
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, byte(fn), byte(x), byte(y)}, nil
+	return []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, byte(fn), byte(x), byte(y)}, nil
 }
 
 // PrintBufferedGraphics prints the graphics data that was previously stored in the print buffer.
@@ -107,7 +107,7 @@ func (c *GraphicsCommands) PrintBufferedGraphics(fn FunctionCode) ([]byte, error
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
+	return []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
 }
 
 // StoreRasterGraphicsInBuffer stores graphics data in raster format in the print buffer
@@ -216,10 +216,10 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizo
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x70, byte(tone),
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x70, byte(tone),
 		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 
@@ -330,11 +330,11 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, h
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x70, byte(tone),
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x70, byte(tone),
 		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 
@@ -436,10 +436,10 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, vertical
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x71, 0x30,
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x71, 0x30,
 		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 
@@ -539,11 +539,11 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBufferLarge(horizontalScale, ver
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x71, 0x30,
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x71, 0x30,
 		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
 	cmd = append(cmd, data...)
 

@@ -1,8 +1,4 @@
-// Package common provides shared utilities and constants for ESC/POS command packages.
-//
-// This package contains shared buffer validation functions, byte manipulation utilities,
-// and shared constants used across multiple ESC/POS command implementations.
-package common //nolint:revive
+package shared
 
 import "errors"
 

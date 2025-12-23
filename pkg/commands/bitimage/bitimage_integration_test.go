@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/internal/testutils"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
@@ -53,7 +53,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 		buffer = append(buffer, printCmd...)
 
 		// Verify commands were generated
-		if !bytes.Contains(buffer, []byte{common.GS, '(', 'L'}) {
+		if !bytes.Contains(buffer, []byte{shared.GS, '(', 'L'}) {
 			t.Error("Buffer should contain graphics commands")
 		}
 
@@ -180,7 +180,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 		}
 		buffer = append(buffer, legacy24Cmd...)
 
-		if !bytes.Contains(buffer, []byte{common.ESC, '*'}) {
+		if !bytes.Contains(buffer, []byte{shared.ESC, '*'}) {
 			t.Error("Buffer should contain legacy bit image commands")
 		}
 
@@ -371,7 +371,7 @@ func TestIntegration_BitImage_LargeDataHandling(t *testing.T) {
 		}
 
 		// Verify it uses extended format (GS 8 L)
-		if storeCmd[0] != common.GS || storeCmd[1] != '8' || storeCmd[2] != 'L' {
+		if storeCmd[0] != shared.GS || storeCmd[1] != '8' || storeCmd[2] != 'L' {
 			t.Error("Large data should use extended command format")
 		}
 
@@ -401,7 +401,7 @@ func TestIntegration_BitImage_LargeDataHandling(t *testing.T) {
 		}
 
 		// Verify extended format
-		if storeCmd[0] != common.GS || storeCmd[1] != '8' || storeCmd[2] != 'L' {
+		if storeCmd[0] != shared.GS || storeCmd[1] != '8' || storeCmd[2] != 'L' {
 			t.Error("Large column data should use extended command format")
 		}
 	})
