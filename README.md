@@ -1,11 +1,11 @@
-# ***Poster: Thermal Printer Driver & ESC/POS Utility***
+# Poster: Thermal Printer Driver & ESC/POS Utility
 
 ![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8?style=flat&logo=go)
 ![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![CI](https://github.com/adcondev/poster/actions/workflows/ci.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/ci.yml)
 
-[![CodeQL](https://github.com/adcondev/poster/actions/workflows/codeql.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/adcondev/poster/actions/workflows/codeql.yml/badge.svg)](https://github.com/adcondev/poster/security/code-scanning)
 [![Release](https://github.com/adcondev/poster/actions/workflows/release.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/release.yml)
 
 [![codecov](https://codecov.io/github/adcondev/poster/graph/badge.svg?token=X9KVG99DDZ)](https://codecov.io/github/adcondev/poster)
