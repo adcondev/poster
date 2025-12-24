@@ -1,7 +1,7 @@
 package linespacing
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SetLineSpacing sets the line spacing to spacing × (vertical or horizontal motion unit).
@@ -37,7 +37,7 @@ import (
 //
 //	This function is safe and does not return errors.
 func (lsc *Commands) SetLineSpacing(n Spacing) []byte {
-	return []byte{common.ESC, '3', byte(n)}
+	return []byte{shared.ESC, '3', byte(n)}
 }
 
 // SelectDefaultLineSpacing sets the line spacing to the printer's default.
@@ -69,5 +69,5 @@ func (lsc *Commands) SetLineSpacing(n Spacing) []byte {
 //
 //	This function is safe and does not return errors.
 func (lsc *Commands) SelectDefaultLineSpacing() []byte {
-	return []byte{common.ESC, '2'}
+	return []byte{shared.ESC, '2'}
 }

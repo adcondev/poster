@@ -5,7 +5,7 @@ import (
 
 	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/bitimage"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -28,7 +28,7 @@ func TestGraphicsCommands_SetGraphicsDotDensity(t *testing.T) {
 			fn:      bitimage.FunctionCodeDensity1,
 			x:       bitimage.Density180x180,
 			y:       bitimage.Density180x180,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 1, 50, 50},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 1, 50, 50},
 			wantErr: nil,
 		},
 		{
@@ -36,7 +36,7 @@ func TestGraphicsCommands_SetGraphicsDotDensity(t *testing.T) {
 			fn:      bitimage.FunctionCodeDensity49,
 			x:       bitimage.Density180x180,
 			y:       bitimage.Density180x180,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 49, 50, 50},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 49, 50, 50},
 			wantErr: nil,
 		},
 		{
@@ -44,7 +44,7 @@ func TestGraphicsCommands_SetGraphicsDotDensity(t *testing.T) {
 			fn:      bitimage.FunctionCodeDensity1,
 			x:       bitimage.Density360x360,
 			y:       bitimage.Density360x360,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 1, 51, 51},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 1, 51, 51},
 			wantErr: nil,
 		},
 		{
@@ -52,7 +52,7 @@ func TestGraphicsCommands_SetGraphicsDotDensity(t *testing.T) {
 			fn:      bitimage.FunctionCodeDensity49,
 			x:       bitimage.Density360x360,
 			y:       bitimage.Density360x360,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 49, 51, 51},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 49, 51, 51},
 			wantErr: nil,
 		},
 		{
@@ -118,13 +118,13 @@ func TestGraphicsCommands_PrintBufferedGraphics(t *testing.T) {
 		{
 			name:    "function code 2",
 			fn:      bitimage.FunctionCodePrint2,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 2},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 2},
 			wantErr: nil,
 		},
 		{
 			name:    "function code 50",
 			fn:      bitimage.FunctionCodePrint50,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 50},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 50},
 			wantErr: nil,
 		},
 		{
@@ -376,7 +376,7 @@ func TestGraphicsCommands_StoreRasterGraphicsInBuffer(t *testing.T) {
 			}
 
 			// Verify the command structure
-			if got[0] != common.GS || got[1] != '(' || got[2] != 'L' {
+			if got[0] != shared.GS || got[1] != '(' || got[2] != 'L' {
 				t.Errorf("StoreRasterGraphicsInBuffer: invalid command prefix")
 			}
 		})
@@ -441,7 +441,7 @@ func TestGraphicsCommands_StoreRasterGraphicsInBufferLarge(t *testing.T) {
 			}
 
 			// Verify the command structure for large format
-			if got[0] != common.GS || got[1] != '8' || got[2] != 'L' {
+			if got[0] != shared.GS || got[1] != '8' || got[2] != 'L' {
 				t.Errorf("StoreRasterGraphicsInBufferLarge: invalid command prefix")
 			}
 		})
@@ -583,7 +583,7 @@ func TestGraphicsCommands_StoreColumnGraphicsInBuffer(t *testing.T) {
 			}
 
 			// Verify the command structure
-			if got[0] != common.GS || got[1] != '(' || got[2] != 'L' {
+			if got[0] != shared.GS || got[1] != '(' || got[2] != 'L' {
 				t.Errorf("StoreColumnGraphicsInBuffer: invalid command prefix")
 			}
 		})
@@ -645,7 +645,7 @@ func TestGraphicsCommands_StoreColumnGraphicsInBufferLarge(t *testing.T) {
 			}
 
 			// Verify the command structure for large format
-			if got[0] != common.GS || got[1] != '8' || got[2] != 'L' {
+			if got[0] != shared.GS || got[1] != '8' || got[2] != 'L' {
 				t.Errorf("StoreColumnGraphicsInBufferLarge: invalid command prefix")
 			}
 		})

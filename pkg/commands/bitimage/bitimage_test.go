@@ -5,7 +5,7 @@ import (
 
 	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/bitimage"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -14,7 +14,7 @@ import (
 
 func TestCommands_SelectBitImageMode(t *testing.T) {
 	cmd := bitimage.NewCommands()
-	prefix := []byte{common.ESC, '*'}
+	prefix := []byte{shared.ESC, '*'}
 
 	// Helper to create test data
 	createTestData := func(mode bitimage.Mode, width uint16) []byte {

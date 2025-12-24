@@ -1,7 +1,7 @@
 package character
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SetRightSideCharacterSpacing sets the right-side character spacing.
@@ -47,7 +47,7 @@ import (
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetRightSideCharacterSpacing(n Spacing) []byte {
-	return []byte{common.ESC, common.SP, byte(n)}
+	return []byte{shared.ESC, shared.SP, byte(n)}
 }
 
 // SelectPrintModes selects character font and style bits (emphasized, double-height, double-width, underline) together.
@@ -105,7 +105,7 @@ func (c *Commands) SetRightSideCharacterSpacing(n Spacing) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SelectPrintModes(n PrintMode) []byte {
-	return []byte{common.ESC, '!', byte(n)}
+	return []byte{shared.ESC, '!', byte(n)}
 }
 
 // SetUnderlineMode sets underline mode on or off and selects underline thickness.
@@ -152,7 +152,7 @@ func (c *Commands) SetUnderlineMode(n UnderlineMode) ([]byte, error) {
 	if err := ValidateUnderlineMode(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, '-', byte(n)}, nil
+	return []byte{shared.ESC, '-', byte(n)}, nil
 }
 
 // SetEmphasizedMode turns emphasized (bold) mode on or off.
@@ -186,7 +186,7 @@ func (c *Commands) SetUnderlineMode(n UnderlineMode) ([]byte, error) {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetEmphasizedMode(n EmphasizedMode) []byte {
-	return []byte{common.ESC, 'E', byte(n)}
+	return []byte{shared.ESC, 'E', byte(n)}
 }
 
 // SetDoubleStrikeMode turns double-strike mode on or off.
@@ -220,7 +220,7 @@ func (c *Commands) SetEmphasizedMode(n EmphasizedMode) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetDoubleStrikeMode(n DoubleStrikeMode) []byte {
-	return []byte{common.ESC, 'G', byte(n)}
+	return []byte{shared.ESC, 'G', byte(n)}
 }
 
 // SelectCharacterFont selects a character font.
@@ -267,7 +267,7 @@ func (c *Commands) SelectCharacterFont(n FontType) ([]byte, error) {
 	if err := ValidateFontType(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'M', byte(n)}, nil
+	return []byte{shared.ESC, 'M', byte(n)}, nil
 }
 
 // SelectInternationalCharacterSet selects an international character set.
@@ -336,7 +336,7 @@ func (c *Commands) SelectInternationalCharacterSet(n InternationalSet) ([]byte, 
 	if err := ValidateInternationalSet(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'R', byte(n)}, nil
+	return []byte{shared.ESC, 'R', byte(n)}, nil
 }
 
 // Set90DegreeClockwiseRotationMode turns 90° clockwise rotation mode on or off.
@@ -382,7 +382,7 @@ func (c *Commands) Set90DegreeClockwiseRotationMode(n RotationMode) ([]byte, err
 	if err := ValidateRotationMode(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'V', byte(n)}, nil
+	return []byte{shared.ESC, 'V', byte(n)}, nil
 }
 
 // SelectPrintColor selects the print color.
@@ -427,7 +427,7 @@ func (c *Commands) SelectPrintColor(n PrintColor) ([]byte, error) {
 	if err := ValidatePrintColor(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'r', byte(n)}, nil
+	return []byte{shared.ESC, 'r', byte(n)}, nil
 }
 
 // SelectCharacterCodeTable selects a character code table page.
@@ -489,7 +489,7 @@ func (c *Commands) SelectCharacterCodeTable(n CodeTable) ([]byte, error) {
 	if err := ValidateCodeTable(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 't', byte(n)}, nil
+	return []byte{shared.ESC, 't', byte(n)}, nil
 }
 
 // SetUpsideDownMode turns upside-down (180° rotated) print mode on or off.
@@ -530,7 +530,7 @@ func (c *Commands) SelectCharacterCodeTable(n CodeTable) ([]byte, error) {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetUpsideDownMode(n UpsideDownMode) []byte {
-	return []byte{common.ESC, '{', byte(n)}
+	return []byte{shared.ESC, '{', byte(n)}
 }
 
 // [Range]
@@ -581,7 +581,7 @@ func (c *Commands) SetUpsideDownMode(n UpsideDownMode) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SelectCharacterSize(n Size) []byte {
-	return []byte{common.GS, '!', byte(n)}
+	return []byte{shared.GS, '!', byte(n)}
 }
 
 // SetWhiteBlackReverseMode turns white/black reverse print mode on or off.
@@ -621,7 +621,7 @@ func (c *Commands) SelectCharacterSize(n Size) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetWhiteBlackReverseMode(n ReverseMode) []byte {
-	return []byte{common.GS, 'B', byte(n)}
+	return []byte{shared.GS, 'B', byte(n)}
 }
 
 // SetSmoothingMode turns smoothing mode on or off.
@@ -656,5 +656,5 @@ func (c *Commands) SetWhiteBlackReverseMode(n ReverseMode) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetSmoothingMode(n SmoothingMode) []byte {
-	return []byte{common.GS, 'b', byte(n)}
+	return []byte{shared.GS, 'b', byte(n)}
 }

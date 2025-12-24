@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestIntegration_Character_BasicFormatting(t *testing.T) {
@@ -39,7 +39,7 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 
 		result := cmd.SelectPrintModes(modes)
 
-		expected := []byte{common.ESC, '!', 0xB8}
+		expected := []byte{shared.ESC, '!', 0xB8}
 		if !bytes.Equal(result, expected) {
 			t.Errorf("SelectPrintModes = %#v, want %#v", result, expected)
 		}

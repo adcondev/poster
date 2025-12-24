@@ -1,24 +1,56 @@
-# Global owners
+# CODEOWNERS file for Poster project
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - will be requested for review for all PRs
 *       @adcondev
 
 # Core components
 /pkg/composer/        @adcondev
 /pkg/connection/      @adcondev
-/pkg/commands/     @adcondev
+/pkg/commands/        @adcondev
 /pkg/document/        @adcondev
 /pkg/graphics/        @adcondev
 /pkg/profile/         @adcondev
 /pkg/service/         @adcondev
+/pkg/tables/          @adcondev
+/pkg/emulator/        @adcondev
+/pkg/constants/       @adcondev
 
-# Testing
+# Testing infrastructure
 /test/                @adcondev
 /internal/testutils/  @adcondev
+**/*_test.go          @adcondev
 
-# Documentation
+# Documentation - requires approval for changes
 *.md                  @adcondev
 /docs/                @adcondev
+/api/v1/*.md          @adcondev
 
-# CI/CD and configuration
+# CI/CD and configuration - critical files
 /.github/             @adcondev
+/.github/workflows/   @adcondev
+/.github/codeql/      @adcondev
 /.golangci.yml        @adcondev
+/.codecov.yml         @adcondev
 /Makefile             @adcondev
+/Dockerfile           @adcondev
+
+# Dependencies - auto-reviewed by Dependabot but owner gets notified
+/go.mod               @adcondev
+/go.sum               @adcondev
+/package.json         @adcondev
+/package-lock.json    @adcondev
+
+# Security-sensitive files
+/SECURITY.md          @adcondev
+/.github/ISSUE_TEMPLATE/security_report.yml  @adcondev
+
+# API schemas
+/api/                 @adcondev
+/api/v1/              @adcondev
+
+# Examples - less critical but should be reviewed
+/examples/            @adcondev
+
+# Assets
+/assets/              @adcondev

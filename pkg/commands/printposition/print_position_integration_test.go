@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
@@ -50,7 +50,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 		}
 
 		// Verify specific command sequences
-		expectedStart := []byte{common.GS, 'L', 50, 0} // SetLeftMargin(50)
+		expectedStart := []byte{shared.GS, 'L', 50, 0} // SetLeftMargin(50)
 		if !bytes.Equal(buffer[:4], expectedStart) {
 			t.Errorf("Buffer should start with SetLeftMargin command")
 		}
@@ -112,7 +112,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 		buffer = append(buffer, cmd.HorizontalTab()...)
 
 		// Verify tab usage
-		htCount := bytes.Count(buffer, []byte{common.HT})
+		htCount := bytes.Count(buffer, []byte{shared.HT})
 		if htCount != 3 {
 			t.Errorf("HT count = %d, want 3", htCount)
 		}
@@ -139,7 +139,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 		}
 
 		// Check first absolute position command
-		expected := []byte{common.ESC, '$', 100, 0}
+		expected := []byte{shared.ESC, '$', 100, 0}
 		if !bytes.Equal(buffer[:4], expected) {
 			t.Errorf("First command = %#v, want %#v", buffer[:4], expected)
 		}
@@ -180,7 +180,7 @@ func TestIntegration_PrintPosition_PageModeWorkflow(t *testing.T) {
 		}
 
 		// Verify print direction command
-		expectedDir := []byte{common.ESC, 'T', byte(LeftToRight)}
+		expectedDir := []byte{shared.ESC, 'T', byte(LeftToRight)}
 		if !bytes.Equal(buffer[:3], expectedDir) {
 			t.Errorf("First command = %#v, want %#v", buffer[:3], expectedDir)
 		}
@@ -209,7 +209,7 @@ func TestIntegration_PrintPosition_PageModeWorkflow(t *testing.T) {
 					return
 				}
 
-				expected := []byte{common.ESC, 'T', byte(d.direction)}
+				expected := []byte{shared.ESC, 'T', byte(d.direction)}
 				if !bytes.Equal(cmd, expected) {
 					t.Errorf("Command = %#v, want %#v", cmd, expected)
 				}
@@ -325,8 +325,8 @@ func TestIntegration_PrintPosition_MixedModeTransitions(t *testing.T) {
 		buffer = append(buffer, cmd.SetAbsoluteVerticalPrintPosition(200)...)
 
 		// Verify mixed commands are present
-		hasStandardCmd := bytes.Contains(buffer, []byte{common.GS, 'L'}) // SetLeftMargin
-		hasPageCmd := bytes.Contains(buffer, []byte{common.ESC, 'T'})    // SelectPrintDirectionPageMode
+		hasStandardCmd := bytes.Contains(buffer, []byte{shared.GS, 'L'}) // SetLeftMargin
+		hasPageCmd := bytes.Contains(buffer, []byte{shared.ESC, 'T'})    // SelectPrintDirectionPageMode
 
 		if !hasStandardCmd {
 			t.Error("Buffer should contain standard mode commands")
@@ -373,7 +373,7 @@ func TestIntegration_PrintPosition_MixedModeTransitions(t *testing.T) {
 		buffer = append(buffer, printASCIICmd...)
 
 		// Verify we have the expected commands
-		beginLineCount := bytes.Count(buffer, []byte{common.GS, 'T'})
+		beginLineCount := bytes.Count(buffer, []byte{shared.GS, 'T'})
 		if beginLineCount != 4 {
 			t.Errorf("Begin line command count = %d, want 4", beginLineCount)
 		}
@@ -597,7 +597,7 @@ func TestIntegration_PrintPosition_RealWorldScenarios(t *testing.T) {
 		}
 
 		// Count total tabs used
-		tabCount := bytes.Count(buffer, []byte{common.HT})
+		tabCount := bytes.Count(buffer, []byte{shared.HT})
 		expectedTabs := 3 + (5 * 3) // Name + 5 items
 		if tabCount != expectedTabs {
 			t.Errorf("Tab count = %d, want %d", tabCount, expectedTabs)

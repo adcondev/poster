@@ -3,7 +3,7 @@ package character
 import (
 	"fmt"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SelectUserDefinedCharacterSet selects or cancels the user-defined character set.
@@ -100,7 +100,7 @@ func (udc *UserDefinedCommands) DefineUserDefinedCharacters(y, c1, c2 byte, defi
 	}
 
 	// Build command
-	seq := []byte{common.ESC, '&', y, c1, c2}
+	seq := []byte{shared.ESC, '&', y, c1, c2}
 	bytesPerCol := int(y)
 
 	for idx, def := range definitions {
@@ -157,5 +157,5 @@ func (udc *UserDefinedCommands) CancelUserDefinedCharacter(n byte) ([]byte, erro
 	if err := ValidateCharacterCode(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, '?', n}, nil
+	return []byte{shared.ESC, '?', n}, nil
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/internal/testutils"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
@@ -57,7 +57,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		buffer = append(buffer, listCmd...)
 
 		// Verify commands
-		if !bytes.Contains(buffer, []byte{common.GS, '(', 'L'}) {
+		if !bytes.Contains(buffer, []byte{shared.GS, '(', 'L'}) {
 			t.Error("Buffer should contain download graphics commands")
 		}
 
@@ -179,7 +179,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 		}
 		buffer = append(buffer, printCmd...)
 
-		if !bytes.Contains(buffer, []byte{common.GS, 'D'}) {
+		if !bytes.Contains(buffer, []byte{shared.GS, 'D'}) {
 			t.Error("Buffer should contain BMP definition command")
 		}
 	})
@@ -237,7 +237,7 @@ func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
 		}
 
 		// Verify extended format (GS 8 L)
-		if defineCmd[0] != common.GS || defineCmd[1] != '8' || defineCmd[2] != 'L' {
+		if defineCmd[0] != shared.GS || defineCmd[1] != '8' || defineCmd[2] != 'L' {
 			t.Error("Large data should use extended command format")
 		}
 
@@ -276,7 +276,7 @@ func TestIntegration_DownloadGraphics_LargeDataHandling(t *testing.T) {
 		}
 
 		// Verify extended format
-		if defineCmd[0] != common.GS || defineCmd[1] != '8' || defineCmd[2] != 'L' {
+		if defineCmd[0] != shared.GS || defineCmd[1] != '8' || defineCmd[2] != 'L' {
 			t.Error("Large column data should use extended command format")
 		}
 

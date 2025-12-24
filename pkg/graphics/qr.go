@@ -11,8 +11,8 @@ import (
 	"golang.org/x/image/draw"
 
 	"github.com/adcondev/poster/internal/load"
-	"github.com/adcondev/poster/pkg/commands/common"
 	posqr "github.com/adcondev/poster/pkg/commands/qrcode"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 
 	// maxPixelWidth es el ancho máximo soportado para impresoras térmicas de 80mm a 203 DPI
 	// (80mm = 3.15in * 203 DPI = 639px, menos márgenes)
-	maxPixelWidth = common.Dpl80mm203dpi
+	maxPixelWidth = shared.Dpl80mm203dpi
 	// minPixelWidth es el mínimo para QR Version 1 (21x21) con módulos de 3px + borders
 	minPixelWidth = 87
 
@@ -410,7 +410,6 @@ func buildImageOptions(opts *QROptions) []standard.ImageOption {
 		// Zona segura para el Logo
 		if opts.ErrorCorrection == posqr.LevelL || opts.ErrorCorrection == posqr.LevelM {
 			imgOpts = append(imgOpts, standard.WithLogoSafeZone())
-
 		}
 
 		// Validar tamaño del Logo contra dataWidth
@@ -434,7 +433,6 @@ func buildImageOptions(opts *QROptions) []standard.ImageOption {
 		case "jpeg", "jpg":
 			imgOpts = append(imgOpts, standard.WithBuiltinImageEncoder(standard.JPEG_FORMAT))
 		}
-
 	} else {
 		opts.LogoData = ""
 		opts.Logo.Image = nil

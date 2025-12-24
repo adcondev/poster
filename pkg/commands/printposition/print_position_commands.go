@@ -3,7 +3,7 @@ package printposition
 import (
 	"fmt"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // HorizontalTab moves the print position to the next horizontal tab position.
@@ -40,7 +40,7 @@ import (
 //
 //	This function is safe and does not return errors.
 func (c *Commands) HorizontalTab() []byte {
-	return []byte{common.HT}
+	return []byte{shared.HT}
 }
 
 // SetAbsolutePrintPosition sets the absolute print position.
@@ -81,8 +81,8 @@ func (c *Commands) HorizontalTab() []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetAbsolutePrintPosition(position uint16) []byte {
-	nL, nH := common.ToLittleEndian(position)
-	return []byte{common.ESC, '$', nL, nH}
+	nL, nH := shared.ToLittleEndian(position)
+	return []byte{shared.ESC, '$', nL, nH}
 }
 
 // SetHorizontalTabPositions sets horizontal tab positions.
@@ -147,9 +147,9 @@ func (c *Commands) SetHorizontalTabPositions(positions []byte) ([]byte, error) {
 	}
 
 	// Build command
-	cmd := []byte{common.ESC, 'D'}
+	cmd := []byte{shared.ESC, 'D'}
 	cmd = append(cmd, positions...)
-	cmd = append(cmd, common.NUL)
+	cmd = append(cmd, shared.NUL)
 	return cmd, nil
 }
 
@@ -190,7 +190,7 @@ func (c *Commands) SelectPrintDirectionPageMode(direction PrintDirection) ([]byt
 	if err := ValidatePrintDirection(direction); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'T', byte(direction)}, nil
+	return []byte{shared.ESC, 'T', byte(direction)}, nil
 }
 
 // SetPrintAreaPageMode sets the print area and logical origin in Page mode.
@@ -239,11 +239,11 @@ func (c *Commands) SetPrintAreaPageMode(x, y, width, height uint16) ([]byte, err
 	if err := ValidatePrintArea(width, height); err != nil {
 		return nil, err
 	}
-	xL, xH := common.ToLittleEndian(x)
-	yL, yH := common.ToLittleEndian(y)
-	dxL, dxH := common.ToLittleEndian(width)
-	dyL, dyH := common.ToLittleEndian(height)
-	return []byte{common.ESC, 'W', xL, xH, yL, yH, dxL, dxH, dyL, dyH}, nil
+	xL, xH := shared.ToLittleEndian(x)
+	yL, yH := shared.ToLittleEndian(y)
+	dxL, dxH := shared.ToLittleEndian(width)
+	dyL, dyH := shared.ToLittleEndian(height)
+	return []byte{shared.ESC, 'W', xL, xH, yL, yH, dxL, dxH, dyL, dyH}, nil
 }
 
 // SetRelativePrintPosition moves the print position relative to the current position.
@@ -285,9 +285,9 @@ func (c *Commands) SetPrintAreaPageMode(x, y, width, height uint16) ([]byte, err
 func (c *Commands) SetRelativePrintPosition(distance int16) []byte {
 	// Convert signed int16 to unsigned bytes (little-endian)
 	// intentional: preserve int16 two's-complement bit pattern for ESC \ command
-	value := uint16(distance) // nolint:gosec
-	nL, nH := common.ToLittleEndian(value)
-	return []byte{common.ESC, '\\', nL, nH}
+	value := uint16(distance) //nolint:gosec
+	nL, nH := shared.ToLittleEndian(value)
+	return []byte{shared.ESC, '\\', nL, nH}
 }
 
 // SelectJustification selects text justification in Standard mode.
@@ -328,7 +328,7 @@ func (c *Commands) SelectJustification(mode Justification) ([]byte, error) {
 	if err := ValidateJustification(mode); err != nil {
 		return nil, err
 	}
-	return []byte{common.ESC, 'a', byte(mode)}, nil
+	return []byte{shared.ESC, 'a', byte(mode)}, nil
 }
 
 // SetAbsoluteVerticalPrintPosition sets the absolute vertical print position in Page mode.
@@ -367,7 +367,7 @@ func (c *Commands) SelectJustification(mode Justification) ([]byte, error) {
 func (c *Commands) SetAbsoluteVerticalPrintPosition(position uint16) []byte {
 	nL := byte(position & 0xFF)
 	nH := byte((position >> 8) & 0xFF)
-	return []byte{common.GS, '$', nL, nH}
+	return []byte{shared.GS, '$', nL, nH}
 }
 
 // SetLeftMargin sets the left margin in Standard mode.
@@ -409,7 +409,7 @@ func (c *Commands) SetAbsoluteVerticalPrintPosition(position uint16) []byte {
 func (c *Commands) SetLeftMargin(margin uint16) []byte {
 	nL := byte(margin & 0xFF)
 	nH := byte((margin >> 8) & 0xFF)
-	return []byte{common.GS, 'L', nL, nH}
+	return []byte{shared.GS, 'L', nL, nH}
 }
 
 // SetPrintPositionBeginningLine moves the print position to the beginning of the print line.
@@ -451,7 +451,7 @@ func (c *Commands) SetPrintPositionBeginningLine(mode BeginLine) ([]byte, error)
 	if err := ValidateBeginLineMode(mode); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'T', byte(mode)}, nil
+	return []byte{shared.GS, 'T', byte(mode)}, nil
 }
 
 // SetPrintAreaWidth sets the print area width in Standard mode.
@@ -489,7 +489,7 @@ func (c *Commands) SetPrintPositionBeginningLine(mode BeginLine) ([]byte, error)
 func (c *Commands) SetPrintAreaWidth(width uint16) []byte {
 	nL := byte(width & 0xFF)
 	nH := byte((width >> 8) & 0xFF)
-	return []byte{common.GS, 'W', nL, nH}
+	return []byte{shared.GS, 'W', nL, nH}
 }
 
 // SetRelativeVerticalPrintPosition moves the vertical print position relative to the current position in Page mode.
@@ -530,8 +530,8 @@ func (c *Commands) SetPrintAreaWidth(width uint16) []byte {
 func (c *Commands) SetRelativeVerticalPrintPosition(distance int16) []byte {
 	// Convert signed int16 to unsigned bytes (little-endian)
 	// intentional: preserve int16 two's-complement bit pattern for ESC \ command
-	value := uint16(distance) // nolint:gosec
+	value := uint16(distance) //nolint:gosec
 	nL := byte(value & 0xFF)
 	nH := byte((value >> 8) & 0xFF)
-	return []byte{common.GS, '\\', nL, nH}
+	return []byte{shared.GS, '\\', nL, nH}
 }

@@ -70,7 +70,6 @@ func (b *DocumentBuilder) Pulse() *DocumentBuilder {
 
 // PulseWithOptions opens the cash drawer with custom timing
 func (b *DocumentBuilder) PulseWithOptions(pin, onTime, offTime int) *DocumentBuilder {
-
 	return b.addCommand("pulse", pulseCommand{Pin: pin, OnTime: onTime, OffTime: offTime})
 }
 

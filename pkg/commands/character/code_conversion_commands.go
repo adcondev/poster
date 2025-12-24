@@ -1,7 +1,7 @@
 package character
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // SelectCharacterEncodeSystem selects the character encoding system.
@@ -40,7 +40,7 @@ func (c *CodeConversionCommands) SelectCharacterEncodeSystem(m EncodeSystem) ([]
 	if err := ValidateEncodeSystem(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.FS, '(', 'C', 0x02, 0x00, 0x30, byte(m)}, nil
+	return []byte{shared.FS, '(', 'C', 0x02, 0x00, 0x30, byte(m)}, nil
 }
 
 // SetFontPriority sets the font priority.
@@ -90,5 +90,5 @@ func (c *CodeConversionCommands) SetFontPriority(m FontPriority, a FontFunction)
 		return nil, err
 	}
 
-	return []byte{common.FS, '(', 'C', 0x03, 0x00, 0x3C, byte(m), byte(a)}, nil
+	return []byte{shared.FS, '(', 'C', 0x03, 0x00, 0x3C, byte(m), byte(a)}, nil
 }

@@ -84,7 +84,6 @@ func (te *TabEngine) Render(w io.Writer, data *Data) error {
 		if _, err := w.Write([]byte(headerLine + string(print.LF))); err != nil {
 			return err
 		}
-
 	}
 
 	// Data rows (without blank lines between them)

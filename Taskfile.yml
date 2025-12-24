@@ -64,8 +64,8 @@ includes:
     aliases:
       - qr
   common:
-    taskfile: ./pkg/commands/common/Taskfile.yml
-    dir: ./pkg/commands/common
+    taskfile: ./pkg/commands/shared/Taskfile.yml
+    dir: ./pkg/commands/shared
     aliases:
       - sh
 

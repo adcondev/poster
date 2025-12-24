@@ -31,7 +31,15 @@
         "github",
         "gomod",
         "npm",
-        "gh-actions"
+        "gh-actions",
+        "poster",
+        "tables",
+        "security",
+        "miscellaneous",
+        "executor",
+        "builder",
+        "constants",
+        "emulator"
       ]
     ],
     "type-enum": [
@@ -66,6 +74,20 @@
       2,
       "never",
       "."
+    ],
+    "header-max-length": [
+      2,
+      "always",
+      100
+    ],
+    "body-leading-blank": [
+      2,
+      "always"
+    ],
+    "footer-leading-blank": [
+      2,
+      "always"
     ]
-  }
+  },
+  "helpUrl": "https://github.com/adcondev/poster/blob/main/.github/git-commit-instructions.md"
 }

@@ -3,7 +3,7 @@ package barcode
 import (
 	"fmt"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -46,7 +46,7 @@ func (c *Commands) SelectHRICharacterPosition(n HRIPosition) ([]byte, error) {
 	if err := ValidateHRIPosition(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'H', byte(n)}, nil
+	return []byte{shared.GS, 'H', byte(n)}, nil
 }
 
 // SelectFontForHRI selects the font used to print HRI (Human Readable Interpretation) characters.
@@ -89,7 +89,7 @@ func (c *Commands) SelectFontForHRI(n HRIFont) ([]byte, error) {
 	if err := ValidateHRIFont(n); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'f', byte(n)}, nil
+	return []byte{shared.GS, 'f', byte(n)}, nil
 }
 
 // SetBarcodeHeight sets the barcode height.
@@ -124,7 +124,7 @@ func (c *Commands) SetBarcodeHeight(height Height) ([]byte, error) {
 	if height < MinHeight || height > MaxHeight {
 		return nil, fmt.Errorf("%w: %d (allowed %d-%d)", ErrHeight, height, MinHeight, MaxHeight)
 	}
-	return []byte{common.GS, 'h', byte(height)}, nil
+	return []byte{shared.GS, 'h', byte(height)}, nil
 }
 
 // SetBarcodeWidth sets the horizontal module width for barcodes.
@@ -163,7 +163,7 @@ func (c *Commands) SetBarcodeWidth(width Width) ([]byte, error) {
 	// Validate standard and extended ranges
 	if (width >= MinWidth && width <= MaxWidth) ||
 		(width >= ExtendedMinWidth && width <= ExtendedMaxWidth) {
-		return []byte{common.GS, 'w', byte(width)}, nil
+		return []byte{shared.GS, 'w', byte(width)}, nil
 	}
 	return nil, fmt.Errorf("%w: %d (allowed %d-%d or %d-%d)", ErrWidth, width, MinWidth, MaxWidth, ExtendedMinWidth, ExtendedMaxWidth)
 }

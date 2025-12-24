@@ -1,0 +1,57 @@
+name: "Poster CodeQL Configuration"
+
+# Query settings
+disable-default-queries: false
+
+# Queries to run
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Exclude test files, examples, and vendored code
+paths-ignore:
+  # Test files
+  - '**/*_test.go'
+  - 'test/**'
+  - 'internal/testutils/**'
+
+  # Examples (not production code)
+  - 'examples/**'
+
+  # Vendored dependencies
+  - 'vendor/**'
+
+  # Test data
+  - 'testdata/**'
+
+  # Build artifacts
+  - '*. exe'
+  - '*.dll'
+  - '*.so'
+
+  # IDE files (shouldn't be in repo, but just in case)
+  - '.idea/**'
+
+# Explicitly include production code (optional)
+paths:
+  - 'pkg/**'
+  - 'cmd/**'
+  - 'internal/**'
+  - 'api/**'
+
+# Paths to explicitly include (optional - by default, all paths are included)
+# paths:
+#   - 'pkg/**'
+#   - 'internal/**'
+
+# Query filters (to disable specific queries)
+# query-filters:
+#   - exclude:
+#       id: go/hardcoded-credentials
+#   - exclude:
+#       id: go/clear-text-logging
+
+# Advanced:  Query packs
+packs:
+  - codeql/go-queries
+  - codeql/go-queries: experimental

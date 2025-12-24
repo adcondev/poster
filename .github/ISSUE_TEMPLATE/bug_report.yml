@@ -1,4 +1,4 @@
-name: Bug Report
+name: 🐛 Bug Report
 description: Create a report to help us improve
 title: "[Bug]: "
 labels: [ "bug", "triage" ]
@@ -9,12 +9,14 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        ## Thanks for taking the time to fill out this bug report!
+        
+        Please provide as much detail as possible to help us resolve the issue quickly.
 
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened?
+      label: 🐛 What happened?
       description: A clear and concise description of what the bug is.
       placeholder: Tell us what you see!
     validations:
@@ -23,60 +25,151 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Expected behavior
+      label: ✅ Expected behavior
       description: What did you expect to happen?
+      placeholder: I expected...
     validations:
       required: true
 
   - type: textarea
     id: reproduce
     attributes:
-      label: Steps to reproduce
+      label: 🔄 Steps to reproduce
       description: How can we reproduce this issue?
       placeholder: |
-        1. Run command '...'
-        2. See error
+        1. Initialize printer with '...'
+        2. Send command '...'
+        3. See error
     validations:
       required: true
 
   - type: dropdown
     id: version
     attributes:
-      label: Version
-      description: What version of pos-printer are you running?
+      label: 📦 Version
+      description: What version of poster are you running?
       options:
-        - v2.0.0 (latest)
+        - v4.3.0 (latest)
+        - v3.6.1
+        - v2.3.0
         - v1.8.0
-        - v1.7.0
-        - v1.6.0
-        - main branch
+        - master branch (development)
+        - Other (please specify in additional context)
     validations:
       required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating System
+      label: 💻 Operating System
+      description: What OS are you using?
       options:
-        - Linux
+        - Windows 11
+        - Windows 10
+        - Windows Server
+        - Linux (Ubuntu)
+        - Linux (Debian)
+        - Linux (Other)
         - macOS
-        - Windows
-        - Other
+        - Other (please specify)
     validations:
       required: true
+
+  - type: dropdown
+    id: go-version
+    attributes:
+      label: 🔧 Go Version
+      description: What version of Go are you using?
+      options:
+        - Go 1.24
+        - Go 1.23
+        - Go 1.22
+        - Go 1.21
+        - Other (please specify)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 🌍 Environment
+      description: Where is the bug occurring?
+      options:
+        - Development (local)
+        - CI/CD Pipeline
+        - Production
+        - Example code
+        - Testing environment
+    validations:
+      required: false
+
+  - type: textarea
+    id: printer-info
+    attributes:
+      label: 🖨️ Printer Information (if applicable)
+      description: If the issue is printer-related, provide printer details
+      placeholder: |
+        - Model: EPSON TM-T88V
+        - Connection: USB / Network / Serial
+        - Paper Width: 80mm
+        - Profile Used: CreateProfile80mm()
+    validations:
+      required: false
 
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output.
+      label: 📋 Relevant log output
+      description: Please copy and paste any relevant log output, error messages, or stack traces.
+      placeholder: |
+        Error: failed to connect to printer
+        panic: runtime error: invalid memory address
       render: shell
 
-  - type: checkboxes
-    id: terms
+  - type: textarea
+    id: workflow-logs
     attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our Code of Conduct
+      label: 🔄 Workflow Logs (if applicable)
+      description: If this bug occurs in CI/CD, paste relevant workflow logs or link to the run
+      placeholder: |
+        Link to failed workflow run: 
+        https://github.com/adcondev/poster/actions/runs/XXXXX
+        
+        Or paste relevant logs here...
+      render: shell
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: 💻 Code Sample
+      description: If applicable, provide a minimal code sample that reproduces the issue
+      placeholder: |
+        ```go
+        package main
+        
+        import "github.com/adcondev/poster/pkg/service"
+        
+        func main() {
+            // Your code here
+        }
+        ```
+      render: go
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 📝 Additional context
+      description: Add any other context about the problem here (screenshots, JSON documents, etc.)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: ✅ Pre-submission Checklist
+      description: Please confirm the following
       options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided all requested information
+          required: true
         - label: I agree to follow this project's Code of Conduct
           required: true

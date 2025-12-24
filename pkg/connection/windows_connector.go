@@ -96,7 +96,7 @@ func (c *WindowsPrintConnector) Close() error {
 				log.Printf("Falló EndDocPrinter: %v, intentando AbortDocPrinter...", err)
 				if abortErr := c.service.AbortDoc(c.handle); abortErr != nil {
 					log.Printf("Falló AbortDocPrinter: %v", abortErr)
-					finalErr = fmt.Errorf("falló EndDoc y AbortDoc: %v", abortErr)
+					finalErr = fmt.Errorf("falló EndDoc y AbortDoc: %w", abortErr)
 				}
 			} else {
 				log.Println("Trabajo de impresión finalizado correctamente.")

@@ -3,7 +3,7 @@ package barcode
 import (
 	"errors"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -237,9 +237,9 @@ func (c *Commands) buildFunctionA(symbology Symbology, data []byte) ([]byte, err
 	}
 
 	// Build command: GS k m data... NUL
-	cmd := []byte{common.GS, 'k', byte(symbology)}
+	cmd := []byte{shared.GS, 'k', byte(symbology)}
 	cmd = append(cmd, data...)
-	cmd = append(cmd, common.NUL)
+	cmd = append(cmd, shared.NUL)
 	return cmd, nil
 }
 
@@ -266,7 +266,7 @@ func (c *Commands) buildFunctionB(symbology Symbology, data []byte) ([]byte, err
 	}
 
 	// Build command: GS k m n data...
-	cmd := []byte{common.GS, 'k', byte(symbology), byte(len(data))}
+	cmd := []byte{shared.GS, 'k', byte(symbology), byte(len(data))}
 	cmd = append(cmd, data...)
 	return cmd, nil
 }

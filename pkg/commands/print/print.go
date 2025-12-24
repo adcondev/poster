@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -45,9 +45,9 @@ var (
 
 var (
 	// ErrEmptyText indicates that the provided text is empty
-	ErrEmptyText = common.ErrEmptyBuffer
+	ErrEmptyText = shared.ErrEmptyBuffer
 	// ErrTextTooLarge indicates that the provided text exceeds buffer limits
-	ErrTextTooLarge = common.ErrBufferOverflow
+	ErrTextTooLarge = shared.ErrBufferOverflow
 	// ErrReverseUnits invalid number of motion units for reverse print
 	ErrReverseUnits = fmt.Errorf("invalid reverse feed units (try 0-%d)", MaxReverseMotionUnits)
 	// ErrReverseLines invalid number of lines for reverse print
@@ -100,11 +100,11 @@ func NewCommands() *Commands {
 //   - Replaces '\t' with HT (0x09)
 //   - Validates buffer size according to printer limitations
 func (c *Commands) Text(n string) ([]byte, error) {
-	if err := common.IsBufLenOk([]byte(n)); err != nil {
+	if err := shared.IsBufLenOk([]byte(n)); err != nil {
 		switch {
-		case errors.Is(err, common.ErrEmptyBuffer):
+		case errors.Is(err, shared.ErrEmptyBuffer):
 			return nil, ErrEmptyText
-		case errors.Is(err, common.ErrBufferOverflow):
+		case errors.Is(err, shared.ErrBufferOverflow):
 			return nil, ErrTextTooLarge
 		default:
 			return nil, err
@@ -130,7 +130,7 @@ func Formatting(data []byte) []byte {
 		case '\r':
 			formatted[i] = CR
 		case '\t':
-			formatted[i] = common.HT
+			formatted[i] = shared.HT
 		}
 	}
 	return formatted

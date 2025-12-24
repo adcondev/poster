@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/internal/testutils"
-	"github.com/adcondev/poster/pkg/commands/common"
 	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -16,14 +16,14 @@ func TestCommands_ReturnHome(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
 
 	got := cmd.ReturnHome()
-	want := []byte{common.ESC, '<'}
+	want := []byte{shared.ESC, '<'}
 
 	testutils.AssertBytes(t, got, want, "ReturnHome()")
 }
 
 func TestCommands_SetUnidirectionalPrintMode(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := testutils.BuildCommand(common.ESC, 'U')
+	prefix := testutils.BuildCommand(shared.ESC, 'U')
 
 	tests := []struct {
 		name string
@@ -66,7 +66,7 @@ func TestCommands_SetUnidirectionalPrintMode(t *testing.T) {
 
 func TestCommands_PaperCut(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := []byte{common.GS, '(', 'V', 0x02, 0x00, 0x30}
+	prefix := []byte{shared.GS, '(', 'V', 0x02, 0x00, 0x30}
 
 	tests := []struct {
 		name    string
@@ -119,7 +119,7 @@ func TestCommands_PaperCut(t *testing.T) {
 
 func TestCommands_PaperFeedAndCut(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := []byte{common.GS, '(', 'V', 0x03, 0x00, 0x31}
+	prefix := []byte{shared.GS, '(', 'V', 0x03, 0x00, 0x31}
 
 	tests := []struct {
 		name       string
@@ -191,7 +191,7 @@ func TestCommands_PaperFeedAndCut(t *testing.T) {
 
 func TestCommands_ReservePaperCut(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := []byte{common.GS, '(', 'V', 0x03, 0x00, 0x33}
+	prefix := []byte{shared.GS, '(', 'V', 0x03, 0x00, 0x33}
 
 	tests := []struct {
 		name       string
@@ -267,7 +267,7 @@ func TestCommands_ReservePaperCut(t *testing.T) {
 
 func TestCommands_CutPaper(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := testutils.BuildCommand(common.GS, 'V')
+	prefix := testutils.BuildCommand(shared.GS, 'V')
 
 	tests := []struct {
 		name    string
@@ -344,7 +344,7 @@ func TestCommands_CutPaper(t *testing.T) {
 
 func TestCommands_FeedAndCutPaper(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := testutils.BuildCommand(common.GS, 'V')
+	prefix := testutils.BuildCommand(shared.GS, 'V')
 
 	tests := []struct {
 		name       string
@@ -430,7 +430,7 @@ func TestCommands_FeedAndCutPaper(t *testing.T) {
 
 func TestCommands_SetCutPosition(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := testutils.BuildCommand(common.GS, 'V')
+	prefix := testutils.BuildCommand(shared.GS, 'V')
 
 	tests := []struct {
 		name     string
@@ -516,7 +516,7 @@ func TestCommands_SetCutPosition(t *testing.T) {
 
 func TestCommands_FeedCutAndReturnPaper(t *testing.T) {
 	cmd := mechanismcontrol.NewCommands()
-	prefix := testutils.BuildCommand(common.GS, 'V')
+	prefix := testutils.BuildCommand(shared.GS, 'V')
 
 	tests := []struct {
 		name       string
@@ -887,7 +887,7 @@ func TestCommands_AllCutModeCombinations(t *testing.T) {
 			got, err := cmd.CutPaper(mode)
 			testutils.AssertError(t, err, nil)
 			testutils.AssertNotEmpty(t, got, "CutPaper should return non-empty result for valid mode")
-			testutils.AssertHasPrefix(t, got, []byte{common.GS, 'V'}, "CutPaper command prefix")
+			testutils.AssertHasPrefix(t, got, []byte{shared.GS, 'V'}, "CutPaper command prefix")
 		})
 	}
 }
@@ -901,8 +901,8 @@ func TestCommands_ConsistencyBetweenModes(t *testing.T) {
 		got2, _ := cmd.CutPaper(mechanismcontrol.CutModeFullASCII)
 
 		// Both should be GS V commands but with different parameter values
-		testutils.AssertHasPrefix(t, got1, []byte{common.GS, 'V'}, "full cut (0)")
-		testutils.AssertHasPrefix(t, got2, []byte{common.GS, 'V'}, "full cut ASCII (48)")
+		testutils.AssertHasPrefix(t, got1, []byte{shared.GS, 'V'}, "full cut (0)")
+		testutils.AssertHasPrefix(t, got2, []byte{shared.GS, 'V'}, "full cut ASCII (48)")
 
 		// Values should be different
 		if got1[2] == got2[2] {
@@ -916,8 +916,8 @@ func TestCommands_ConsistencyBetweenModes(t *testing.T) {
 		got2, _ := cmd.CutPaper(mechanismcontrol.CutModePartialASCII)
 
 		// Both should be GS V commands but with different parameter values
-		testutils.AssertHasPrefix(t, got1, []byte{common.GS, 'V'}, "partial cut (1)")
-		testutils.AssertHasPrefix(t, got2, []byte{common.GS, 'V'}, "partial cut ASCII (49)")
+		testutils.AssertHasPrefix(t, got1, []byte{shared.GS, 'V'}, "partial cut (1)")
+		testutils.AssertHasPrefix(t, got2, []byte{shared.GS, 'V'}, "partial cut ASCII (49)")
 
 		// Values should be different
 		if got1[2] == got2[2] {

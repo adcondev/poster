@@ -6,7 +6,7 @@ documentation:
           - '**/*.md'
           - 'docs/**'
           - '**/doc.go'
-          - 'ISSUE_TEMPLATE/**'
+          - '.github/ISSUE_TEMPLATE/**'
 
 github:
   - changed-files:
@@ -16,12 +16,28 @@ gh-actions:
   - changed-files:
       - any-glob-to-any-file: '.github/workflows/**'
 
+codeql:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/codeql/**'
+          - '.github/workflows/codeql.yml'
+
+issue-templates:
+  - changed-files:
+      - any-glob-to-any-file: '.github/ISSUE_TEMPLATE/**'
+
 tests:
   - changed-files:
       - any-glob-to-any-file:
           - '**/*_test.go'
           - 'test/**'
           - 'internal/testutils/**'
+
+benchmarks:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*_bench_test.go'
+          - '**/*_benchmark_test.go'
 
 # Core components
 composer:
@@ -109,12 +125,28 @@ emulator:
   - changed-files:
       - any-glob-to-any-file: 'pkg/emulator/**'
 
+constants:
+  - changed-files:
+      - any-glob-to-any-file: 'pkg/constants/**'
+
 # Other categories
 windows:
   - changed-files:
       - any-glob-to-any-file:
           - '**/*_windows.go'
           - 'pkg/connection/windows/**'
+
+linux:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*_linux.go'
+          - 'pkg/connection/linux/**'
+
+macos:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*_darwin.go'
+          - 'pkg/connection/darwin/**'
 
 examples:
   - changed-files:
@@ -127,3 +159,26 @@ dependencies:
           - 'go.sum'
           - 'package.json'
           - 'package-lock.json'
+
+configuration:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.yml'
+          - '*.yaml'
+          - '*.json'
+          - '.golangci.yml'
+          - '.codecov.yml'
+          - 'Makefile'
+
+api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'api/**'
+          - 'api/v1/**'
+
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/SECURITY.md'
+          - '.github/workflows/codeql.yml'
+          - '.github/workflows/security.yml'
