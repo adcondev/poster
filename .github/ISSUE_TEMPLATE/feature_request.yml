@@ -1,20 +1,22 @@
-name: Feature Request
+name: ✨ Feature Request
 description: Suggest an idea for this project
 title: "[Feature]: "
 labels: [ "enhancement", "triage" ]
 assignees:
-  - AdConDev
+  - adcondev
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to suggest a new feature!
+        ## Thanks for taking the time to suggest a new feature!
+        
+        Your ideas help make Poster better for everyone.
 
   - type: textarea
     id: problem
     attributes:
-      label: Is your feature request related to a problem?
+      label: 🤔 Is your feature request related to a problem?
       description: A clear and concise description of what the problem is.
       placeholder: I'm always frustrated when...
     validations:
@@ -23,26 +25,88 @@ body:
   - type: textarea
     id: solution
     attributes:
-      label: Describe the solution you'd like
+      label: 💡 Describe the solution you'd like
       description: A clear and concise description of what you want to happen.
+      placeholder: I would like to be able to do `y-feat`, or do `z-feat` like in `user/repo`...
     validations:
       required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 🎯 Which component would this affect?
+      description: Select the primary component this feature relates to
+      options:
+        - Composer (ESC/POS protocol)
+        - Connection (printer connectivity)
+        - Commands (ESC/POS commands)
+        - Document (JSON document processing & building)
+        - Graphics (image processing)
+        - Tables (table formatting)
+        - Emulator (visual emulator)
+        - Profile (printer profiles)
+        - Service (high-level API)
+        - CLI Tool
+        - Documentation
+        - Examples
+        - Other / Multiple
+    validations:
+      required: false
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Describe alternatives you've considered
-      description: Any alternative solutions or features you've considered.
+      label: 🔄 Describe alternatives you've considered
+      description: Any alternative solutions, workarounds and features you've considered.
+      placeholder: Alternatively, I could...
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: 💻 Code Examples (if applicable)
+      description: Show how you'd like to use this feature
+      placeholder: |
+        ```go
+        // Example of how the feature would be used
+        printer.NewFeature()
+        ```
+      render: go
 
   - type: textarea
     id: context
     attributes:
-      label: Additional context
+      label: 📝 Additional context
       description: Add any other context, mockups, or examples about the feature request here.
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 📊 Priority (your perspective)
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my workflow
+        - High - Blocking my use case
+    validations:
+      required: false
 
   - type: checkboxes
     id: willing-to-contribute
     attributes:
-      label: Contribution
+      label: 🤝 Contribution
+      description: Are you willing to help implement this?
       options:
-        - label: I'm willing to contribute this feature
+        - label: I'm willing to contribute this feature, either fully or partially
+        - label: I can help with testing, feedback, or QA
+        - label: I can help with documentation, examples, or tutorials
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: ✅ Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided sufficient detail about the feature
+          required: true

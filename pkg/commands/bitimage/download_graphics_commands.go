@@ -1,7 +1,7 @@
 package bitimage
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // GetDownloadGraphicsRemainingCapacity transmits the remaining capacity (unused area) in the download graphics area.
@@ -47,7 +47,7 @@ func (c *DownloadGraphicsCommands) GetDownloadGraphicsRemainingCapacity(fn DLFun
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
+	return []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, byte(fn)}, nil
 }
 
 // GetDownloadGraphicsKeyCodeList transmits the list of key codes for defined download graphics.
@@ -96,7 +96,7 @@ func (c *DownloadGraphicsCommands) GetDownloadGraphicsRemainingCapacity(fn DLFun
 //
 //	This function is safe and does not return errors.
 func (c *DownloadGraphicsCommands) GetDownloadGraphicsKeyCodeList() []byte {
-	return []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x50, 'K', 'C'}
+	return []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x50, 'K', 'C'}
 }
 
 // DeleteAllDownloadGraphics deletes all download graphics data from the printer's memory.
@@ -139,7 +139,7 @@ func (c *DownloadGraphicsCommands) GetDownloadGraphicsKeyCodeList() []byte {
 //
 //	This function is safe and does not return errors.
 func (c *DownloadGraphicsCommands) DeleteAllDownloadGraphics() []byte {
-	return []byte{common.GS, '(', 'L', 0x05, 0x00, 0x30, 0x51, 'C', 'L', 'R'}
+	return []byte{shared.GS, '(', 'L', 0x05, 0x00, 0x30, 0x51, 'C', 'L', 'R'}
 }
 
 // DeleteDownloadGraphicsByKeyCode deletes the specified download graphics data identified by key codes.
@@ -185,7 +185,7 @@ func (c *DownloadGraphicsCommands) DeleteDownloadGraphicsByKeyCode(kc1, kc2 byte
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, kc1, kc2}, nil
+	return []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, kc1, kc2}, nil
 }
 
 // DefineDownloadGraphics defines the download graphics data (raster format) as a record specified by the key codes (kc1 and kc2) in the download graphics area.
@@ -248,7 +248,6 @@ func (c *DownloadGraphicsCommands) DeleteDownloadGraphicsByKeyCode(kc1, kc2 byte
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -281,10 +280,10 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -355,7 +354,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -386,11 +384,11 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -460,7 +458,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -490,10 +487,10 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, w
 
 	pL := byte((totalSize) & 0xFF)
 	pH := byte(((totalSize) >> 8) & 0xFF)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '(', 'L', pL, pH, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -563,7 +560,6 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, w
 //	Returns ErrInvalidDataLength if the data length does not match the expected size.
 func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumnLarge(kc1, kc2 byte, width, height uint16,
 	colorData []DLGraphicsColorData) ([]byte, error) {
-
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -591,11 +587,11 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumnLarge(kc1, kc2 by
 		return nil, ErrDataTooLarge
 	}
 
-	p1, p2, p3, p4 := common.ToLittleEndian32(totalSize)
-	xL, xH := common.ToLittleEndian(width)
-	yL, yH := common.ToLittleEndian(height)
+	p1, p2, p3, p4 := shared.ToLittleEndian32(totalSize)
+	xL, xH := shared.ToLittleEndian(width)
+	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{common.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -671,7 +667,7 @@ func (c *DownloadGraphicsCommands) PrintDownloadGraphics(kc1, kc2 byte, horizont
 		return nil, err
 	}
 
-	return []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, kc1, kc2, byte(horizontalScale), byte(verticalScale)}, nil
+	return []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, kc1, kc2, byte(horizontalScale), byte(verticalScale)}, nil
 }
 
 // DefineBMPDownloadGraphics defines Windows BMP download graphics data in the printer's memory.
@@ -737,7 +733,7 @@ func (c *DownloadGraphicsCommands) DefineBMPDownloadGraphics(kc1, kc2 byte, tone
 		return nil, err
 	}
 
-	cmd := []byte{common.GS, 'D', 0x30, 0x53, 0x30, kc1, kc2, byte(tone), 0x31}
+	cmd := []byte{shared.GS, 'D', 0x30, 0x53, 0x30, kc1, kc2, byte(tone), 0x31}
 	cmd = append(cmd, bmpData...)
 
 	return cmd, nil

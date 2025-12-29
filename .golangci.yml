@@ -1,29 +1,61 @@
-# Configuración simple pero efectiva para proyecto personal/pequeño
+# golangci-lint configuration for Poster
+# Reference: https://golangci-lint.run/usage/configuration/
+
 version: "2"
 run:
   timeout: 5m  # 5 minutos es suficiente
   tests: true
   build-tags:
     - integration
+  modules-download-mode: readonly
 
 linters:
   # Solo habilitar los esenciales
   enable:
-    # Critical linters
-    - errcheck
-    - govet
-    - staticcheck
-    - ineffassign
-    - gosec
-    - unused
+    # Critical - Must pass
+    - errcheck       # Check for unchecked errors
+    - govet          # Vet examines Go source code
+    - staticcheck    # Advanced Go linter
+    - ineffassign    # Detect ineffectual assignments
+    - gosec          # Security problems
+    - unused         # Check for unused code
 
-    # Code quality
-    - gocyclo
-    - gocritic
-    - unparam
-    - revive
+    # Code Quality
+    - gocyclo        # Cyclomatic complexity
+    - gocritic       # Most opinionated linter
+    - unparam        # Unused function parameters
+    - revive         # Fast, configurable, extensible
 
-    # Best practices
-    - prealloc
-    - bodyclose
-    - goconst
+    # Best Practices
+    - prealloc       # Slice preallocation
+    - bodyclose      # Check HTTP body is closed
+    - goconst        # Repeated strings that could be constants
+    - unconvert      # Remove unnecessary type conversions
+    # - misspell       # Spelling mistakes (not for now)
+    - nolintlint     # Ensure nolint directives are valid
+
+    # Error Handling
+    - errorlint      # Error wrapping issues
+    - errname        # Error naming conventions
+
+    # Code Clarity
+    # - godot          # Check comments end in period
+    - whitespace     # Whitespace issues
+
+    # Performance (optional but recommended)
+    - noctx          # HTTP requests without context
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+  fix: false
+
+severity:
+  default: error
+  rules:
+    - linters:
+        - errcheck
+        - govet
+        - staticcheck
+      severity: error

@@ -5,7 +5,7 @@ import (
 
 	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/bitimage"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -24,13 +24,13 @@ func TestNVGraphicsCommands_GetNVGraphicsCapacity(t *testing.T) {
 		{
 			name:    "function code 0",
 			fn:      bitimage.NVFuncGetCapacity,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 0},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 0},
 			wantErr: nil,
 		},
 		{
 			name:    "function code 48",
 			fn:      bitimage.NVFuncGetCapacityASCII,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 48},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 48},
 			wantErr: nil,
 		},
 		{
@@ -76,13 +76,13 @@ func TestNVGraphicsCommands_GetNVGraphicsRemainingCapacity(t *testing.T) {
 		{
 			name:    "function code 3",
 			fn:      bitimage.NVFuncGetRemaining,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 3},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 3},
 			wantErr: nil,
 		},
 		{
 			name:    "function code 51",
 			fn:      bitimage.NVFuncGetRemainingASCII,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 51},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 51},
 			wantErr: nil,
 		},
 		{
@@ -118,7 +118,7 @@ func TestNVGraphicsCommands_GetNVGraphicsRemainingCapacity(t *testing.T) {
 
 func TestNVGraphicsCommands_GetNVGraphicsKeyCodeList(t *testing.T) {
 	cmd := bitimage.NewNVGraphicsCommands()
-	want := []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x40, 'K', 'C'}
+	want := []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x40, 'K', 'C'}
 
 	got := cmd.GetNVGraphicsKeyCodeList()
 	testutils.AssertBytes(t, got, want, "GetNVGraphicsKeyCodeList()")
@@ -126,7 +126,7 @@ func TestNVGraphicsCommands_GetNVGraphicsKeyCodeList(t *testing.T) {
 
 func TestNVGraphicsCommands_DeleteAllNVGraphics(t *testing.T) {
 	cmd := bitimage.NewNVGraphicsCommands()
-	want := []byte{common.GS, '(', 'L', 0x05, 0x00, 0x30, 0x41, 'C', 'L', 'R'}
+	want := []byte{shared.GS, '(', 'L', 0x05, 0x00, 0x30, 0x41, 'C', 'L', 'R'}
 
 	got := cmd.DeleteAllNVGraphics()
 	testutils.AssertBytes(t, got, want, "DeleteAllNVGraphics()")
@@ -146,21 +146,21 @@ func TestNVGraphicsCommands_DeleteNVGraphicsByKeyCode(t *testing.T) {
 			name:    "valid key codes minimum",
 			kc1:     32,
 			kc2:     32,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 32, 32},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 32, 32},
 			wantErr: nil,
 		},
 		{
 			name:    "valid key codes typical",
 			kc1:     'A',
 			kc2:     '1',
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 'A', '1'},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 'A', '1'},
 			wantErr: nil,
 		},
 		{
 			name:    "valid key codes maximum",
 			kc1:     126,
 			kc2:     126,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 126, 126},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x42, 126, 126},
 			wantErr: nil,
 		},
 		{
@@ -214,7 +214,7 @@ func TestNVGraphicsCommands_PrintNVGraphics(t *testing.T) {
 			kc2:             '1',
 			horizontalScale: bitimage.NormalScale,
 			verticalScale:   bitimage.NormalScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'A', '1', 1, 1},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'A', '1', 1, 1},
 			wantErr:         nil,
 		},
 		{
@@ -223,7 +223,7 @@ func TestNVGraphicsCommands_PrintNVGraphics(t *testing.T) {
 			kc2:             '2',
 			horizontalScale: bitimage.DoubleScale,
 			verticalScale:   bitimage.NormalScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'B', '2', 2, 1},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'B', '2', 2, 1},
 			wantErr:         nil,
 		},
 		{
@@ -232,7 +232,7 @@ func TestNVGraphicsCommands_PrintNVGraphics(t *testing.T) {
 			kc2:             '3',
 			horizontalScale: bitimage.NormalScale,
 			verticalScale:   bitimage.DoubleScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'C', '3', 1, 2},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'C', '3', 1, 2},
 			wantErr:         nil,
 		},
 		{
@@ -241,7 +241,7 @@ func TestNVGraphicsCommands_PrintNVGraphics(t *testing.T) {
 			kc2:             '4',
 			horizontalScale: bitimage.DoubleScale,
 			verticalScale:   bitimage.DoubleScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'D', '4', 2, 2},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x45, 'D', '4', 2, 2},
 			wantErr:         nil,
 		},
 		{

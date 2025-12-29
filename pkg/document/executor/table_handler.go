@@ -118,7 +118,7 @@ func (e *Executor) handleTable(printer *service.Printer, data json.RawMessage) e
 			} else {
 				// Auto-reduction failed
 				return fmt.Errorf(
-					"table overflow: required %d chars > max %d; auto-reduction failed:  %v",
+					"table overflow: required %d chars > max %d; auto-reduction failed:  %w",
 					totalRequiredWidth, maxChars, err,
 				)
 			}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/character"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // TODO: Swap out hardcoded bytes and values with constants from the character package
@@ -21,7 +21,7 @@ import (
 
 func TestCodeConversionCommands_SelectCharacterEncodeSystem(t *testing.T) {
 	cc := character.NewCodeConversionCommands()
-	prefix := []byte{common.FS, '(', 'C', 0x02, 0x00, 0x30}
+	prefix := []byte{shared.FS, '(', 'C', 0x02, 0x00, 0x30}
 
 	tests := []struct {
 		name     string
@@ -96,21 +96,21 @@ func TestCodeConversionCommands_SetFontPriority(t *testing.T) {
 			name:     "first priority AnkSansSerif font",
 			priority: 0,
 			function: 0,
-			want:     []byte{common.FS, '(', 'C', 0x03, 0x00, 0x3C, 0, 0},
+			want:     []byte{shared.FS, '(', 'C', 0x03, 0x00, 0x3C, 0, 0},
 			wantErr:  false,
 		},
 		{
 			name:     "second priority Japanese",
 			priority: 1,
 			function: 11,
-			want:     []byte{common.FS, '(', 'C', 0x03, 0x00, 0x3C, 1, 11},
+			want:     []byte{shared.FS, '(', 'C', 0x03, 0x00, 0x3C, 1, 11},
 			wantErr:  false,
 		},
 		{
 			name:     "first priority Simplified Chinese",
 			priority: 0,
 			function: 20,
-			want:     []byte{common.FS, '(', 'C', 0x03, 0x00, 0x3C, 0, 20},
+			want:     []byte{shared.FS, '(', 'C', 0x03, 0x00, 0x3C, 0, 20},
 			wantErr:  false,
 		},
 		{

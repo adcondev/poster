@@ -30,7 +30,7 @@
     {
       "type": "qr",
       "data": {
-        "data": "https://github.com/adcondev/pos-printer",
+        "data": "https://github.com/adcondev/poster",
         "human_text": "The POS daemon for Go",
         "pixel_width": 384,
         "correction": "H",

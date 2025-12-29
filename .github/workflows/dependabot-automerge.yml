@@ -1,7 +1,6 @@
 name: Dependabot Auto-merge
+
 on:
-  pull_request:
-    types: [ opened, synchronize, reopened ]
   pull_request_target:
     types: [ opened, synchronize, reopened ]
 
@@ -12,72 +11,81 @@ permissions:
   actions: write
   checks: read
 
+concurrency:
+  group: dependabot-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   auto-merge:
+    name: 🤖 Auto-merge Dependencies
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
-      - name: Get Dependabot metadata
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Fetch Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Setup labels
+      - name: Ensure required labels exist
         run: |
-          # Función para crear label si no existe
-          create_label_if_not_exists() {
-            local name=$1
-            local color=$2
-            local description=$3
-            
-            if ! gh api repos/${{ github.repository }}/labels --jq '.[] | .name' | grep -q "^$name$"; then
-              echo "Creating label: $name"
-              gh api repos/${{ github.repository }}/labels \
-                -X POST \
-                -f name="$name" \
-                -f color="$color" \
-                -f description="$description" || echo "Label might already exist"
-            fi
+          create_label() {
+            local name=$1 color=$2 description=$3
+            gh api repos/${{ github.repository }}/labels \
+              -X POST \
+              -f name="$name" \
+              -f color="$color" \
+              -f description="$description" 2>/dev/null || true
           }
           
-          # Crear labels necesarios
-          create_label_if_not_exists "dependencies" "0366d6" "Pull requests that update a dependency file"
-          create_label_if_not_exists "needs-review" "ededed" "Requires manual review"
-          create_label_if_not_exists "auto-merge" "22863a" "Auto-merge enabled"
-          create_label_if_not_exists "major-update" "b60205" "Major version update"
-          create_label_if_not_exists "javascript" "f1e05a" "JavaScript related"
+          create_label "dependencies" "0366d6" "Dependency updates"
+          create_label "needs-review" "ededed" "Requires manual review"
+          create_label "auto-merge" "22863a" "Auto-merge enabled"
+          create_label "major-update" "b60205" "Major version update"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check update type and set labels
-        id: check-update
+      - name: Evaluate update type
+        id: evaluate
         run: |
           UPDATE_TYPE="${{ steps.metadata.outputs.update-type }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          REPO="${{ github.repository }}"
+          DEPENDENCY="${{ steps.metadata.outputs.dependency-names }}"
           
-          # Añadir label de dependencies siempre
-          gh pr edit $PR_NUMBER --repo $REPO --add-label "dependencies"
+          gh pr edit $PR_NUMBER --add-label "dependencies"
           
           if [[ "$UPDATE_TYPE" == "version-update:semver-major" ]]; then
             echo "is_major=true" >> $GITHUB_OUTPUT
-            gh pr edit $PR_NUMBER --repo $REPO --add-label "major-update,needs-review"
-            echo "::warning::Major version update detected - manual review required"
+            gh pr edit $PR_NUMBER --add-label "major-update,needs-review"
+          
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ⚠️ Major Update Detected
+          
+          **Dependency:** \`$DEPENDENCY\`
+          **Update Type:** Major version
+          **Action:** Manual review required
+          EOF
           else
             echo "is_major=false" >> $GITHUB_OUTPUT
-            gh pr edit $PR_NUMBER --repo $REPO --add-label "auto-merge"
+            gh pr edit $PR_NUMBER --add-label "auto-merge"
+          
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ✅ Auto-merge Eligible
+          
+          **Dependency:** \`$DEPENDENCY\`
+          **Update Type:** ${UPDATE_TYPE}
+          **Action:** Will auto-merge after checks pass
+          EOF
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for checks
-        if: steps.check-update.outputs.is_major == 'false'
+      - name: Wait for CI checks
+        if: steps.evaluate.outputs.is_major == 'false'
         uses: lewagon/wait-on-check-action@v1.4.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -87,22 +95,20 @@ jobs:
           allowed-conclusions: success
           running-workflow-name: 'auto-merge'
 
-      - name: Auto-approve and merge
-        if: steps.check-update.outputs.is_major == 'false'
+      - name: Approve and merge
+        if: steps.evaluate.outputs.is_major == 'false'
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          REPO="${{ github.repository }}"
           
-          echo "Approving PR #$PR_NUMBER"
-          gh pr review $PR_NUMBER --repo $REPO --approve
+          gh pr review $PR_NUMBER --approve --body "✅ Auto-approved by Dependabot workflow"
+          gh pr merge $PR_NUMBER --auto --squash --delete-branch
           
-          echo "Enabling auto-merge for PR #$PR_NUMBER"
-          gh pr merge $PR_NUMBER --repo $REPO --auto --squash --delete-branch
+          echo "✅ PR #$PR_NUMBER approved and queued for merge" >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on major updates
-        if: steps.check-update.outputs.is_major == 'true'
+        if: steps.evaluate.outputs.is_major == 'true'
         uses: actions/github-script@v8
         with:
           script: |
@@ -110,28 +116,41 @@ jobs:
               updateType: "${{ steps.metadata.outputs.update-type }}",
               dependencyNames: "${{ steps.metadata.outputs.dependency-names }}",
               previousVersion: "${{ steps.metadata.outputs.previous-version }}",
-              newVersion: "${{ steps.metadata.outputs.new-version }}"
+              newVersion: "${{ steps.metadata.outputs.new-version }}",
+              ecosystem: "${{ steps.metadata.outputs.package-ecosystem }}"
             };
             
-            const comment = `## ⚠️ Major Version Update Detected
+            const comment = `## 💥 Major Version Update
             
-            This Dependabot PR contains a major version update that requires manual review.
+            This PR contains a **major version update** that requires manual review before merging.
             
-            ### Update Details
-            - **Dependency**: ${metadata.dependencyNames}
-            - **Previous Version**: ${metadata.previousVersion}
-            - **New Version**: ${metadata.newVersion}
-            - **Update Type**: ${metadata.updateType}
+            ### 📦 Update Details
             
-            ### Action Required
-            1. Review the [release notes](https://github.com/search?q=repo:${metadata.dependencyNames}+${metadata.newVersion}&type=releases)
-            2. Check for breaking changes
-            3. Update code if necessary
-            4. Manually approve and merge when ready
+            | Item | Value |
+            |------|-------|
+            | **Dependency** | \`${metadata.dependencyNames}\` |
+            | **Ecosystem** | ${metadata.ecosystem} |
+            | **Current Version** | \`${metadata.previousVersion}\` |
+            | **New Version** | \`${metadata.newVersion}\` |
+            | **Update Type** | \`${metadata.updateType}\` |
             
-            ### Resources
-            - [Dependency changelog](https://github.com/${metadata.dependencyNames}/releases)
-            - [Security advisories](https://github.com/${metadata.dependencyNames}/security/advisories)`;
+            ### ✅ Review Checklist
+            
+            - [ ] Review [release notes and changelog](https://github.com/search?q=repo: ${metadata.dependencyNames}+${metadata.newVersion}&type=releases)
+            - [ ] Check for [breaking changes](https://github.com/${metadata.dependencyNames}/releases)
+            - [ ] Review [security advisories](https://github.com/${metadata.dependencyNames}/security/advisories)
+            - [ ] Test locally if needed
+            - [ ] Update code for breaking changes
+            
+            ### 🔗 Useful Links
+            
+            - [📋 Release Notes](https://github.com/${metadata.dependencyNames}/releases)
+            - [🔒 Security](https://github.com/${metadata.dependencyNames}/security)
+            - [📚 Documentation](https://github.com/${metadata.dependencyNames})
+            
+            ---
+            
+            ℹ️ Once reviewed, manually approve and merge this PR.`;
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,

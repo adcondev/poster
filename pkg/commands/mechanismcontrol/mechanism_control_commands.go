@@ -1,7 +1,7 @@
 package mechanismcontrol
 
 import (
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ReturnHome moves the print head to the standby position.
@@ -32,7 +32,7 @@ import (
 //
 //	This function is safe and does not return errors.
 func (c *Commands) ReturnHome() []byte {
-	return []byte{common.ESC, '<'}
+	return []byte{shared.ESC, '<'}
 }
 
 // SetUnidirectionalPrintMode turns unidirectional print mode on or off.
@@ -70,7 +70,7 @@ func (c *Commands) ReturnHome() []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) SetUnidirectionalPrintMode(n UnidirectionalMode) []byte {
-	return []byte{common.ESC, 'U', byte(n)}
+	return []byte{shared.ESC, 'U', byte(n)}
 }
 
 // PartialCut executes a partial cut of the roll paper (one point left uncut).
@@ -104,7 +104,7 @@ func (c *Commands) SetUnidirectionalPrintMode(n UnidirectionalMode) []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) PartialCut() []byte {
-	return []byte{common.ESC, 'i'}
+	return []byte{shared.ESC, 'i'}
 }
 
 // PartialCutThreePoints executes a partial cut of the roll paper (three points left uncut).
@@ -138,7 +138,7 @@ func (c *Commands) PartialCut() []byte {
 //
 //	This function is safe and does not return errors.
 func (c *Commands) PartialCutThreePoints() []byte {
-	return []byte{common.ESC, 'm'}
+	return []byte{shared.ESC, 'm'}
 }
 
 // PaperCut executes a paper cut operation.
@@ -177,7 +177,7 @@ func (c *Commands) PaperCut(m CutType) ([]byte, error) {
 	if err := ValidateCutType(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, '(', 'V', 0x02, 0x00, 0x30, byte(m)}, nil
+	return []byte{shared.GS, '(', 'V', 0x02, 0x00, 0x30, byte(m)}, nil
 }
 
 // PaperFeedAndCut executes paper cut after feeding paper by the specified amount.
@@ -219,7 +219,7 @@ func (c *Commands) PaperFeedAndCut(m CutType, n byte) ([]byte, error) {
 	if err := ValidateCutType(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, '(', 'V', 0x03, 0x00, 0x31, byte(m), n}, nil
+	return []byte{shared.GS, '(', 'V', 0x03, 0x00, 0x31, byte(m), n}, nil
 }
 
 // ReservePaperCut reserves a paper cut operation to be executed during continuous printing.
@@ -267,7 +267,7 @@ func (c *Commands) ReservePaperCut(m CutType, n byte) ([]byte, error) {
 	if err := ValidateCutType(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, '(', 'V', 0x03, 0x00, 0x33, byte(m), n}, nil
+	return []byte{shared.GS, '(', 'V', 0x03, 0x00, 0x33, byte(m), n}, nil
 }
 
 // CutPaper executes paper cutting with the specified mode (Function A).
@@ -304,7 +304,7 @@ func (c *Commands) CutPaper(m CutMode) ([]byte, error) {
 	if err := ValidateCutMode(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'V', byte(m)}, nil
+	return []byte{shared.GS, 'V', byte(m)}, nil
 }
 
 // FeedAndCutPaper feeds paper to the specified position and executes paper cutting (Function B).
@@ -343,7 +343,7 @@ func (c *Commands) FeedAndCutPaper(m FeedCut, n byte) ([]byte, error) {
 	if err := ValidateFeedCutMode(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'V', byte(m), n}, nil
+	return []byte{shared.GS, 'V', byte(m), n}, nil
 }
 
 // SetCutPosition sets the paper cutting position and executes paper cut when it reaches the autocutter position (Function C).
@@ -389,7 +389,7 @@ func (c *Commands) SetCutPosition(m PositionCut, n byte) ([]byte, error) {
 	if err := ValidatePositionCutMode(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'V', byte(m), n}, nil
+	return []byte{shared.GS, 'V', byte(m), n}, nil
 }
 
 // FeedCutAndReturnPaper feeds paper to the specified position, executes paper cutting, and feeds paper to the print starting position (Function D).
@@ -430,5 +430,5 @@ func (c *Commands) FeedCutAndReturnPaper(m FeedCutReturn, n byte) ([]byte, error
 	if err := ValidateFeedCutReturnMode(m); err != nil {
 		return nil, err
 	}
-	return []byte{common.GS, 'V', byte(m), n}, nil
+	return []byte{shared.GS, 'V', byte(m), n}, nil
 }

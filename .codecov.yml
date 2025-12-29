@@ -1,0 +1,33 @@
+# Codecov configuration
+coverage:
+  status:
+    project:
+      default:
+        target: 80%                     # Target coverage
+        threshold: 1%                    # Allow 1% drop
+        if_ci_failed: error
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+ignore:
+  - "examples/**"                        # Don't track example code
+  - "**/*_test.go"                       # Don't track test files
+  - "cmd/**"                             # Don't track CLI code
+
+flags:
+  unittests:
+    paths:
+      - pkg/
+    carryforward: true
+
+github_checks:
+  annotations: true

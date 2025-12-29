@@ -5,7 +5,7 @@ import (
 
 	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/bitimage"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
 // ============================================================================
@@ -24,13 +24,13 @@ func TestDownloadGraphicsCommands_GetDownloadGraphicsRemainingCapacity(t *testin
 		{
 			name:    "function code 4",
 			fn:      bitimage.DLFuncGetRemaining,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 4},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 4},
 			wantErr: nil,
 		},
 		{
 			name:    "function code 52 (ASCII)",
 			fn:      bitimage.DLFuncGetRemainingASCII,
-			want:    []byte{common.GS, '(', 'L', 0x02, 0x00, 0x30, 52},
+			want:    []byte{shared.GS, '(', 'L', 0x02, 0x00, 0x30, 52},
 			wantErr: nil,
 		},
 		{
@@ -66,7 +66,7 @@ func TestDownloadGraphicsCommands_GetDownloadGraphicsRemainingCapacity(t *testin
 
 func TestDownloadGraphicsCommands_GetDownloadGraphicsKeyCodeList(t *testing.T) {
 	cmd := bitimage.NewDownloadGraphicsCommands()
-	want := []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x50, 'K', 'C'}
+	want := []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x50, 'K', 'C'}
 
 	got := cmd.GetDownloadGraphicsKeyCodeList()
 	testutils.AssertBytes(t, got, want, "GetDownloadGraphicsKeyCodeList()")
@@ -74,7 +74,7 @@ func TestDownloadGraphicsCommands_GetDownloadGraphicsKeyCodeList(t *testing.T) {
 
 func TestDownloadGraphicsCommands_DeleteAllDownloadGraphics(t *testing.T) {
 	cmd := bitimage.NewDownloadGraphicsCommands()
-	want := []byte{common.GS, '(', 'L', 0x05, 0x00, 0x30, 0x51, 'C', 'L', 'R'}
+	want := []byte{shared.GS, '(', 'L', 0x05, 0x00, 0x30, 0x51, 'C', 'L', 'R'}
 
 	got := cmd.DeleteAllDownloadGraphics()
 	testutils.AssertBytes(t, got, want, "DeleteAllDownloadGraphics()")
@@ -94,21 +94,21 @@ func TestDownloadGraphicsCommands_DeleteDownloadGraphicsByKeyCode(t *testing.T) 
 			name:    "valid key codes minimum",
 			kc1:     32,
 			kc2:     32,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 32, 32},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 32, 32},
 			wantErr: nil,
 		},
 		{
 			name:    "valid key codes typical",
 			kc1:     'L',
 			kc2:     '5',
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 'L', '5'},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 'L', '5'},
 			wantErr: nil,
 		},
 		{
 			name:    "valid key codes maximum",
 			kc1:     126,
 			kc2:     126,
-			want:    []byte{common.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 126, 126},
+			want:    []byte{shared.GS, '(', 'L', 0x04, 0x00, 0x30, 0x52, 126, 126},
 			wantErr: nil,
 		},
 		{
@@ -162,7 +162,7 @@ func TestDownloadGraphicsCommands_PrintDownloadGraphics(t *testing.T) {
 			kc2:             'Y',
 			horizontalScale: bitimage.NormalScale,
 			verticalScale:   bitimage.NormalScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'X', 'Y', 1, 1},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'X', 'Y', 1, 1},
 			wantErr:         nil,
 		},
 		{
@@ -171,7 +171,7 @@ func TestDownloadGraphicsCommands_PrintDownloadGraphics(t *testing.T) {
 			kc2:             'B',
 			horizontalScale: bitimage.DoubleScale,
 			verticalScale:   bitimage.NormalScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'A', 'B', 2, 1},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'A', 'B', 2, 1},
 			wantErr:         nil,
 		},
 		{
@@ -180,7 +180,7 @@ func TestDownloadGraphicsCommands_PrintDownloadGraphics(t *testing.T) {
 			kc2:             'D',
 			horizontalScale: bitimage.NormalScale,
 			verticalScale:   bitimage.DoubleScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'C', 'D', 1, 2},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'C', 'D', 1, 2},
 			wantErr:         nil,
 		},
 		{
@@ -189,7 +189,7 @@ func TestDownloadGraphicsCommands_PrintDownloadGraphics(t *testing.T) {
 			kc2:             'F',
 			horizontalScale: bitimage.DoubleScale,
 			verticalScale:   bitimage.DoubleScale,
-			want:            []byte{common.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'E', 'F', 2, 2},
+			want:            []byte{shared.GS, '(', 'L', 0x06, 0x00, 0x30, 0x55, 'E', 'F', 2, 2},
 			wantErr:         nil,
 		},
 		{

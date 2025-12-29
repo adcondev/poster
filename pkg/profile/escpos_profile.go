@@ -2,7 +2,7 @@ package profile
 
 import (
 	"github.com/adcondev/poster/pkg/commands/character"
-	"github.com/adcondev/poster/pkg/commands/common"
+	"github.com/adcondev/poster/pkg/commands/shared"
 	"github.com/adcondev/poster/pkg/graphics"
 )
 
@@ -94,7 +94,7 @@ func CreateProfile80mm() *Escpos {
 
 		PaperWidth:  80,
 		DPI:         203,
-		DotsPerLine: common.Dpl80mm203dpi, // Típico para 80mm (72mm) a 203 DPI
+		DotsPerLine: shared.Dpl80mm203dpi, // Típico para 80mm (72mm) a 203 DPI
 
 		SupportsGraphics: true,
 		SupportsBarcode:  true,
