@@ -5,6 +5,19 @@ All notable changes to the POS Printer library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [](https://github.com/adcondev/poster/compare/v4.3.0...v) (2025-12-29)
+
+
+### 🐛 Bug Fixes
+
+* **npm:** restore package version from null to 4.3.0 ([9517910](https://github.com/adcondev/poster/commit/95179103055e1b64caa3b210b289729e87663195))
+* **npm:** update package name and dependencies for poster library ([#94](https://github.com/adcondev/poster/issues/94)) ([ac2ce69](https://github.com/adcondev/poster/commit/ac2ce69b3ff279e73ee962673afa752876e9d80f)), closes [#92](https://github.com/adcondev/poster/issues/92)
+
+
+### 🤖 Continuous Integration
+
+* **gh-actions:** enhance Github Actions workflows ([#91](https://github.com/adcondev/poster/issues/91)) ([480b2ea](https://github.com/adcondev/poster/commit/480b2eaa8b7daadfb734cb7a10a29564ebb66396)), closes [#92](https://github.com/adcondev/poster/issues/92)
+
 ## [4.3.0](https://github.com/adcondev/poster/compare/v4.2.0...v4.3.0) (2025-12-19)
 
 ### ✨ Features
