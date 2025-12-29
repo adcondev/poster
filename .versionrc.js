@@ -22,7 +22,7 @@ module.exports = {
     userUrlFormat: "https://github.com/{{user}}",
 
     // Skip CI on release commits
-    releaseCommitMessageFormat: "chore(release): v{{currentTag}} [skip ci]",
+    releaseCommitMessageFormat: "chore(release): {{currentTag}} [skip ci]",
 
     // Custom header for CHANGELOG
     header: "# Changelog\n\nAll notable changes to the POS Printer library will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n",
