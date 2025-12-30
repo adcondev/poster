@@ -27,7 +27,7 @@ module.exports = {
     // Custom header for CHANGELOG
     header: "# Changelog\n\nAll notable changes to the POS Printer library will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n",
 
-    // ✅ CORRECCIÓN: Solo una configuración de archivos
+    // Bump files configuration
     bumpFiles: [
         {
             filename: "package.json",
@@ -35,7 +35,7 @@ module.exports = {
         }
     ],
 
-    // ✅ CORRECCIÓN: Lifecycle scripts
+    // Lifecycle scripts
     scripts: {
         prebump: "echo 'Preparing release...'",
         postbump: "echo 'Version bumped successfully'",

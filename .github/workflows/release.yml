@@ -1,6 +1,8 @@
-name: Release
+name: Release (TEST)
 
 on:
+  push:
+    branches: [ test-release-workflow ]
   workflow_run:
     workflows: [ "CI" ]
     types: [ completed ]
@@ -20,8 +22,10 @@ jobs:
     name: 🚀 Create Release
     runs-on: ubuntu-latest
     if: |
+      (github.event_name == 'push') ||
+      (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
-      ! contains(github.event.workflow_run.head_commit.message, '[skip release]')
+      ! contains(github.event.workflow_run.head_commit.message, '[skip release]'))
 
     steps:
       - name: Generate GitHub App token
@@ -37,7 +41,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - name: Setup Git
         run: |
@@ -111,13 +115,14 @@ jobs:
         id: release
         run: |
           set -e
-          
+
           npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}
-          
+
           NEW_VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-          git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}
+
+          BRANCH=${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+          git push --follow-tags origin $BRANCH
 
       - name: Extract release notes
         if: steps.analyze.outputs.should_release == 'true'
