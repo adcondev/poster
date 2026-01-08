@@ -1,4 +1,4 @@
-module github.com/adcondev/poster/v4
+module github.com/adcondev/poster
 
 go 1.24.6
 
