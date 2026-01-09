@@ -169,15 +169,15 @@ Genera códigos de barras:
 }
 ```
 
-| Campo          | Tipo    | Requerido | Descripción           | Default | Valores                                                  |
-|----------------|---------|-----------|-----------------------|---------|----------------------------------------------------------|
-| `symbology`    | string  | ✓         | Tipo de simbología    |         | UPC-A, UPC-E, EAN13, EAN8, CODE39, CODE128, ITF, CODABAR |
-| `data`         | string  | ✓         | Datos a codificar     |         | 1-25 caracteres                                          |
-| `width`        | integer |           | Ancho del módulo      |         | 2-6                                                      |
-| `height`       | integer |           | Altura en puntos      |         | 1-255                                                    |
-| `hri_position` | string  |           | Posición del HRI      | below   | none, above, below, both                                 |
-| `hri_font`     | string  |           | Fuente para HRI       | A       | A, B                                                     |
-| `align`        | string  |           | Alineación del código | center  | left, center, right                                      |
+| Campo          | Tipo    | Requerido | Descripción           | Default | Valores                                                |
+|----------------|---------|-----------|-----------------------|---------|--------------------------------------------------------|
+| `symbology`    | string  | ✓         | Tipo de simbología    |         | upca, upce, ean13, ean8, code39, code128, itf, codabar |
+| `data`         | string  | ✓         | Datos a codificar     |         | 1-25 caracteres                                        |
+| `width`        | integer |           | Ancho del módulo      |         | 2-6                                                    |
+| `height`       | integer |           | Altura en puntos      |         | 1-255                                                  |
+| `hri_position` | string  |           | Posición del HRI      | below   | none, above, below, both                               |
+| `hri_font`     | string  |           | Fuente para HRI       | A       | A, B                                                   |
+| `align`        | string  |           | Alineación del código | center  | left, center, right                                    |
 
 ### 4. QR Command
 
@@ -377,6 +377,48 @@ Envía bytes directamente a la impresora sin procesamiento:
 
 - Máximo 4096 bytes por comando
 - Solo caracteres hexadecimales válidos
+
+### 10. Pulse Command
+
+Genera un pulso eléctrico (apertura de cajón).
+
+```json
+{
+  "type": "pulse",
+  "data": {
+    "pin": 0,
+    "on_time": 50,
+    "off_time": 100
+  }
+}
+
+```
+
+| Campo      | Tipo | Descripción              | Default |
+|------------|------|--------------------------|---------|
+| `pin`      | int  | Pin del conector (0 o 1) | 0       |
+| `on_time`  | int  | Tiempo encendido en ms   | 50      |
+| `off_time` | int  | Tiempo apagado en ms     | 100     |
+
+### 11. Beep Command
+
+Emite un sonido de alerta (si la impresora cuenta con buzzer).
+
+```json
+{
+  "type": "beep",
+  "data": {
+    "times": 2,
+    "lapse": 1
+  }
+}
+
+```
+
+| Campo   | Tipo | Descripción                  | Default |
+|---------|------|------------------------------|---------|
+| `times` | int  | Cantidad de pitidos          | 1       |
+| `lapse` | int  | Factor de duración/intervalo | 1       |
 
 ## Ejemplo Completo
 
