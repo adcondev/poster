@@ -1,0 +1,69 @@
+//go:build windows
+
+package connection
+
+// PrinterDetail contains detailed information about an installed printer.
+// Note: Status reflects the last known state from the Windows Spooler,
+// which may not reflect real-time connectivity for USB/Serial printers.
+type PrinterDetail struct {
+	Name        string       `json:"name"`
+	Port        string       `json:"port"`
+	Driver      string       `json:"driver"`
+	Status      PrinterState `json:"status"`
+	StatusRaw   uint32       `json:"status_raw,omitempty"`
+	IsDefault   bool         `json:"is_default"`
+	IsVirtual   bool         `json:"is_virtual"`
+	PrinterType string       `json:"printer_type"` // "thermal", "virtual", "network", "unknown"
+}
+
+// PrinterState represents the interpreted printer status
+type PrinterState string
+
+const (
+	StateReady   PrinterState = "ready"
+	StateOffline PrinterState = "offline"
+	StatePaused  PrinterState = "paused"
+	StateError   PrinterState = "error"
+	StateUnknown PrinterState = "unknown"
+)
+
+// virtualPrinterPatterns - names that indicate virtual/software printers
+var virtualPrinterPatterns = []string{
+	"microsoft print to pdf",
+	"microsoft xps document writer",
+	"onenote",
+	"fax",
+	"send to onenote",
+	"adobe pdf",
+	"cutepdf",
+	"pdfcreator",
+	"foxit",
+	"dopdf",
+	"bullzip",
+	"primopdf",
+	"nitro",
+}
+
+// thermalDriverPatterns - patterns that suggest ESC/POS thermal printers
+var thermalDriverPatterns = []string{
+	"epson",
+	"star",
+	"citizen",
+	"bixolon",
+	"sewoo",
+	"pos-",
+	"thermal",
+	"receipt",
+	"esc/pos",
+	"zj-",
+	"xp-",
+	"pt-",
+	"ec-pm",
+	"gp-",
+	"tsc",
+	"zebra",
+	"honeywell",
+	"datamax",
+	"58mm",
+	"80mm",
+}
