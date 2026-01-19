@@ -65,7 +65,7 @@ func main() {
 	}
 
 	if config.JSONFile == "" {
-		log.Fatal("Error: JSON file is required.  Use -h for help")
+		log.Fatal("Error: JSON file is required. Use -h for help")
 	}
 
 	if err := executePrint(config); err != nil {
@@ -87,11 +87,11 @@ func parseArgs() *Config {
 	flag.StringVar(&config.PrinterName, "printer", "", "Printer name")
 	flag.StringVar(&config.PrinterName, "p", "", "Printer name (short)")
 
-	flag.StringVar(&config.ConnectionType, "type", win, "Connection type:  windows, network, serial, file")
+	flag.StringVar(&config.ConnectionType, "type", win, "Connection type: windows, network, serial, file")
 	flag.StringVar(&config.ConnectionType, "t", win, "Connection type (short)")
 
 	// TODO: Following flags will work when connection is developed
-	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e. g., 192.168.1.100:9100)")
+	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e.g., 192.168.1.100:9100)")
 	flag.StringVar(&config.SerialPort, "serial", "", "Serial port (e.g., COM1, /dev/ttyUSB0)")
 	flag.IntVar(&config.BaudRate, "baud", 9600, "Serial baud rate")
 	flag.StringVar(&config.OutputFile, "output", "output.prn", "Output file for file type")
@@ -158,7 +158,7 @@ OPTIONS:
 CONNECTION TYPES:
   windows  - Windows printer (default)
   network  - Network printer
-  serial   - Serial/USB printer  
+  serial   - Serial/USB printer
   file     - Output to file
 
 PRINTER LISTING (Windows only):
@@ -175,11 +175,11 @@ NOTES:
 func listPrinters(config *Config) {
 	printers, err := connection.ListAvailablePrinters()
 	if err != nil {
-		// En Windows, el error de syscall puede ser "success" incluso cuando funciona
+		// In Windows, syscall errors may occur; fail only if no printers found
 		if len(printers) == 0 {
 			log.Fatalf("Failed to enumerate printers: %v", err)
 		}
-		// Log warning pero continuar si hay resultados
+		// Warning log but continue if there are some printers found
 		log.Printf("Warning during printer enumeration: %v", err)
 	}
 
@@ -218,14 +218,14 @@ func listPrinters(config *Config) {
 		}
 
 		fmt.Printf("  Name:    %s%s%s\n", p.Name, defaultMark, virtualMark)
-		fmt.Printf("  Port:   %s\n", p.Port)
+		fmt.Printf("  Port:    %s\n", p.Port)
 		fmt.Printf("  Driver: %s\n", p.Driver)
 		fmt.Printf("  Status: %s\n", p.Status)
-		fmt.Printf("  Type:   %s\n", p.PrinterType)
+		fmt.Printf("  Type:    %s\n", p.PrinterType)
 		fmt.Println()
 	}
 
-	fmt.Printf("Total:  %d printer(s)\n", len(printers))
+	fmt.Printf("Total: %d printer(s)\n", len(printers))
 }
 
 func executePrint(config *Config) error {

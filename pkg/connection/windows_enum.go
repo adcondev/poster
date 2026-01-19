@@ -62,7 +62,7 @@ var (
 func ListAvailablePrinters() ([]PrinterDetail, error) {
 	// First call:  get required buffer size
 	var needed, returned uint32
-	_, _, err := procEnumPrinters.Call(
+	_, _, _ = procEnumPrinters.Call(
 		uintptr(PrinterEnumLocal|PrinterEnumConnections),
 		0, 2, 0, 0,
 		//nolint:gosec // Required for Windows API
@@ -70,9 +70,6 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&returned)),
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	if needed == 0 {
 		return []PrinterDetail{}, nil
@@ -129,10 +126,7 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 func getDefaultPrinterName() string {
 	var size uint32
 	//nolint:gosec // Required for Windows API
-	_, _, err := procGetDefaultPrinter.Call(0, uintptr(unsafe.Pointer(&size)))
-	if err != nil {
-		return ""
-	}
+	_, _, _ = procGetDefaultPrinter.Call(0, uintptr(unsafe.Pointer(&size)))
 
 	if size == 0 {
 		return ""

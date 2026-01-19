@@ -1,5 +1,4 @@
 module.exports = {
-    // Types for changelog sections
     types: [
         {type: "feat", section: "✨ Features"},
         {type: "fix", section: "🐛 Bug Fixes"},
@@ -15,33 +14,34 @@ module.exports = {
         {type: "chore", hidden: true}
     ],
 
-    // URL formats
     commitUrlFormat: "https://github.com/adcondev/poster/commit/{{hash}}",
     compareUrlFormat: "https://github.com/adcondev/poster/compare/{{previousTag}}...{{currentTag}}",
     issueUrlFormat: "https://github.com/adcondev/poster/issues/{{id}}",
     userUrlFormat: "https://github.com/{{user}}",
 
-    // Release commit message
-    releaseCommitMessageFormat: "chore(release): {{currentTag}} [skip ci]",
+    // FIX: Restore 'v' prefix logic and skip-ci to prevent loops
+    releaseCommitMessageFormat: "chore(release): v{{currentTag}} [skip ci]",
 
-    // Custom header for CHANGELOG
-    header: "# Changelog\n\nAll notable changes to the POS Printer library will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n",
+    header: "# Changelog\n\nAll notable changes to Poster will be documented in this file.\n",
 
-    // ✅ CORRECCIÓN: Solo una configuración de archivos
+    // FIX: Update both package and lock file
     bumpFiles: [
         {
             filename: "package.json",
             type: "json"
+        },
+        {
+            filename: "package-lock.json",
+            type: "json"
         }
     ],
 
-    // ✅ CORRECCIÓN: Lifecycle scripts
+    // FIX: Removed Go-specific scripts that crash the Node.js environment
     scripts: {
         prebump: "echo 'Preparing release...'",
-        postbump: "echo 'Version bumped successfully'",
-        precommit: "go mod tidy && git add go.mod go.sum",
+        postbump: "echo 'Version bumped to {{currentTag}}'",
         postcommit: "echo 'Release commit created'",
-        pretag: "echo 'Creating tag...'",
-        posttag: "echo 'Release v{{currentTag}} tagged successfully'"
+        pretag: "echo 'Creating tag v{{currentTag}}...'",
+        posttag: "echo 'Tag v{{currentTag}} created successfully'"
     }
 };

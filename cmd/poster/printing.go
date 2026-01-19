@@ -37,11 +37,11 @@ func detectPrinter() string {
 			}
 		}
 		// Otherwise use first thermal printer
-		log.Printf("Auto-detected thermal printer:  %s", thermalPrinters[0].Name)
+		log.Printf("Auto-detected thermal printer: %s", thermalPrinters[0].Name)
 		return thermalPrinters[0].Name
 	}
 
-	// Fallback:  search for common printer name patterns
+	// Fallback: search for common printer name patterns
 	commonPatterns := []string{
 		"pos-80", "pos-58", "80mm", "58mm",
 		"pt-210", "gp-58", "ec-pm",

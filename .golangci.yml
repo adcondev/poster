@@ -34,11 +34,14 @@ linters:
     - unconvert      # Removes unnecessary type conversions (cleans up code).
     - nolintlint     # Reports ill-formed or unnecessary //nolint directives.
 
-    # --- 4. Code Style & Complexity ---
+    # --- 3. Code Style & Complexity ---
     - revive         # Fast, configurable, extensible, flexible, and beautiful drop-in replacement for golint.
     - goconst        # Finds repeated strings that could be replaced by a constant.
     - gocritic       # Provides diagnostics that check for bugs, performance, and style issues. Very opinionated.
     - gocyclo        # Computes and checks the cyclomatic complexity of functions.
+    - gosec          # Inspects source code for security problems (SQL injection, weak crypto, etc.).
+
+    # --- 4. Performance (Optional) ---
     - gosec          # Inspects source code for security problems (SQL injection, weak crypto, etc.).
 
     # --- 5. Performance (Optional) ---
