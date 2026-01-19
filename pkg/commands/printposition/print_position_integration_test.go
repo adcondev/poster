@@ -11,7 +11,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("complete standard mode positioning", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 64)
 
 		// Set up print area
 		buffer = append(buffer, cmd.SetLeftMargin(50)...)
@@ -57,7 +57,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 	})
 
 	t.Run("justification modes", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 32)
 
 		// Test all justification modes
 		modes := []struct {
@@ -89,7 +89,7 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 	})
 
 	t.Run("tab position workflow", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 32)
 
 		// Clear tabs first
 		clearCmd, err := cmd.SetHorizontalTabPositions([]byte{})
@@ -119,7 +119,8 @@ func TestIntegration_PrintPosition_StandardModeWorkflow(t *testing.T) {
 	})
 
 	t.Run("relative and absolute positioning mix", func(t *testing.T) {
-		var buffer []byte
+		// 6 modes × 3 bytes per command = 18 bytes
+		var buffer = make([]byte, 0, 18)
 
 		// Start at absolute position
 		buffer = append(buffer, cmd.SetAbsolutePrintPosition(100)...)
@@ -150,7 +151,8 @@ func TestIntegration_PrintPosition_PageModeWorkflow(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("complete page mode setup", func(t *testing.T) {
-		var buffer []byte
+		// Area(10) + 2 absolute(8) + ~6 relative(24) = ~42 bytes
+		var buffer = make([]byte, 0, 64)
 
 		// Set print direction
 		dirCmd, err := cmd.SelectPrintDirectionPageMode(LeftToRight)
@@ -274,7 +276,8 @@ func TestIntegration_PrintPosition_PageModeWorkflow(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				var buffer []byte
+				// Direction(3) + area(10) = 13 bytes
+				var buffer = make([]byte, 0, 16)
 
 				// Set direction
 				dirCmd, err := cmd.SelectPrintDirectionPageMode(tc.direction)
@@ -303,7 +306,8 @@ func TestIntegration_PrintPosition_MixedModeTransitions(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("standard to page mode transition", func(t *testing.T) {
-		var buffer []byte
+		// Multiple commands, estimate ~50 bytes
+		var buffer = make([]byte, 0, 64)
 
 		// Standard mode setup
 		buffer = append(buffer, cmd.SetLeftMargin(20)...)
@@ -337,7 +341,8 @@ func TestIntegration_PrintPosition_MixedModeTransitions(t *testing.T) {
 	})
 
 	t.Run("beginning of line operations", func(t *testing.T) {
-		var buffer []byte
+		// 2 absolute(8) + 4 begin line(12) = 20 bytes
+		var buffer = make([]byte, 0, 32)
 
 		// Position somewhere
 		buffer = append(buffer, cmd.SetAbsolutePrintPosition(200)...)
@@ -384,7 +389,8 @@ func TestIntegration_PrintPosition_EdgeCases(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("maximum values", func(t *testing.T) {
-		var buffer []byte
+		// Many max commands, estimate ~80 bytes
+		var buffer = make([]byte, 0, 128)
 
 		// Maximum positions
 		buffer = append(buffer, cmd.SetAbsolutePrintPosition(65535)...)
@@ -416,7 +422,8 @@ func TestIntegration_PrintPosition_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("minimum values", func(t *testing.T) {
-		var buffer []byte
+		// Similar to maximum values
+		var buffer = make([]byte, 0, 64)
 
 		// Minimum positions (zero)
 		buffer = append(buffer, cmd.SetAbsolutePrintPosition(0)...)
@@ -543,7 +550,8 @@ func TestIntegration_PrintPosition_RealWorldScenarios(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("receipt header alignment", func(t *testing.T) {
-		var buffer []byte
+		// 4 justification commands × 3 bytes = 12 bytes
+		var buffer = make([]byte, 0, 16)
 
 		// Center company name
 		centerCmd, _ := cmd.SelectJustification(Center)
@@ -605,7 +613,8 @@ func TestIntegration_PrintPosition_RealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("barcode positioning", func(t *testing.T) {
-		var buffer []byte
+		// Tab setup + many HT commands, estimate ~50 bytes
+		var buffer = make([]byte, 0, 64)
 
 		// Set narrow print area for product label
 		buffer = append(buffer, cmd.SetLeftMargin(50)...)
@@ -632,7 +641,8 @@ func TestIntegration_PrintPosition_RealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("multi-column layout in page mode", func(t *testing.T) {
-		var buffer []byte
+		// Margins(8) + justifications(6) + position(4) + begin(3) = ~21 bytes
+		var buffer = make([]byte, 0, 32)
 
 		// Set up page mode for two-column layout
 		dirCmd, _ := cmd.SelectPrintDirectionPageMode(LeftToRight)

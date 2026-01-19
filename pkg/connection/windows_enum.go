@@ -62,12 +62,17 @@ var (
 func ListAvailablePrinters() ([]PrinterDetail, error) {
 	// First call:  get required buffer size
 	var needed, returned uint32
-	procEnumPrinters.Call(
+	_, _, err := procEnumPrinters.Call(
 		uintptr(PrinterEnumLocal|PrinterEnumConnections),
 		0, 2, 0, 0,
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&needed)),
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&returned)),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	if needed == 0 {
 		return []PrinterDetail{}, nil
@@ -78,9 +83,12 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 	r1, _, err := procEnumPrinters.Call(
 		uintptr(PrinterEnumLocal|PrinterEnumConnections),
 		0, 2,
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&buf[0])),
 		uintptr(needed),
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&needed)),
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&returned)),
 	)
 
@@ -89,10 +97,14 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 	}
 
 	defaultPrinter := getDefaultPrinterName()
+	if defaultPrinter == "" {
+		defaultPrinter = "<none>"
+	}
 	printers := make([]PrinterDetail, 0, returned)
 	infoSize := unsafe.Sizeof(printerInfo2{})
 
 	for i := uint32(0); i < returned; i++ {
+		//nolint:gosec // Required for Windows API - casting buffer to struct pointer
 		info := (*printerInfo2)(unsafe.Pointer(&buf[uintptr(i)*infoSize]))
 
 		name := utf16PtrToString(info.pPrinterName)
@@ -116,7 +128,11 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 
 func getDefaultPrinterName() string {
 	var size uint32
-	procGetDefaultPrinter.Call(0, uintptr(unsafe.Pointer(&size)))
+	//nolint:gosec // Required for Windows API
+	_, _, err := procGetDefaultPrinter.Call(0, uintptr(unsafe.Pointer(&size)))
+	if err != nil {
+		return ""
+	}
 
 	if size == 0 {
 		return ""
@@ -124,7 +140,9 @@ func getDefaultPrinterName() string {
 
 	buf := make([]uint16, size)
 	r1, _, _ := procGetDefaultPrinter.Call(
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&buf[0])),
+		//nolint:gosec // Required for Windows API
 		uintptr(unsafe.Pointer(&size)),
 	)
 
@@ -139,13 +157,16 @@ func utf16PtrToString(p *uint16) string {
 		return ""
 	}
 	// Find length
+	//nolint:gosec // Required for Windows API - pointer arithmetic for UTF-16 string
 	end := unsafe.Pointer(p)
 	n := 0
+	//nolint:gosec // Required for Windows API - reading UTF-16 characters
 	for *(*uint16)(unsafe.Pointer(uintptr(end) + uintptr(n)*2)) != 0 {
 		n++
 	}
 	s := make([]uint16, n)
 	for i := 0; i < n; i++ {
+		//nolint:gosec // Required for Windows API - copying UTF-16 characters
 		s[i] = *(*uint16)(unsafe.Pointer(uintptr(end) + uintptr(i)*2))
 	}
 	return syscall.UTF16ToString(s)
