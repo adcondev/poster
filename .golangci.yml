@@ -1,61 +1,59 @@
-# golangci-lint configuration for Poster
+# golangci-lint configuration file
 # Reference: https://golangci-lint.run/usage/configuration/
-
+# Config format version
 version: "2"
+
 run:
-  timeout: 5m  # 5 minutos es suficiente
+  # Timeout for analysis, e.g. 30s, 5m.
+  # 5m is usually enough for medium-sized projects.
+  timeout: 5m
+
+  # Include test files in the analysis.
   tests: true
+
+  # Build tags to include integration tests or specific build modes.
   build-tags:
     - integration
+
+  # Ensure modules are not downloaded during linting (CI friendly).
   modules-download-mode: readonly
 
 linters:
-  # Solo habilitar los esenciales
   enable:
-    # Critical - Must pass
-    - errcheck       # Check for unchecked errors
-    - govet          # Vet examines Go source code
-    - staticcheck    # Advanced Go linter
-    - ineffassign    # Detect ineffectual assignments
-    - gosec          # Security problems
-    - unused         # Check for unused code
+    # --- 1. Critical Bugs & Static Analysis (Must Pass) ---
+    - govet          # Official Go tool. Reports suspicious constructs (printf args, shadow variables, etc.).
+    - errcheck       # Forces checking of all returned errors. Essential for robust code.
+    - staticcheck    # The "Gold Standard" for Go. Detects bugs, simplifications, and useless code.
+    - unused         # Checks for unused constants, variables, functions, and types.
+    - ineffassign    # Detects when assignments to existing variables are not used (often a logic bug).
 
-    # Code Quality
-    - gocyclo        # Cyclomatic complexity
-    - gocritic       # Most opinionated linter
-    - unparam        # Unused function parameters
-    - revive         # Fast, configurable, extensible
+    # --- 2. Modern Go Idioms & Best Practices ---
+    - errorlint      # Enforces Go 1.13+ error wrapping (errors.Is/As) instead of direct comparisons.
+    - bodyclose      # Checks whether HTTP response body is closed successfully (prevents memory leaks).
+    - noctx          # Finds HTTP requests sent without a context.Context (critical for timeouts/cancellation).
+    - unconvert      # Removes unnecessary type conversions (cleans up code).
+    - nolintlint     # Reports ill-formed or unnecessary //nolint directives.
 
-    # Best Practices
-    - prealloc       # Slice preallocation
-    - bodyclose      # Check HTTP body is closed
-    - goconst        # Repeated strings that could be constants
-    - unconvert      # Remove unnecessary type conversions
-    # - misspell       # Spelling mistakes (not for now)
-    - nolintlint     # Ensure nolint directives are valid
+    # --- 4. Code Style & Complexity ---
+    - revive         # Fast, configurable, extensible, flexible, and beautiful drop-in replacement for golint.
+    - goconst        # Finds repeated strings that could be replaced by a constant.
+    - gocritic       # Provides diagnostics that check for bugs, performance, and style issues. Very opinionated.
+    - gocyclo        # Computes and checks the cyclomatic complexity of functions.
+    - gosec          # Inspects source code for security problems (SQL injection, weak crypto, etc.).
 
-    # Error Handling
-    - errorlint      # Error wrapping issues
-    - errname        # Error naming conventions
-
-    # Code Clarity
-    # - godot          # Check comments end in period
-    - whitespace     # Whitespace issues
-
-    # Performance (optional but recommended)
-    - noctx          # HTTP requests without context
+    # --- 5. Performance (Optional) ---
+    - prealloc       # Finds slice declarations that could potentially be preallocated.
 
 issues:
+  # Maximum issues count per one linter. Set to 0 to disable.
   max-issues-per-linter: 0
-  max-same-issues: 0
-  new: false
-  fix: false
 
-severity:
-  default: error
-  rules:
-    - linters:
-        - errcheck
-        - govet
-        - staticcheck
-      severity: error
+  # Maximum count of issues with the same text. Set to 0 to disable.
+  max-same-issues: 0
+
+  # Show only new issues: if there are unstaged changes or untracked files, only those issues are reported.
+  new: false
+
+  # Try to automatically fix issues (like imports or simple style stuff).
+  # Run `golangci-lint run --fix` manually instead of enabling this permanently in CI.
+  fix: false
