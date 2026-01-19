@@ -229,7 +229,7 @@ func detectPrinterType(name, port, driver string) string {
 
 // FilterThermalPrinters returns only thermal/POS printers
 func FilterThermalPrinters(printers []PrinterDetail) []PrinterDetail {
-	result := make([]PrinterDetail, 0)
+	result := make([]PrinterDetail, 0, len(printers)/2)
 	for _, p := range printers {
 		if p.PrinterType == "thermal" {
 			result = append(result, p)
@@ -240,7 +240,7 @@ func FilterThermalPrinters(printers []PrinterDetail) []PrinterDetail {
 
 // FilterPhysicalPrinters returns non-virtual printers
 func FilterPhysicalPrinters(printers []PrinterDetail) []PrinterDetail {
-	result := make([]PrinterDetail, 0)
+	result := make([]PrinterDetail, 0, len(printers)/2)
 	for _, p := range printers {
 		if !p.IsVirtual {
 			result = append(result, p)

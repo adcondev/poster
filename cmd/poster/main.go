@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 
 	"github.com/adcondev/poster/pkg/composer"
@@ -18,20 +19,23 @@ import (
 
 const (
 	AppName    = "poster"
-	AppVersion = "1.0.0"
+	AppVersion = "4.4.0"
 	AppAuthor  = "adcondev"
 	win        = "windows"
 )
 
 type Config struct {
 	JSONFile       string
+	JSONOutput     bool
 	PrinterName    string
 	DryRun         bool
 	Debug          bool
 	Version        bool
 	Help           bool
 	ListPrinters   bool
-	ConnectionType string // windows, network, serial, file
+	ListThermal    bool
+	ListPhysical   bool
+	ConnectionType string
 	NetworkAddr    string
 	SerialPort     string
 	BaudRate       int
@@ -51,13 +55,17 @@ func main() {
 		return
 	}
 
-	if config.ListPrinters && runtime.GOOS == win {
-		listWindowsPrinters()
+	// Handle printer listing options
+	if config.ListPrinters || config.ListThermal || config.ListPhysical {
+		if runtime.GOOS != win {
+			log.Fatal("Printer listing is only available on Windows")
+		}
+		listPrinters(config)
 		return
 	}
 
 	if config.JSONFile == "" {
-		log.Fatal("Error: JSON file is required. Use -h for help")
+		log.Fatal("Error: JSON file is required.  Use -h for help")
 	}
 
 	if err := executePrint(config); err != nil {
@@ -70,24 +78,29 @@ func main() {
 func parseArgs() *Config {
 	config := &Config{}
 
-	// Define flags
+	// Short and long flags share the same destination variable
 	flag.StringVar(&config.JSONFile, "file", "", "JSON document file path")
-	flag.StringVar(&config.JSONFile, "f", "", "JSON document file path (short)")
+	flag.StringVar(&config.JSONFile, "f", "", "JSON document file path (shorthand)")
+
+	flag.BoolVar(&config.JSONOutput, "json", false, "Output in JSON format (for --list commands)")
 
 	flag.StringVar(&config.PrinterName, "printer", "", "Printer name")
 	flag.StringVar(&config.PrinterName, "p", "", "Printer name (short)")
 
-	flag.StringVar(&config.ConnectionType, "type", win, "Connection type: windows, network, serial, file")
+	flag.StringVar(&config.ConnectionType, "type", win, "Connection type:  windows, network, serial, file")
 	flag.StringVar(&config.ConnectionType, "t", win, "Connection type (short)")
 
-	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e.g., 192.168.1.100:9100)")
+	// TODO: Following flags will work when connection is developed
+	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e. g., 192.168.1.100:9100)")
 	flag.StringVar(&config.SerialPort, "serial", "", "Serial port (e.g., COM1, /dev/ttyUSB0)")
 	flag.IntVar(&config.BaudRate, "baud", 9600, "Serial baud rate")
 	flag.StringVar(&config.OutputFile, "output", "output.prn", "Output file for file type")
 
 	flag.BoolVar(&config.DryRun, "dry-run", false, "Validate without printing")
 	flag.BoolVar(&config.Debug, "debug", false, "Enable debug logging")
-	flag.BoolVar(&config.ListPrinters, "list", false, "List available printers (Windows only)")
+	flag.BoolVar(&config.ListPrinters, "list", false, "List all available printers (Windows only)")
+	flag.BoolVar(&config.ListThermal, "list-thermal", false, "List thermal/POS printers only (Windows only)")
+	flag.BoolVar(&config.ListPhysical, "list-physical", false, "List physical printers only (Windows only)")
 	flag.BoolVar(&config.Version, "version", false, "Show version")
 	flag.BoolVar(&config.Version, "v", false, "Show version (short)")
 	flag.BoolVar(&config.Help, "help", false, "Show help")
@@ -132,9 +145,12 @@ EXAMPLES:
   %s -t serial -serial COM1 -baud 115200 ticket.json
   %s -t file -output receipt.prn ticket.json
   %s --dry-run ticket.json
+  %s --list
+  %s --list-thermal
+  %s --list-physical
 
 OPTIONS:
-`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
+`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
 
 	flag.PrintDefaults()
 
@@ -145,16 +161,71 @@ CONNECTION TYPES:
   serial   - Serial/USB printer  
   file     - Output to file
 
+PRINTER LISTING (Windows only):
+  --list          List all installed printers
+  --list-thermal  List only thermal/POS printers
+  --list-physical List only physical (non-virtual) printers
+
 NOTES:
   - If no printer is specified, attempts to auto-detect common models
   - JSON files should follow the poster document format
   - Use --dry-run to validate JSON without printing`)
 }
 
-func listWindowsPrinters() {
-	fmt.Println("Available printers:")
-	// TODO: Implement Windows printer listing using winspool.dll
-	fmt.Println("  (Feature not yet implemented)")
+func listPrinters(config *Config) {
+	printers, err := connection.ListAvailablePrinters()
+	if err != nil {
+		// En Windows, el error de syscall puede ser "success" incluso cuando funciona
+		if len(printers) == 0 {
+			log.Fatalf("Failed to enumerate printers: %v", err)
+		}
+		// Log warning pero continuar si hay resultados
+		log.Printf("Warning during printer enumeration: %v", err)
+	}
+
+	// Apply filters
+	switch {
+	case config.ListThermal:
+		printers = connection.FilterThermalPrinters(printers)
+		fmt.Println("Thermal/POS Printers:")
+	case config.ListPhysical:
+		printers = connection.FilterPhysicalPrinters(printers)
+		fmt.Println("Physical Printers:")
+	default:
+		fmt.Println("All Available Printers:")
+	}
+
+	if len(printers) == 0 {
+		fmt.Println("  No printers found.")
+		return
+	} else if config.JSONOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(printers)
+		return
+	}
+
+	fmt.Println()
+	for _, p := range printers {
+		defaultMark := ""
+		if p.IsDefault {
+			defaultMark = " [DEFAULT]"
+		}
+
+		virtualMark := ""
+		if p.IsVirtual {
+			virtualMark = " (virtual)"
+		}
+
+		fmt.Printf("  Name:    %s%s%s\n", p.Name, defaultMark, virtualMark)
+		fmt.Printf("  Port:   %s\n", p.Port)
+		fmt.Printf("  Driver: %s\n", p.Driver)
+		fmt.Printf("  Status: %s\n", p.Status)
+		fmt.Printf("  Type:   %s\n", p.PrinterType)
+		fmt.Println()
+	}
+
+	fmt.Printf("Total:  %d printer(s)\n", len(printers))
 }
 
 func executePrint(config *Config) error {
