@@ -18,7 +18,7 @@ type WindowsPrintConnector struct {
 // NewWindowsPrintConnector creates a new connector for the specified printer name.
 func NewWindowsPrintConnector(printerName string) (*WindowsPrintConnector, error) {
 	if printerName == "" {
-		return nil, errors.New("el nombre de la impresora no puede estar vacío")
+		return nil, errors.New("printer name cannot be empty")
 	}
 
 	// Get the platform-specific service implementation
@@ -34,7 +34,7 @@ func NewWindowsPrintConnector(printerName string) (*WindowsPrintConnector, error
 	handle, err := service.Open(printerName)
 	if err != nil {
 		// On non-windows, this will likely fail with "not available"
-		return nil, fmt.Errorf("no se pudo abrir la impresora '%s': %w", printerName, err)
+		return nil, fmt.Errorf("failed to open printer '%s': %w", printerName, err)
 	}
 
 	return &WindowsPrintConnector{

@@ -1,6 +1,6 @@
 {
   "name": "@adcondev/poster",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "private": true,
   "description": "A professional, production-ready Go library for controlling ESC/POS thermal printers",
   "keywords": [
@@ -36,9 +36,9 @@
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:patch": "standard-version --release-as patch",
-    "release: major": "standard-version --release-as major",
-    "release: dry-run": "standard-version --dry-run",
-    "release: first": "standard-version --first-release",
+    "release:major": "standard-version --release-as major",
+    "release:dry-run": "standard-version --dry-run",
+    "release:first": "standard-version --first-release",
     "changelog": "standard-version --skip.bump --skip.tag",
     "postinstall": "husky install || true",
     "prepare": "husky install || true",

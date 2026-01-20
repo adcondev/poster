@@ -390,6 +390,7 @@ func TestParseDocument_ValidDocument(t *testing.T) {
 
 	if doc == nil {
 		t.Fatal("ParseDocument() returned nil document")
+		return
 	}
 
 	if doc.Version != constants.DefaultVersion {

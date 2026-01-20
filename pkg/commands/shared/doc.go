@@ -2,4 +2,6 @@
 //
 // Constants, types, and utility functions defined here are used by other
 // packages to implement ESC/POS commands for various printing operations.
+//
+//nolint:nolintlint,revive
 package shared

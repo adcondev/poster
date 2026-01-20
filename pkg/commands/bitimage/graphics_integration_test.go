@@ -12,7 +12,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 	cmd := NewGraphicsCommands()
 
 	t.Run("raster graphics printing workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 1024)
 
 		// Step 1: Set dot density to 360x360 for high quality
 		densityCmd, err := cmd.SetGraphicsDotDensity(
@@ -65,7 +65,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("column graphics workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		// Step 1: Set density to 180x180
 		densityCmd, err := cmd.SetGraphicsDotDensity(
@@ -111,7 +111,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("multi-tone graphics with color overlay", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		width := uint16(200)
 		height := uint16(150)

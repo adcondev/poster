@@ -1,6 +1,9 @@
+//go:build windows
+
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"runtime"
@@ -12,24 +15,55 @@ import (
 )
 
 func detectPrinter() string {
-	// Common printer names to search for
-	commonNames := []string{
-		"POS-80",
-		"POS-58",
-		"80mm EC-PM-80250",
-		"PT-210",
-		"GP-58N",
-		"Generic",
-		"Receipt",
-		"Thermal",
-		"EPSON",
+	if runtime.GOOS != win {
+		return ""
 	}
 
-	if runtime.GOOS == win {
-		// TODO: Implement Windows printer enumeration
-		for _, name := range commonNames {
-			// Check if printer exists
-			log.Printf("Checking for printer: %s", name)
+	// Use the new ListAvailablePrinters function
+	printers, err := connection.ListAvailablePrinters()
+	if err != nil {
+		log.Printf("Warning: failed to enumerate printers: %v", err)
+		return ""
+	}
+
+	// First, try to find a thermal printer
+	thermalPrinters := connection.FilterThermalPrinters(printers)
+	if len(thermalPrinters) > 0 {
+		// Prefer default thermal printer if available
+		for _, p := range thermalPrinters {
+			if p.IsDefault {
+				log.Printf("Auto-detected default thermal printer: %s", p.Name)
+				return p.Name
+			}
+		}
+		// Otherwise use first thermal printer
+		log.Printf("Auto-detected thermal printer: %s", thermalPrinters[0].Name)
+		return thermalPrinters[0].Name
+	}
+
+	// Fallback: search for common printer name patterns
+	commonPatterns := []string{
+		"pos-80", "pos-58", "80mm", "58mm",
+		"pt-210", "gp-58", "ec-pm",
+		"receipt", "thermal", "epson",
+	}
+
+	physicalPrinters := connection.FilterPhysicalPrinters(printers)
+	for _, p := range physicalPrinters {
+		nameLower := strings.ToLower(p.Name)
+		for _, pattern := range commonPatterns {
+			if strings.Contains(nameLower, pattern) {
+				log.Printf("Auto-detected printer by name pattern: %s", p.Name)
+				return p.Name
+			}
+		}
+	}
+
+	// Last resort: use default physical printer
+	for _, p := range physicalPrinters {
+		if p.IsDefault {
+			log.Printf("Using default physical printer: %s", p.Name)
+			return p.Name
 		}
 	}
 
@@ -39,6 +73,9 @@ func detectPrinter() string {
 func createConnection(config *Config) (connection.Connector, error) {
 	switch strings.ToLower(config.ConnectionType) {
 	case win:
+		if runtime.GOOS != win {
+			return nil, errors.New("windows connection type requires Windows OS")
+		}
 		if config.PrinterName == "" {
 			return nil, fmt.Errorf("printer name required for Windows connection")
 		}

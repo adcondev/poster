@@ -19,6 +19,7 @@ func TestDefaultImageOptions(t *testing.T) {
 
 	if opts == nil {
 		t.Fatal("DefaultImageOptions() returned nil")
+		return
 	}
 
 	if opts.PixelWidth != constants.DefaultImagePixelWidth {

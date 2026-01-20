@@ -12,7 +12,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("complete logo printing workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 256)
 
 		// Step 1: Set graphics dot density for high quality
 		densityCmd, err := cmd.Graphics.SetGraphicsDotDensity(
@@ -63,7 +63,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 	})
 
 	t.Run("multi-color graphics workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		// Store multiple color layers
 		width := uint16(100)
@@ -107,7 +107,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 	})
 
 	t.Run("column format graphics workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		// Use column format for vertical patterns
 		width := uint16(256)
@@ -150,7 +150,7 @@ func TestIntegration_BitImage_LogoWorkflow(t *testing.T) {
 	})
 
 	t.Run("legacy bit image mode workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 128)
 
 		// Use legacy 8-dot single density mode
 		width := uint16(100)

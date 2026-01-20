@@ -12,7 +12,7 @@ func TestIntegration_NVGraphics_CompleteWorkflow(t *testing.T) {
 	cmd := NewNVGraphicsCommands()
 
 	t.Run("define and print NV graphics", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 1024)
 
 		// Step 1: Check NV capacity
 		capacityCmd, err := cmd.GetNVGraphicsCapacity(NVFuncGetCapacity)
@@ -75,7 +75,7 @@ func TestIntegration_NVGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("multiple tone NV graphics with color groups", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		width := uint16(200)
 		height := uint16(100)
@@ -115,7 +115,7 @@ func TestIntegration_NVGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("column format NV graphics", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		width := uint16(512)
 		height := uint16(128)
@@ -166,7 +166,7 @@ func TestIntegration_NVGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("Windows BMP NV graphics", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		// Create valid BMP header + small image data
 		bmpData := make([]byte, 200)
@@ -212,7 +212,7 @@ func TestIntegration_NVGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("NV graphics management workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 64)
 
 		// Get key code list
 		listCmd := cmd.GetNVGraphicsKeyCodeList()
@@ -384,7 +384,7 @@ func TestIntegration_NVGraphics_ColorRestrictions(t *testing.T) {
 		}
 
 		for i, colors := range validCombinations {
-			var colorData []NVGraphicsColorData
+			colorData := make([]NVGraphicsColorData, 0, len(colors))
 			for _, color := range colors {
 				colorData = append(colorData, NVGraphicsColorData{
 					Color: color,
@@ -610,7 +610,7 @@ func TestIntegration_NVGraphics_ScalingModes(t *testing.T) {
 	}
 
 	// Combine define and print commands
-	var fullBuffer []byte
+	fullBuffer := make([]byte, 0, 256)
 	fullBuffer = append(fullBuffer, defineCmd...)
 
 	for _, scale := range scales {

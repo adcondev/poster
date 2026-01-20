@@ -185,7 +185,8 @@ func (c *GraphicsCommands) PrintBufferedGraphics(fn FunctionCode) ([]byte, error
 //	Returns ErrInvalidDataLength if data length doesn't match calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizontalScale, verticalScale GraphicsScale,
-	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
+	color GraphicsColor, width, height uint16, data []byte,
+) ([]byte, error) {
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -218,8 +219,9 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizo
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x70, byte(tone),
-		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 15+len(data))
+	cmd = append(cmd, shared.GS, '(', 'L', pL, pH, 0x30, 0x70, byte(tone),
+		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -300,7 +302,8 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizo
 //	Returns ErrInvalidDataLength if data length doesn't match calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, horizontalScale, verticalScale GraphicsScale,
-	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
+	color GraphicsColor, width, height uint16, data []byte,
+) ([]byte, error) {
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -332,8 +335,9 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, h
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x70, byte(tone),
-		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 17+len(data))
+	cmd = append(cmd, shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x70, byte(tone),
+		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -405,7 +409,8 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBufferLarge(tone GraphicsTone, h
 //	Returns ErrInvalidDataLength if data length doesn't match calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, verticalScale GraphicsScale,
-	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
+	color GraphicsColor, width, height uint16, data []byte,
+) ([]byte, error) {
 	if err := ValidateGraphicsScale(horizontalScale); err != nil {
 		return nil, err
 	}
@@ -436,8 +441,9 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, vertical
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x71, 0x30,
-		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 15+len(data))
+	cmd = append(cmd, shared.GS, '(', 'L', pL, pH, 0x30, 0x71, 0x30,
+		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -509,7 +515,8 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, vertical
 //	Returns ErrInvalidDataLength if data length doesn't match calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *GraphicsCommands) StoreColumnGraphicsInBufferLarge(horizontalScale, verticalScale GraphicsScale,
-	color GraphicsColor, width, height uint16, data []byte) ([]byte, error) {
+	color GraphicsColor, width, height uint16, data []byte,
+) ([]byte, error) {
 	if err := ValidateGraphicsScale(horizontalScale); err != nil {
 		return nil, err
 	}
@@ -539,8 +546,9 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBufferLarge(horizontalScale, ver
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x71, 0x30,
-		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 17+len(data))
+	cmd = append(cmd, shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x71, 0x30,
+		byte(horizontalScale), byte(verticalScale), byte(color), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil

@@ -513,6 +513,7 @@ func TestStrPtr(t *testing.T) {
 	result := strPtr("test")
 	if result == nil {
 		t.Fatal("Expected non-nil pointer")
+		return
 	}
 	if *result != "test" {
 		t.Errorf("Expected 'test', got '%s'", *result)
