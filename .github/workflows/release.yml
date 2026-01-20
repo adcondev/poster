@@ -19,9 +19,12 @@ jobs:
   release:
     name: 🚀 Create Release
     runs-on: ubuntu-latest
+    # FIX 1: Prevent infinite loops by ignoring release commits
     if: |
       github.event.workflow_run.conclusion == 'success' &&
-      ! contains(github.event.workflow_run.head_commit.message, '[skip release]')
+      !contains(github.event.workflow_run.head_commit.message, 'chore(release)') &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip ci]') &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip release]')
 
     steps:
       - name: Generate GitHub App token
@@ -70,7 +73,8 @@ jobs:
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!: "; then
+          # FIX 2: Fixed regex to catch breaking changes correctly
+          if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             RELEASE_TYPE="major"
             EMOJI="💥"
             DESC="Breaking changes detected"
@@ -97,13 +101,11 @@ jobs:
           
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 📊 Release Analysis
-          
           | Metric | Value |
           |--------|-------|
           | $EMOJI **Status** | $DESC |
           | 🏷️ **Current Version** | \`$LATEST_TAG\` |
           | 📦 **Release Type** | ${RELEASE_TYPE:-none} |
-          | 📝 **Commits Since Last Release** | $(echo "$COMMITS" | wc -l) |
           EOF
 
       - name: Generate release
@@ -111,21 +113,41 @@ jobs:
         id: release
         run: |
           set -e
+          echo "🔄 Running standard-version..."
           
-          npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}
+          # FIX 3: Run release tool with error handling
+          if ! npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}; then
+            echo "❌ standard-version failed"
+            exit 1
+          fi
           
-          NEW_VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
+          NEW_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+          
+          # FIX 4: CRITICAL validation to prevent vnull tags
+          if [ -z "$NEW_VERSION" ]; then
+            echo "❌ Failed to extract version from git tag"
+            exit 1
+          fi
+          
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           
-          git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}
+          if ! git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}; then
+            echo "❌ Failed to push tags"
+            git tag -d "v${NEW_VERSION}" 2>/dev/null || true
+            exit 1
+          fi
 
       - name: Extract release notes
         if: steps.analyze.outputs.should_release == 'true'
         run: |
           awk '/^## \[/{if (++count == 2) exit} count == 1' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "## Release v${{ steps.release.outputs.new_version }}" > RELEASE_NOTES.md
+            echo "See CHANGELOG.md for details." >> RELEASE_NOTES.md
+          fi
 
       - name: Create GitHub release
-        if: steps.analyze.outputs.should_release == 'true'
+        if: steps.analyze.outputs.should_release == 'true' && steps.release.outputs.new_version != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.release.outputs.new_version }}
@@ -138,46 +160,6 @@ jobs:
         if: steps.analyze.outputs.should_release == 'true'
         run: |
           sleep 10
-          
           VERSION="v${{ steps.release.outputs.new_version }}"
           MODULE="github.com/${{ github.repository }}"
-          
-          echo "🔄 Warming up Go module proxy..."
-          curl -f "https://proxy.golang.org/${MODULE}/@v/${VERSION}.info" || true
-          curl -f "https://sum.golang.org/lookup/${MODULE}@${VERSION}" || true
-          
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## 📦 Go Module Published
-          
-          \`\`\`bash
-          go get ${MODULE}@${VERSION}
-          \`\`\`
-          
-          [📖 View on pkg.go.dev](https://pkg.go.dev/${MODULE}@${VERSION})
-          EOF
-
-      - name: Generate final summary
-        if: always()
-        run: |
-          if [ "${{ steps.analyze.outputs.should_release }}" == "true" ]; then
-            VERSION="v${{ steps.release.outputs.new_version }}"
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          
-          ---
-          
-          ## 🎉 Release $VERSION Published! 
-          
-          **Installation:**
-          \`\`\`bash
-          go get github.com/${{ github.repository }}@$VERSION
-          \`\`\`
-          
-          **Links:**
-          - 📋 [Release Notes](https://github.com/${{ github.repository }}/releases/tag/$VERSION)
-          - 📦 [pkg.go.dev](https://pkg.go.dev/github.com/${{ github.repository }}@$VERSION)
-          - 📝 [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          EOF
-          else
-            echo "## ℹ️ No Release Required" >> $GITHUB_STEP_SUMMARY
-            echo "No releasable changes detected in this push." >> $GITHUB_STEP_SUMMARY
-          fi
+          curl -sf "https://proxy.golang.org/${MODULE}/@v/${VERSION}.info" || true

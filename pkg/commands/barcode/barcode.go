@@ -210,15 +210,10 @@ var _ Capability = (*Commands)(nil)
 
 // Capability groups barcode-related capabilities
 type Capability interface {
-	// HRI settings
 	SelectHRICharacterPosition(position HRIPosition) ([]byte, error)
 	SelectFontForHRI(font HRIFont) ([]byte, error)
-
-	// Dimensions
 	SetBarcodeHeight(height Height) ([]byte, error)
 	SetBarcodeWidth(width Width) ([]byte, error)
-
-	// Printing
 	PrintBarcode(symbology Symbology, data []byte) ([]byte, error)
 	PrintBarcodeWithCodeSet(symbology Symbology, codeSet Code128Set, data []byte) ([]byte, error)
 }
@@ -237,7 +232,8 @@ func (c *Commands) buildFunctionA(symbology Symbology, data []byte) ([]byte, err
 	}
 
 	// Build command: GS k m data... NUL
-	cmd := []byte{shared.GS, 'k', byte(symbology)}
+	cmd := make([]byte, 0, 3+len(data)+1)
+	cmd = append(cmd, shared.GS, 'k', byte(symbology))
 	cmd = append(cmd, data...)
 	cmd = append(cmd, shared.NUL)
 	return cmd, nil
@@ -266,7 +262,8 @@ func (c *Commands) buildFunctionB(symbology Symbology, data []byte) ([]byte, err
 	}
 
 	// Build command: GS k m n data...
-	cmd := []byte{shared.GS, 'k', byte(symbology), byte(len(data))}
+	cmd := make([]byte, 0, 4+len(data))
+	cmd = append(cmd, shared.GS, 'k', byte(symbology), byte(len(data)))
 	cmd = append(cmd, data...)
 	return cmd, nil
 }

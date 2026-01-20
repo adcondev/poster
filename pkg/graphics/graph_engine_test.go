@@ -51,10 +51,11 @@ func TestPipeline_Process(t *testing.T) {
 	// Process
 	mono, err := p.Process(img)
 	if err != nil {
-		t.Errorf("Process(img) error = %v", err)
+		t.Fatalf("Process(img) error = %v", err)
 	}
 	if mono == nil {
 		t.Fatal("Process(img) returned nil bitmap")
+		return
 	}
 
 	// Verify dimensions

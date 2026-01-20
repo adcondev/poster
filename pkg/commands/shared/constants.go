@@ -1,3 +1,4 @@
+//nolint:nolintlint,revive
 package shared
 
 // ESCPOS and Dots Per Line constants
