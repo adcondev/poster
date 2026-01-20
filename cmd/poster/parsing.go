@@ -64,7 +64,7 @@ func validateDocument(doc *schema.Document) error {
 	// Show command summary
 	fmt.Println("\nCommand Summary:")
 	for cmdType, count := range commandCounts {
-		fmt.Printf("  %s: %d\n", cmdType, count)
+		fmt.Printf(" %s: %d\n", cmdType, count)
 	}
 
 	fmt.Println("\n✅ Validation passed")

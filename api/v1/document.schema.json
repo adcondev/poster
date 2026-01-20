@@ -97,7 +97,9 @@
             "qr",
             "table",
             "barcode",
-            "raw"
+            "raw",
+            "pulse",
+            "beep"
           ],
           "description": "Command type"
         },
@@ -130,6 +132,12 @@
             },
             {
               "$ref": "#/definitions/RawCommand"
+            },
+            {
+              "$ref": "#/definitions/PulseCommand"
+            },
+            {
+              "$ref": "#/definitions/BeepCommand"
             }
           ]
         }
@@ -619,6 +627,44 @@
           "type": "boolean",
           "description": "Automatically reduce column widths to fit paper. When enabled, the system will shrink the widest columns first to preserve smaller columns.",
           "default": true
+        }
+      }
+    },
+    "PulseCommand": {
+      "type": "object",
+      "properties": {
+        "pin": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ],
+          "default": 0
+        },
+        "on_time": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 50
+        },
+        "off_time": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 100
+        }
+      }
+    },
+    "BeepCommand": {
+      "type": "object",
+      "properties": {
+        "times": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "lapse": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
         }
       }
     }

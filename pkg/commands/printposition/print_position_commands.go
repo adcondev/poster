@@ -147,7 +147,8 @@ func (c *Commands) SetHorizontalTabPositions(positions []byte) ([]byte, error) {
 	}
 
 	// Build command
-	cmd := []byte{shared.ESC, 'D'}
+	cmd := make([]byte, 0, 2+len(positions)+1)
+	cmd = append(cmd, shared.ESC, 'D')
 	cmd = append(cmd, positions...)
 	cmd = append(cmd, shared.NUL)
 	return cmd, nil

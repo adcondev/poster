@@ -84,7 +84,7 @@ tasks:
   lint:
     cmds:
       - echo "Running linters..."
-      - golangci-lint run {{.LINT_FLAGS}}
+      - '"C:\Users\RED 2000\golangci-lint\2.8.0\golangci-lint.exe" run {{.LINT_FLAGS}}'
   test:
     cmds:
       - echo "Running all tests in detail..."

@@ -230,13 +230,14 @@ func (c *Commands) StoreQRCodeData(data []byte) ([]byte, error) {
 	pH := byte((totalLen >> 8) & 0xFF)
 
 	// Build command header
-	cmd := []byte{
+	cmd := make([]byte, 0, 8+len(data))
+	cmd = append(cmd, []byte{
 		shared.GS, '(', 'k',
 		pL, pH, // length bytes
 		0x31, // cn = 49
 		80,   // fn = 80
 		0x30, // m = 48
-	}
+	}...)
 
 	// Append data
 	cmd = append(cmd, data...)

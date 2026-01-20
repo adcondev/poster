@@ -11,7 +11,7 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("receipt header formatting", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 32)
 
 		// Title formatting
 		titleSize, _ := NewSize(2, 3)
@@ -46,7 +46,7 @@ func TestIntegration_Character_BasicFormatting(t *testing.T) {
 	})
 
 	t.Run("character transformations", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 16)
 
 		rotationCmd, _ := cmd.Set90DegreeClockwiseRotationMode(On90Dot1)
 		buffer = append(buffer, rotationCmd...)
