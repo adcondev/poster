@@ -1,9 +1,38 @@
 # Changelog
 
-All notable changes to the POS Printer library will be documented in this file.
+All notable changes to Poster will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [4.4.0](https://github.com/adcondev/poster/compare/v4.3.0...v4.4.0) (2026-01-20)
+
+
+### 🤖 Continuous Integration
+
+* **gh-actions:** enhance Github Actions workflows ([#91](https://github.com/adcondev/poster/issues/91)) ([480b2ea](https://github.com/adcondev/poster/commit/480b2eaa8b7daadfb734cb7a10a29564ebb66396)), closes [#92](https://github.com/adcondev/poster/issues/92)
+
+
+### ♻️ Code Refactoring
+
+* **linters:** improve golangci-lint configuration for better analysis ([ee2d80b](https://github.com/adcondev/poster/commit/ee2d80b553763810fb95f6c08b7e0e150bb4994c))
+* **poster:** optimize command buffer allocation and improve readability ([1a6e148](https://github.com/adcondev/poster/commit/1a6e14832e42bbe88eaff01ea92d4cf3656ff6bd))
+
+
+### 🐛 Bug Fixes
+
+* **github:** update release workflow and improve changelog management ([096db5d](https://github.com/adcondev/poster/commit/096db5de66d71db6610ab8cab0c9163a05efcf3c))
+* **go.mod:** remove version suffix from module path ([1f85a12](https://github.com/adcondev/poster/commit/1f85a12b578c1189ec0d1797a63a7b363c4d9604))
+* **go.mod:** update module path to include version v4 ([e113ed3](https://github.com/adcondev/poster/commit/e113ed3abd0fadd9c8b6af486962b0b0efe075f4))
+* **npm:** restore package version from null to 4.3.0 ([79508d3](https://github.com/adcondev/poster/commit/79508d3fc3c51c09f8e0767ff64ff48d2d6c10c1))
+* **npm:** restore package version from null to 4.3.0 ([9517910](https://github.com/adcondev/poster/commit/95179103055e1b64caa3b210b289729e87663195))
+* **npm:** update package name and dependencies for poster library ([#94](https://github.com/adcondev/poster/issues/94)) ([ac2ce69](https://github.com/adcondev/poster/commit/ac2ce69b3ff279e73ee962673afa752876e9d80f)), closes [#92](https://github.com/adcondev/poster/issues/92)
+* **Taskfile:** update golangci-lint command to use absolute path ([9492552](https://github.com/adcondev/poster/commit/9492552e545340ef09aa6c3529b44643d394c688))
+
+
+### ✨ Features
+
+* **connection:** enhance printer listing functionality for Windows ([1794548](https://github.com/adcondev/poster/commit/1794548ad27c2bb2671e752aee24545eb2503667))
+* **connection:** enhance printer listing functionality for Windows ([#100](https://github.com/adcondev/poster/issues/100)) ([48118b8](https://github.com/adcondev/poster/commit/48118b8c117374e68e41518ded6c6e09ee837604)), closes [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R22-R26](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R22-R26) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R76](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R76) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L100-R150](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L100-R150) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L141-R165](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L141-R165) [/#diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L2](https://github.com/adcondev/poster/issues/diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L2) [/#diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L18-R45](https://github.com/adcondev/poster/issues/diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L18-R45) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL21-R38](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL21-R38) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL54-R63](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL54-R63) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL73-R103](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL73-R103) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR148-R153](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR148-R153) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR164-R228](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR164-R228) [/#diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaR1-R6](https://github.com/adcondev/poster/issues/diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaR1-R6) [/#diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL15-R66](https://github.com/adcondev/poster/issues/diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL15-R66)
+* **connection:** implement printer enumeration and details for Windows ([e7a9735](https://github.com/adcondev/poster/commit/e7a9735d1627f462023a20a3ab849de11fd1ce60))
+* **schema:** add PulseCommand and BeepCommand to document schema ([5edba5e](https://github.com/adcondev/poster/commit/5edba5e4a9d9c0422cf3f959ee987ee1f1a468fc))
 
 ## [4.3.0](https://github.com/adcondev/poster/compare/v4.2.0...v4.3.0) (2025-12-19)
 
