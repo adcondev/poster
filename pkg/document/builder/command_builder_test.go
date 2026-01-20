@@ -21,6 +21,7 @@ func TestNewDocument(t *testing.T) {
 
 	if doc == nil {
 		t.Fatal("NewDocument() returned nil")
+		return
 	}
 
 	if doc.version != Release {
@@ -183,7 +184,6 @@ func TestToJSON(t *testing.T) {
 		Text("Hello World").Center().Bold().End().
 		Cut().
 		ToJSON()
-
 	if err != nil {
 		t.Fatalf("ToJSON() error: %v", err)
 	}

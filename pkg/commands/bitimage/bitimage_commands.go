@@ -70,7 +70,8 @@ func (c *Commands) SelectBitImageMode(mode Mode, width uint16, data []byte) ([]b
 
 	nL, nH := shared.ToLittleEndian(width)
 
-	cmd := []byte{shared.ESC, '*', byte(mode), nL, nH}
+	cmd := make([]byte, 0, 5+len(data))
+	cmd = append(cmd, shared.ESC, '*', byte(mode), nL, nH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -274,7 +275,8 @@ func (c *Commands) DefineDownloadedBitImage(x, y byte, data []byte) ([]byte, err
 		return nil, ErrInvalidDataLength
 	}
 
-	cmd := []byte{shared.GS, '*', x, y}
+	cmd := make([]byte, 0, 4+len(data))
+	cmd = append(cmd, shared.GS, '*', x, y)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -404,7 +406,8 @@ func (c *Commands) PrintVariableVerticalSizeBitImage(mode PrintMode, width, heig
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, 'Q', 0x30, byte(mode), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 8+len(data))
+	cmd = append(cmd, shared.GS, 'Q', 0x30, byte(mode), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil
@@ -482,7 +485,8 @@ func (c *Commands) PrintRasterBitImage(mode PrintMode, width, height uint16, dat
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, 'v', 0x30, byte(mode), xL, xH, yL, yH}
+	cmd := make([]byte, 0, 8+len(data))
+	cmd = append(cmd, shared.GS, 'v', 0x30, byte(mode), xL, xH, yL, yH)
 	cmd = append(cmd, data...)
 
 	return cmd, nil

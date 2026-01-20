@@ -12,7 +12,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 	cmd := NewDownloadGraphicsCommands()
 
 	t.Run("define and print download graphics", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 1024)
 
 		// Step 1: Check remaining capacity
 		capacityCmd, err := cmd.GetDownloadGraphicsRemainingCapacity(DLFuncGetRemaining)
@@ -67,7 +67,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("multiple tone graphics with color groups", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		width := uint16(100)
 		height := uint16(50)
@@ -107,7 +107,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("column format graphics", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 512)
 
 		width := uint16(256)
 		height := uint16(64)
@@ -151,7 +151,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("BMP graphics definition", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 256)
 
 		// Create minimal BMP header (54 bytes) + small image data
 		bmpData := make([]byte, 100)
@@ -185,7 +185,7 @@ func TestIntegration_DownloadGraphics_CompleteWorkflow(t *testing.T) {
 	})
 
 	t.Run("graphics deletion workflow", func(t *testing.T) {
-		var buffer []byte
+		buffer := make([]byte, 0, 32)
 
 		// Delete specific graphics by key code
 		deleteCmd, err := cmd.DeleteDownloadGraphicsByKeyCode('X', 'Y')
@@ -487,7 +487,7 @@ func TestIntegration_DownloadGraphics_ScalingModes(t *testing.T) {
 	}
 
 	// Combine define and print commands
-	var fullBuffer []byte
+	fullBuffer := make([]byte, 0, 256)
 	fullBuffer = append(fullBuffer, defineCmd...)
 
 	for _, scale := range scales {

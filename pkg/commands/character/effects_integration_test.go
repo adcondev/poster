@@ -8,7 +8,7 @@ func TestIntegration_Effects_ColorCombinations(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("promotional text with all effects", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 32)
 
 		// Apply character color
 		charColor, err := cmd.Effects.SelectCharacterColor(CharColor2)

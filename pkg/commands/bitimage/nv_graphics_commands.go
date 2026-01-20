@@ -300,7 +300,8 @@ func (c *NvGraphicsCommands) DeleteNVGraphicsByKeyCode(kc1, kc2 byte) ([]byte, e
 //	Returns ErrInvalidDataLength if any data length doesn't match the calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *NvGraphicsCommands) DefineNVRasterGraphics(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
-	colorData []NVGraphicsColorData) ([]byte, error) {
+	colorData []NVGraphicsColorData,
+) ([]byte, error) {
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -416,7 +417,8 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphics(tone GraphicsTone, kc1, kc2 
 //	Returns ErrInvalidDataLength if any data length doesn't match the calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *NvGraphicsCommands) DefineNVRasterGraphicsLarge(tone GraphicsTone, kc1, kc2 byte, width, height uint16,
-	colorData []NVGraphicsColorData) ([]byte, error) {
+	colorData []NVGraphicsColorData,
+) ([]byte, error) {
 	if err := ValidateGraphicsTone(tone); err != nil {
 		return nil, err
 	}
@@ -524,7 +526,8 @@ func (c *NvGraphicsCommands) DefineNVRasterGraphicsLarge(tone GraphicsTone, kc1,
 //	Returns ErrInvalidDataLength if any data length doesn't match the calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 65,535 bytes.
 func (c *NvGraphicsCommands) DefineNVColumnGraphics(kc1, kc2 byte, width, height uint16,
-	colorData []NVGraphicsColorData) ([]byte, error) {
+	colorData []NVGraphicsColorData,
+) ([]byte, error) {
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -631,7 +634,8 @@ func (c *NvGraphicsCommands) DefineNVColumnGraphics(kc1, kc2 byte, width, height
 //	Returns ErrInvalidDataLength if any data length doesn't match the calculated size.
 //	Returns ErrDataTooLarge if the total command size exceeds 4,294,967,295 bytes.
 func (c *NvGraphicsCommands) DefineNVColumnGraphicsLarge(kc1, kc2 byte, width, height uint16,
-	colorData []NVGraphicsColorData) ([]byte, error) {
+	colorData []NVGraphicsColorData,
+) ([]byte, error) {
 	if err := ValidateKeyCode(kc1); err != nil {
 		return nil, err
 	}
@@ -812,7 +816,8 @@ func (c *NvGraphicsCommands) DefineWindowsBMPNVGraphics(kc1, kc2 byte, tone Grap
 		return nil, err
 	}
 
-	cmd := []byte{shared.GS, 'D', 0x30, 0x43, 0x30, kc1, kc2, byte(tone), 0x31}
+	cmd := make([]byte, 0, 9+len(bmpData))
+	cmd = append(cmd, shared.GS, 'D', 0x30, 0x43, 0x30, kc1, kc2, byte(tone), 0x31)
 	cmd = append(cmd, bmpData...)
 
 	return cmd, nil

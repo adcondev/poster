@@ -9,7 +9,7 @@ func TestIntegration_UserDefined_CustomLogoWorkflow(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("define and use custom characters", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 256)
 
 		// Create 4-part logo
 		logoChars := make([]UserDefinedChar, 4)

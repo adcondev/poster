@@ -11,7 +11,7 @@ func TestIntegration_CodeConversion_MultiLanguageSupport(t *testing.T) {
 	cmd := NewCommands()
 
 	t.Run("UTF-8 with font priorities", func(t *testing.T) {
-		var buffer []byte
+		var buffer = make([]byte, 0, 32)
 
 		// Enable UTF-8
 		utf8Cmd, err := cmd.CodeConversion.SelectCharacterEncodeSystem(UTF8)

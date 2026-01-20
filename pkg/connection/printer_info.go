@@ -20,10 +20,15 @@ type PrinterDetail struct {
 type PrinterState string
 
 const (
-	StateReady   PrinterState = "ready"
+	// StateReady indicates the printer is ready to print
+	StateReady PrinterState = "ready"
+	// StateOffline indicates the printer is offline
 	StateOffline PrinterState = "offline"
-	StatePaused  PrinterState = "paused"
-	StateError   PrinterState = "error"
+	// StatePaused indicates the printer is paused
+	StatePaused PrinterState = "paused"
+	// StateError indicates the printer is in an error state
+	StateError PrinterState = "error"
+	// StateUnknown indicates the printer state is unknown
 	StateUnknown PrinterState = "unknown"
 )
 
