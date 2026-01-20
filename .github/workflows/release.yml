@@ -64,8 +64,21 @@ jobs:
       - name: Analyze commits
         id: analyze
         run: |
+          # 1. Obtener el último tag de Git
+          git fetch --tags
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "🏷️ Último Tag detectado: $LATEST_TAG"
+          
+          # --- NUEVO: AUTO-CURACIÓN ---
+          # Sincronizamos package.json con el Tag de Git antes de empezar.
+          # Esto previene el error "null" si el archivo estaba corrupto.
+          CLEAN_VERSION=${LATEST_TAG#v} # Quita la 'v' del tag
+          if [ "$CLEAN_VERSION" != "0.0.0" ]; then
+             echo "🔧 Sincronizando package.json a versión $CLEAN_VERSION para asegurar estabilidad..."
+             npm version $CLEAN_VERSION --no-git-tag-version --allow-same-version || true
+          fi
+          # ----------------------------
           
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
@@ -73,7 +86,7 @@ jobs:
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # FIX 2: Fixed regex to catch breaking changes correctly
+          # Análisis de Conventional Commits
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             RELEASE_TYPE="major"
             EMOJI="💥"
@@ -105,7 +118,7 @@ jobs:
           |--------|-------|
           | $EMOJI **Status** | $DESC |
           | 🏷️ **Current Version** | \`$LATEST_TAG\` |
-          | 📦 **Release Type** | ${RELEASE_TYPE:-none} |
+          | 📦 **Next Release** | ${RELEASE_TYPE:-none} |
           EOF
 
       - name: Generate release
