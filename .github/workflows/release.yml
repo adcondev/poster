@@ -79,45 +79,49 @@ jobs:
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      # --- PASO 3: APLICAR CAMBIOS Y PUBLICAR ---
+      # 3. APLICAR CAMBIOS Y PUBLICAR (Con lógica anti-conflictos)
       - name: Apply Version & Push
         if: steps.analyze.outputs.should_release == 'true'
         env:
           NEXT_VER: ${{ steps.analyze.outputs.next_version }}
-          # Usamos el token de la App para las operaciones de git
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
-          # Configurar Git con el bot
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # 1. Actualizar JSONs
-          npm version $NEXT_VER --no-git-tag-version --allow-same-version
+          echo "⬇️ Sincronizando con remoto para evitar conflictos..."
+          git pull origin master --rebase
 
-          # 2. Generar Changelog
-          npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
-
-          # 3. Corrección de emergencia para [null]
-          sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
+          # Verificar si la versión ya fue aplicada en un intento fallido anterior
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
           
-          # 4. Commit
-          git add package.json package-lock.json CHANGELOG.md
-          git commit -m "chore(release): v$NEXT_VER [skip ci]"
+          if [ "$CURRENT_VERSION" = "$NEXT_VER" ]; then
+            echo "⚠️ La versión $NEXT_VER ya existe en package.json. Se omitirá la generación de commit."
+            ALREADY_UPDATED="true"
+          else
+            echo "✨ Aplicando nueva versión $NEXT_VER..."
+          
+            # 1. Actualizar JSONs
+            npm version $NEXT_VER --no-git-tag-version --allow-same-version
 
-          # 5. Crear Tag y Push (Usando autenticación de App implícita en checkout o url)
-          # Re-autenticamos el remote por seguridad
+            # 2. Generar Changelog
+            npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
+
+            # 3. Corrección [null] -> [vX.X.X]
+            sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
+          
+            # 4. Commit
+            git add package.json package-lock.json CHANGELOG.md
+            git commit -m "chore(release): v$NEXT_VER [skip ci]"
+          fi
+
+          # 5. Push Tag (Autenticado con App)
+          # Re-autenticamos el remote
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
           
-          echo "🏷️ Pushing v$NEXT_VER..."
-          git tag v$NEXT_VER
+          echo "🏷️ Asegurando tag v$NEXT_VER..."
+          # Forzamos el tag por si se quedó a medias
+          git tag -f v$NEXT_VER
+          
+          echo "🚀 Subiendo cambios..."
           git push origin master --follow-tags
-
-      # --- PASO 4: CREAR RELEASE EN UI DE GITHUB ---
-      - name: Create GitHub Release
-        if: steps.analyze.outputs.should_release == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.analyze.outputs.next_version }}
-          name: v${{ steps.analyze.outputs.next_version }}
-          body_path: CHANGELOG.md
-          token: ${{ steps.generate_token.outputs.token }} # Token de la App aquí también
