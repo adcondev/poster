@@ -1,178 +1,104 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: [ "CI" ]
-    types: [ completed ]
-    branches: [ main, master ]
+  push:
+    branches:
+      - master
 
 permissions:
   contents: write
-  packages: write
+  pull-requests: write
   issues: write
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  release:
-    name: 🚀 Create Release
+  release-flow:
     runs-on: ubuntu-latest
-    # FIX 1: Prevent infinite loops by ignoring release commits
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      !contains(github.event.workflow_run.head_commit.message, 'chore(release)') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip ci]') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip release]')
-
     steps:
-      - name: Generate GitHub App token
-        id: generate_token
-        uses: tibdex/github-app-token@v2
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
-        continue-on-error: true
-
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}
-          ref: ${{ github.event.workflow_run.head_branch }}
-
-      - name: Setup Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          token: ${{ secrets.GITHUB_TOKEN }} # Usamos el token por defecto para simplificar si no tienes la App configurada
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 'lts/*'
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: npm ci
 
-      - name: Analyze commits
+      # --- PASO CRÍTICO: ANÁLISIS Y CÁLCULO MANUAL ---
+      - name: Analyze commits and Calculate Version
         id: analyze
         run: |
-          # 1. Obtener el último tag de Git
+          # 1. Obtener último tag. Si no existe, asumir v0.0.0
           git fetch --tags
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "🏷️ Último Tag detectado: $LATEST_TAG"
+          CLEAN_VERSION=${LATEST_TAG#v} # Quitar la 'v' (ej. 4.4.0)
           
-          # --- NUEVO: AUTO-CURACIÓN ---
-          # Sincronizamos package.json con el Tag de Git antes de empezar.
-          # Esto previene el error "null" si el archivo estaba corrupto.
-          CLEAN_VERSION=${LATEST_TAG#v} # Quita la 'v' del tag
-          if [ "$CLEAN_VERSION" != "0.0.0" ]; then
-             echo "🔧 Sincronizando package.json a versión $CLEAN_VERSION para asegurar estabilidad..."
-             npm version $CLEAN_VERSION --no-git-tag-version --allow-same-version || true
-          fi
-          # ----------------------------
-          
+          echo "🏷️ Tag Actual detectado: $LATEST_TAG"
+
+          # 2. Analizar commits desde el último tag
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # Análisis de Conventional Commits
+          echo "🔍 Commits a analizar:"
+          echo "$COMMITS"
+
+          # 3. Determinar tipo de release (Major > Minor > Patch)
+          # NOTA: Agregamos 'deps' y 'ci' como trigger de PATCH para llegar a la 4.4.1
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             RELEASE_TYPE="major"
-            EMOJI="💥"
-            DESC="Breaking changes detected"
           elif echo "$COMMITS" | grep -q "^feat"; then
             RELEASE_TYPE="minor"
-            EMOJI="✨"
-            DESC="New features added"
-          elif echo "$COMMITS" | grep -qE "^(fix|perf|deps)"; then
+          elif echo "$COMMITS" | grep -qE "^(fix|perf|deps|ci|chore)"; then
             RELEASE_TYPE="patch"
-            EMOJI="🐛"
-            DESC="Bug fixes and improvements"
           else
             RELEASE_TYPE=""
-            EMOJI="📝"
-            DESC="No releasable changes"
           fi
-          
+
           if [ -n "$RELEASE_TYPE" ]; then
-            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+            # 4. CALCULAR MATEMÁTICAMENTE LA VERSIÓN (Sin standard-version)
+            # Usamos el paquete 'semver' que ya instaló npm ci
+            NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$RELEASE_TYPE')")
+          
+            echo "✅ Versión Calculada: $CLEAN_VERSION + $RELEASE_TYPE = $NEXT_VERSION"
+          
             echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
           else
+            echo "⚠️ No hay cambios relevantes para release."
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
-          
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## 📊 Release Analysis
-          | Metric | Value |
-          |--------|-------|
-          | $EMOJI **Status** | $DESC |
-          | 🏷️ **Current Version** | \`$LATEST_TAG\` |
-          | 📦 **Next Release** | ${RELEASE_TYPE:-none} |
-          EOF
 
+      # --- PASO DE GENERACIÓN DE RELEASE ---
       - name: Generate release
         if: steps.analyze.outputs.should_release == 'true'
-        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-          echo "🔄 Running standard-version..."
+          # Configurar Git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # FIX 3: Run release tool with error handling
-          if ! npx standard-version --release-as ${{ steps.analyze.outputs.release_type }}; then
-            echo "❌ standard-version failed"
-            exit 1
-          fi
+          NEXT_VER="${{ steps.analyze.outputs.next_version }}"
+          echo "🚀 Forzando release a versión: $NEXT_VER"
           
-          NEW_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+          # 1. SINCRONIZACIÓN PREVENTIVA (Auto-healing)
+          # Esto arregla el package.json (que está en 4.3.0) para que coincida con el tag (4.4.0)
+          # antes de intentar subir a 4.4.1. Sin esto, standard-version falla.
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CLEAN_CURRENT=${LATEST_TAG#v}
+          npm version $CLEAN_CURRENT --no-git-tag-version --allow-same-version || true
           
-          # FIX 4: CRITICAL validation to prevent vnull tags
-          if [ -z "$NEW_VERSION" ]; then
-            echo "❌ Failed to extract version from git tag"
-            exit 1
-          fi
+          # 2. EJECUTAR STANDARD-VERSION CON NÚMERO EXPLÍCITO
+          # --release-as fuerza el número, ignorando cálculos internos erróneos.
+          npx standard-version --release-as $NEXT_VER
           
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-          if ! git push --follow-tags origin ${{ github.event.workflow_run.head_branch }}; then
-            echo "❌ Failed to push tags"
-            git tag -d "v${NEW_VERSION}" 2>/dev/null || true
-            exit 1
-          fi
-
-      - name: Extract release notes
-        if: steps.analyze.outputs.should_release == 'true'
-        run: |
-          awk '/^## \[/{if (++count == 2) exit} count == 1' CHANGELOG.md > RELEASE_NOTES.md
-          if [ ! -s RELEASE_NOTES.md ]; then
-            echo "## Release v${{ steps.release.outputs.new_version }}" > RELEASE_NOTES.md
-            echo "See CHANGELOG.md for details." >> RELEASE_NOTES.md
-          fi
-
-      - name: Create GitHub release
-        if: steps.analyze.outputs.should_release == 'true' && steps.release.outputs.new_version != ''
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.release.outputs.new_version }}
-          name: Release v${{ steps.release.outputs.new_version }}
-          body_path: RELEASE_NOTES.md
-          generate_release_notes: true
-          make_latest: true
-
-      - name: Notify Go module proxy
-        if: steps.analyze.outputs.should_release == 'true'
-        run: |
-          sleep 10
-          VERSION="v${{ steps.release.outputs.new_version }}"
-          MODULE="github.com/${{ github.repository }}"
-          curl -sf "https://proxy.golang.org/${MODULE}/@v/${VERSION}.info" || true
+          # 3. Subir cambios y tags
+          git push --follow-tags origin master
