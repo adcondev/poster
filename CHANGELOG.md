@@ -29,7 +29,9 @@ All notable changes to Poster will be documented in this file.
 * **gh-actions:** enhance Github Actions workflows ([#91](https://github.com/adcondev/poster/issues/91)) ([480b2ea](https://github.com/adcondev/poster/commit/480b2eaa8b7daadfb734cb7a10a29564ebb66396)), closes [#92](https://github.com/adcondev/poster/issues/92)
 * **gh-actions:** update release workflow for improved version synchronization [skip ci] ([c1bb2aa](https://github.com/adcondev/poster/commit/c1bb2aa3d011cdc21efce7c5790a30f5cd6bfe03))
 * **github:** add self-healing version sync to release workflow [skip ci] ([ae6dc12](https://github.com/adcondev/poster/commit/ae6dc12ee542ea585ee092838cc857a9ae39e118))
-* **release:** filter tags strictly to avoid v4.4.0 errors [skip ci] ([14a7839](https://github.com/adcondev/poster/commit/14a783908676ccd92431b7ad39788d7b25c05265))
+* **release:** add gh-release action to fix missing ui release [skip ci] ([967dc5f](https://github.com/adcondev/poster/commit/967dc5f386e829878d2b9118cc7472cfd3efddd3))
+* **release:** filter tags strictly to avoid vnull errors [skip ci] ([14a7839](https://github.com/adcondev/poster/commit/14a783908676ccd92431b7ad39788d7b25c05265))
+* **release:** restore app token to bypass protection rules [skip ci] ([98e366a](https://github.com/adcondev/poster/commit/98e366a8f65ffc6ef243706ae48ec67e595eed36))
 * **release:** switch to manual release strategy to fix null error [skip ci] ([318016a](https://github.com/adcondev/poster/commit/318016a1c08b6d490224f5cb79d708358ae947e6))
 
 
@@ -37,6 +39,7 @@ All notable changes to Poster will be documented in this file.
 
 * **ci:** trigger release pipeline validation ([6762271](https://github.com/adcondev/poster/commit/67622711e063c54487a5977c0df4704a3b65d824))
 * **ci:** trigger release test for v4.4.1 ([9e41e9d](https://github.com/adcondev/poster/commit/9e41e9d2cddabb00fc456673cf3d2e38338cd892))
+* **ci:** trigger release with app token ([a1882f8](https://github.com/adcondev/poster/commit/a1882f8aaa3adade91741d621efb3ea0aeaeea2c))
 * **github:** update release workflow and improve changelog management ([096db5d](https://github.com/adcondev/poster/commit/096db5de66d71db6610ab8cab0c9163a05efcf3c))
 * **go.mod:** remove version suffix from module path ([1f85a12](https://github.com/adcondev/poster/commit/1f85a12b578c1189ec0d1797a63a7b363c4d9604))
 * **go.mod:** update module path to include version v4 ([e113ed3](https://github.com/adcondev/poster/commit/e113ed3abd0fadd9c8b6af486962b0b0efe075f4))
