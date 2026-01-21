@@ -36,7 +36,7 @@ jobs:
           
           # 2. Obtener el último tag REAL.
           # Usamos 'sort -V' para asegurar orden semántico (v4.4.0 > v4.3.0)
-          LATEST_TAG=$(git tag --list 'v*' | sort -V | tail -n 1)
+          LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
           
           if [ -z "$LATEST_TAG" ]; then
              LATEST_TAG="v0.0.0"
