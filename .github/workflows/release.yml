@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }} # Usamos el token por defecto para simplificar si no tienes la App configurada
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,77 +28,91 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # --- PASO CRÍTICO: ANÁLISIS Y CÁLCULO MANUAL ---
       - name: Analyze commits and Calculate Version
         id: analyze
         run: |
-          # 1. Obtener último tag. Si no existe, asumir v0.0.0
-          git fetch --tags
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          CLEAN_VERSION=${LATEST_TAG#v} # Quitar la 'v' (ej. 4.4.0)
+          # 1. Asegurar que tenemos todos los tags
+          git fetch --tags --force
           
-          echo "🏷️ Tag Actual detectado: $LATEST_TAG"
-
-          # 2. Analizar commits desde el último tag
+          # 2. Obtener el último tag REAL.
+          # Usamos 'sort -V' para asegurar orden semántico (v4.4.0 > v4.3.0)
+          LATEST_TAG=$(git tag --list 'v*' | sort -V | tail -n 1)
+          
+          if [ -z "$LATEST_TAG" ]; then
+             LATEST_TAG="v0.0.0"
+          fi
+          
+          CLEAN_VERSION=${LATEST_TAG#v}
+          echo "🏷️ Último Tag en historial: $LATEST_TAG"
+          
+          # 3. Analizar commits desde ese tag
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          echo "🔍 Commits a analizar:"
+          echo "🔍 Commits nuevos encontrados:"
           echo "$COMMITS"
 
-          # 3. Determinar tipo de release (Major > Minor > Patch)
-          # NOTA: Agregamos 'deps' y 'ci' como trigger de PATCH para llegar a la 4.4.1
+          # 4. Determinar incremento (Patch por defecto para deps/ci)
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             RELEASE_TYPE="major"
           elif echo "$COMMITS" | grep -q "^feat"; then
             RELEASE_TYPE="minor"
-          elif echo "$COMMITS" | grep -qE "^(fix|perf|deps|ci|chore)"; then
+          elif echo "$COMMITS" | grep -qE "^(fix|perf|deps|ci|chore|refactor)"; then
             RELEASE_TYPE="patch"
           else
             RELEASE_TYPE=""
           fi
 
           if [ -n "$RELEASE_TYPE" ]; then
-            # 4. CALCULAR MATEMÁTICAMENTE LA VERSIÓN (Sin standard-version)
-            # Usamos el paquete 'semver' que ya instaló npm ci
+            # Calcular la siguiente versión usando Node.js
             NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$RELEASE_TYPE')")
           
-            echo "✅ Versión Calculada: $CLEAN_VERSION + $RELEASE_TYPE = $NEXT_VERSION"
+            echo "✅ Versión Actual: $CLEAN_VERSION"
+            echo "✅ Incremento: $RELEASE_TYPE"
+            echo "🚀 Próxima Versión: $NEXT_VERSION"
           
             echo "should_release=true" >> $GITHUB_OUTPUT
             echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ No hay cambios relevantes para release."
+            echo "⚠️ No hay cambios para release."
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      # --- PASO DE GENERACIÓN DE RELEASE ---
-      - name: Generate release
+      - name: Execute Release (Manual Mode)
         if: steps.analyze.outputs.should_release == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT_VER: ${{ steps.analyze.outputs.next_version }}
         run: |
-          # Configurar Git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          echo "🛠️ Aplicando versión $NEXT_VER manualmente..."
+
+          # 1. ACTUALIZAR ARCHIVOS JSON (Usando npm nativo, NO standard-version)
+          # Esto evita el error "null" porque npm es más robusto editando el archivo.
+          npm version $NEXT_VER --no-git-tag-version --allow-same-version
+
+          # 2. GENERAR CHANGELOG (Usando standard-version solo para esto)
+          # --skip.bump: Ya lo hicimos con npm
+          # --skip.tag: Lo haremos manual
+          # --skip.commit: Lo haremos manual
+          npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
+
+          # 3. VERIFICAR QUE NO HAYA "vnull" EN CHANGELOG
+          # Si standard-version falló al leer el tag, corregimos el encabezado del changelog
+          sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
+          sed -i "s/vnull/v$NEXT_VER/g" CHANGELOG.md || true
+
+          # 4. COMMIT Y TAG MANUAL
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): v$NEXT_VER [skip ci]"
           
-          NEXT_VER="${{ steps.analyze.outputs.next_version }}"
-          echo "🚀 Forzando release a versión: $NEXT_VER"
-          
-          # 1. SINCRONIZACIÓN PREVENTIVA (Auto-healing)
-          # Esto arregla el package.json (que está en 4.3.0) para que coincida con el tag (4.4.0)
-          # antes de intentar subir a 4.4.1. Sin esto, standard-version falla.
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          CLEAN_CURRENT=${LATEST_TAG#v}
-          npm version $CLEAN_CURRENT --no-git-tag-version --allow-same-version || true
-          
-          # 2. EJECUTAR STANDARD-VERSION CON NÚMERO EXPLÍCITO
-          # --release-as fuerza el número, ignorando cálculos internos erróneos.
-          npx standard-version --release-as $NEXT_VER
-          
-          # 3. Subir cambios y tags
-          git push --follow-tags origin master
+          echo "🏷️ Creando tag v$NEXT_VER"
+          git tag v$NEXT_VER
+
+          # 5. PUSH
+          git push origin master --follow-tags
