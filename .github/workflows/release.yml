@@ -14,7 +14,7 @@ jobs:
   release-flow:
     runs-on: ubuntu-latest
     steps:
-      # 1. TOKEN DE LA APP (Bypass de reglas)
+      # 1. GENERAR TOKEN DE APP (LLAVE MAESTRA)
       - name: Generate GitHub App token
         id: generate_token
         uses: tibdex/github-app-token@v2
@@ -36,45 +36,53 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 2. CÁLCULO DE VERSIÓN
+      # 2. CÁLCULO DE VERSIÓN (LÓGICA ANTI-BUCLE)
       - name: Calculate Next Version
         id: analyze
         run: |
           git fetch --tags --force
           
-          # Buscamos último tag numérico válido
+          # 1. Detectar último tag de Git
           LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
           [ -z "$LATEST_TAG" ] && LATEST_TAG="v0.0.0"
+          CLEAN_TAG_VERSION=${LATEST_TAG#v}
           
-          CLEAN_VERSION=${LATEST_TAG#v}
-          echo "🏷️ Base para cálculo: $LATEST_TAG"
-
-          if [ "$LATEST_TAG" = "v0.0.0" ]; then
-            COMMITS=$(git log --pretty=format:"%s" HEAD)
-          else
-            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
-          fi
+          # 2. Leer versión actual del package.json
+          PKG_VERSION=$(node -p "require('./package.json').version")
           
-          if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
-            TYPE="major"
-          elif echo "$COMMITS" | grep -q "^feat"; then
-            TYPE="minor"
-          elif echo "$COMMITS" | grep -qE "^(fix|perf|deps|ci|chore|refactor)"; then
-            TYPE="patch"
+          echo "🏷️ Git Tag: $CLEAN_TAG_VERSION"
+          echo "Pgk Json: $PKG_VERSION"
+
+          # 3. Lógica de recuperación
+          # Si package.json (4.4.0) es mayor que el tag (4.3.0), significa que el release anterior falló a medias.
+          # Forzamos el uso de la versión del package.json para terminar el trabajo.
+          if [ "$(node -pe "require('semver').gt('$PKG_VERSION', '$CLEAN_TAG_VERSION')")" == "true" ]; then
+            echo "⚠️ Detectado release incompleto ($PKG_VERSION > $CLEAN_TAG_VERSION)."
+            NEXT_VERSION=$PKG_VERSION
+            TYPE="recovery"
           else
-            TYPE=""
+            # Cálculo normal
+            if [ "$LATEST_TAG" = "v0.0.0" ]; then
+                COMMITS=$(git log --pretty=format:"%s" HEAD)
+            else
+                COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
+            fi
+          
+            if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
+              TYPE="major"
+            elif echo "$COMMITS" | grep -q "^feat"; then
+              TYPE="minor"
+            else
+              TYPE="patch"
+            fi
+            NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_TAG_VERSION', '$TYPE')")
           fi
 
-          if [ -n "$TYPE" ]; then
-            NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$TYPE')")
-            echo "🚀 Próxima versión: $NEXT_VERSION ($TYPE)"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
+          echo "🚀 Versión Objetivo: $NEXT_VERSION ($TYPE)"
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
 
-      # 3. APLICAR VERSIÓN, CHANGELOG Y GIT
+      # 3. APLICAR Y SUBIR (PUSH EXPLÍCITO)
       - name: Apply Version & Push
         if: steps.analyze.outputs.should_release == 'true'
         env:
@@ -87,35 +95,38 @@ jobs:
           echo "⬇️ Sincronizando..."
           git pull origin master --rebase
 
-          echo "✨ Forzando generación de versión $NEXT_VER..."
+          echo "✨ Generando versión $NEXT_VER..."
 
-          # 1. Forzar escritura en package.json (aunque sea la misma versión)
+          # Actualizar JSONs
           npm version $NEXT_VER --no-git-tag-version --allow-same-version
 
-          # 2. Generar Changelog SIEMPRE (Esto arregla tu problema actual)
+          # Generar Changelog
           npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
 
-          # 3. Limpieza de emergencia
+          # Limpieza [null]
           sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
           
-          # 4. Commit (Solo si hay cambios, ej. el changelog nuevo)
+          # Commit (Si es necesario)
           git add package.json package-lock.json CHANGELOG.md
-          
-          # Si no hay cambios (ej. corriste esto 2 veces), no fallamos
           if git diff --staged --quiet; then
-            echo "⚠️ No hay cambios para comitear (¿Ya se generó antes?)"
+            echo "⚠️ Nada que commitear"
           else
             git commit -m "chore(release): v$NEXT_VER [skip ci]"
           fi
 
-          # 5. Push Tag Forzado
+          # CONFIGURACIÓN DE PUSH BLINDADA
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
           
-          echo "🏷️ Actualizando tag v$NEXT_VER..."
+          # --- AQUÍ ESTÁ EL ARREGLO CLAVE ---
+          echo "🏷️ Forzando creación y subida de tag v$NEXT_VER..."
           git tag -f v$NEXT_VER
-          git push origin master --follow-tags
+          
+          # 1. Subir master primero
+          git push origin master
+          # 2. Subir el tag EXPLÍCITAMENTE (follow-tags a veces falla)
+          git push origin v$NEXT_VER --force
 
-      # 4. CREAR RELEASE EN GITHUB UI (Recuperado de tu v4.3.0)
+      # 4. CREAR RELEASE EN GITHUB UI
       - name: Create GitHub Release
         if: steps.analyze.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
@@ -123,5 +134,5 @@ jobs:
           tag_name: v${{ steps.analyze.outputs.next_version }}
           name: v${{ steps.analyze.outputs.next_version }}
           body_path: CHANGELOG.md
-          make_latest: true
           token: ${{ steps.generate_token.outputs.token }}
+          make_latest: true
