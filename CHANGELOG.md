@@ -2,7 +2,6 @@
 
 All notable changes to Poster will be documented in this file.
 
-
 ## [4.3.0](https://github.com/adcondev/poster/compare/v4.2.0...v4.3.0) (2025-12-19)
 
 ### ✨ Features
