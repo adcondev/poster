@@ -14,8 +14,7 @@ jobs:
   release-flow:
     runs-on: ubuntu-latest
     steps:
-      # --- PASO 1: OBTENER TOKEN DE LA APP (LA LLAVE MAESTRA) ---
-      # Esto es CRÍTICO para saltarse la regla GH013
+      # 1. TOKEN DE LA APP (Bypass de reglas)
       - name: Generate GitHub App token
         id: generate_token
         uses: tibdex/github-app-token@v2
@@ -27,7 +26,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Usamos el token de la App, no el GITHUB_TOKEN por defecto
           token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup Node.js
@@ -38,27 +36,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # --- PASO 2: CÁLCULO DE VERSIÓN (LÓGICA BLINDADA) ---
+      # 2. CÁLCULO DE VERSIÓN
       - name: Calculate Next Version
         id: analyze
         run: |
           git fetch --tags --force
           
-          # Buscamos último tag válido (v4.3.0, v4.4.0, etc)
+          # Buscamos último tag numérico válido
           LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
           [ -z "$LATEST_TAG" ] && LATEST_TAG="v0.0.0"
           
           CLEAN_VERSION=${LATEST_TAG#v}
           echo "🏷️ Base para cálculo: $LATEST_TAG"
 
-          # Analizar commits
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # Detectar tipo de incremento
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             TYPE="major"
           elif echo "$COMMITS" | grep -q "^feat"; then
@@ -70,16 +66,15 @@ jobs:
           fi
 
           if [ -n "$TYPE" ]; then
-            # Cálculo matemático con Node.js
             NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$TYPE')")
-            echo "🚀 Próxima versión calculada: $NEXT_VERSION ($TYPE)"
+            echo "🚀 Próxima versión: $NEXT_VERSION ($TYPE)"
             echo "should_release=true" >> $GITHUB_OUTPUT
             echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      # 3. APLICAR CAMBIOS Y PUBLICAR (Con lógica anti-conflictos)
+      # 3. APLICAR VERSIÓN, CHANGELOG Y GIT
       - name: Apply Version & Push
         if: steps.analyze.outputs.should_release == 'true'
         env:
@@ -89,39 +84,44 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          echo "⬇️ Sincronizando con remoto para evitar conflictos..."
+          echo "⬇️ Sincronizando..."
           git pull origin master --rebase
 
-          # Verificar si la versión ya fue aplicada en un intento fallido anterior
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "✨ Forzando generación de versión $NEXT_VER..."
+
+          # 1. Forzar escritura en package.json (aunque sea la misma versión)
+          npm version $NEXT_VER --no-git-tag-version --allow-same-version
+
+          # 2. Generar Changelog SIEMPRE (Esto arregla tu problema actual)
+          npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
+
+          # 3. Limpieza de emergencia
+          sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
           
-          if [ "$CURRENT_VERSION" = "$NEXT_VER" ]; then
-            echo "⚠️ La versión $NEXT_VER ya existe en package.json. Se omitirá la generación de commit."
-            ALREADY_UPDATED="true"
+          # 4. Commit (Solo si hay cambios, ej. el changelog nuevo)
+          git add package.json package-lock.json CHANGELOG.md
+          
+          # Si no hay cambios (ej. corriste esto 2 veces), no fallamos
+          if git diff --staged --quiet; then
+            echo "⚠️ No hay cambios para comitear (¿Ya se generó antes?)"
           else
-            echo "✨ Aplicando nueva versión $NEXT_VER..."
-          
-            # 1. Actualizar JSONs
-            npm version $NEXT_VER --no-git-tag-version --allow-same-version
-
-            # 2. Generar Changelog
-            npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
-
-            # 3. Corrección [null] -> [vX.X.X]
-            sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
-          
-            # 4. Commit
-            git add package.json package-lock.json CHANGELOG.md
             git commit -m "chore(release): v$NEXT_VER [skip ci]"
           fi
 
-          # 5. Push Tag (Autenticado con App)
-          # Re-autenticamos el remote
+          # 5. Push Tag Forzado
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
           
-          echo "🏷️ Asegurando tag v$NEXT_VER..."
-          # Forzamos el tag por si se quedó a medias
+          echo "🏷️ Actualizando tag v$NEXT_VER..."
           git tag -f v$NEXT_VER
-          
-          echo "🚀 Subiendo cambios..."
           git push origin master --follow-tags
+
+      # 4. CREAR RELEASE EN GITHUB UI (Recuperado de tu v4.3.0)
+      - name: Create GitHub Release
+        if: steps.analyze.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.analyze.outputs.next_version }}
+          name: v${{ steps.analyze.outputs.next_version }}
+          body_path: CHANGELOG.md
+          make_latest: true
+          token: ${{ steps.generate_token.outputs.token }}
