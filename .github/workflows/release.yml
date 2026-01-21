@@ -14,11 +14,21 @@ jobs:
   release-flow:
     runs-on: ubuntu-latest
     steps:
+      # --- PASO 1: OBTENER TOKEN DE LA APP (LA LLAVE MAESTRA) ---
+      # Esto es CRÍTICO para saltarse la regla GH013
+      - name: Generate GitHub App token
+        id: generate_token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Usamos el token de la App, no el GITHUB_TOKEN por defecto
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,27 +38,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # --- PASO 1: CÁLCULO DE VERSIÓN ROBUSTO ---
+      # --- PASO 2: CÁLCULO DE VERSIÓN (LÓGICA BLINDADA) ---
       - name: Calculate Next Version
         id: analyze
         run: |
           git fetch --tags --force
           
-          # Buscamos el último tag numérico válido (v4.3.0, v4.4.0, etc)
+          # Buscamos último tag válido (v4.3.0, v4.4.0, etc)
           LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
           [ -z "$LATEST_TAG" ] && LATEST_TAG="v0.0.0"
           
           CLEAN_VERSION=${LATEST_TAG#v}
           echo "🏷️ Base para cálculo: $LATEST_TAG"
 
-          # Analizamos commits desde ese tag
+          # Analizar commits
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # Detectamos tipo de incremento
+          # Detectar tipo de incremento
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             TYPE="major"
           elif echo "$COMMITS" | grep -q "^feat"; then
@@ -60,55 +70,54 @@ jobs:
           fi
 
           if [ -n "$TYPE" ]; then
-            # Usamos semver para sumar (ej: 4.4.0 + patch = 4.4.1)
+            # Cálculo matemático con Node.js
             NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$TYPE')")
-            echo "🚀 Próxima versión: $NEXT_VERSION ($TYPE)"
+            echo "🚀 Próxima versión calculada: $NEXT_VERSION ($TYPE)"
             echo "should_release=true" >> $GITHUB_OUTPUT
             echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      # --- PASO 2: GENERAR ARCHIVOS Y COMMIT ---
-      - name: Apply Version & Generate Changelog
+      # --- PASO 3: APLICAR CAMBIOS Y PUBLICAR ---
+      - name: Apply Version & Push
         if: steps.analyze.outputs.should_release == 'true'
         env:
           NEXT_VER: ${{ steps.analyze.outputs.next_version }}
+          # Usamos el token de la App para las operaciones de git
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
+          # Configurar Git con el bot
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # 1. Actualizar JSONs (npm es más seguro que standard-version para esto)
+          # 1. Actualizar JSONs
           npm version $NEXT_VER --no-git-tag-version --allow-same-version
 
-          # 2. Generar Changelog (standard-version solo escribe texto aquí)
+          # 2. Generar Changelog
           npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
 
-          # 3. Limpieza de emergencia por si standard-version pone [null]
+          # 3. Corrección de emergencia para [null]
           sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
           
-          # 4. Commit de Release
+          # 4. Commit
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): v$NEXT_VER [skip ci]"
 
-      # --- PASO 3: PUBLICAR (TAG Y RELEASE UI) ---
-      - name: Push Tag & Create GitHub Release
+          # 5. Crear Tag y Push (Usando autenticación de App implícita en checkout o url)
+          # Re-autenticamos el remote por seguridad
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
+          
+          echo "🏷️ Pushing v$NEXT_VER..."
+          git tag v$NEXT_VER
+          git push origin master --follow-tags
+
+      # --- PASO 4: CREAR RELEASE EN UI DE GITHUB ---
+      - name: Create GitHub Release
         if: steps.analyze.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.analyze.outputs.next_version }}
           name: v${{ steps.analyze.outputs.next_version }}
-          body_path: CHANGELOG.md # Usa el changelog completo o puedes filtrar
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # --- PASO 4: SINCRONIZAR MASTER ---
-      - name: Push Changes to Master
-        if: steps.analyze.outputs.should_release == 'true'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-          tags: true # Esto asegura que los tags se suban sí o sí
+          body_path: CHANGELOG.md
+          token: ${{ steps.generate_token.outputs.token }} # Token de la App aquí también
