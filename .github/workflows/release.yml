@@ -28,91 +28,87 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Analyze commits and Calculate Version
+      # --- PASO 1: CÁLCULO DE VERSIÓN ROBUSTO ---
+      - name: Calculate Next Version
         id: analyze
         run: |
-          # 1. Asegurar que tenemos todos los tags
           git fetch --tags --force
           
-          # 2. Obtener el último tag REAL.
-          # Usamos 'sort -V' para asegurar orden semántico (v4.4.0 > v4.3.0)
+          # Buscamos el último tag numérico válido (v4.3.0, v4.4.0, etc)
           LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
-          
-          if [ -z "$LATEST_TAG" ]; then
-             LATEST_TAG="v0.0.0"
-          fi
+          [ -z "$LATEST_TAG" ] && LATEST_TAG="v0.0.0"
           
           CLEAN_VERSION=${LATEST_TAG#v}
-          echo "🏷️ Último Tag en historial: $LATEST_TAG"
-          
-          # 3. Analizar commits desde ese tag
+          echo "🏷️ Base para cálculo: $LATEST_TAG"
+
+          # Analizamos commits desde ese tag
           if [ "$LATEST_TAG" = "v0.0.0" ]; then
             COMMITS=$(git log --pretty=format:"%s" HEAD)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          echo "🔍 Commits nuevos encontrados:"
-          echo "$COMMITS"
-
-          # 4. Determinar incremento (Patch por defecto para deps/ci)
+          # Detectamos tipo de incremento
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
-            RELEASE_TYPE="major"
+            TYPE="major"
           elif echo "$COMMITS" | grep -q "^feat"; then
-            RELEASE_TYPE="minor"
+            TYPE="minor"
           elif echo "$COMMITS" | grep -qE "^(fix|perf|deps|ci|chore|refactor)"; then
-            RELEASE_TYPE="patch"
+            TYPE="patch"
           else
-            RELEASE_TYPE=""
+            TYPE=""
           fi
 
-          if [ -n "$RELEASE_TYPE" ]; then
-            # Calcular la siguiente versión usando Node.js
-            NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$RELEASE_TYPE')")
-          
-            echo "✅ Versión Actual: $CLEAN_VERSION"
-            echo "✅ Incremento: $RELEASE_TYPE"
-            echo "🚀 Próxima Versión: $NEXT_VERSION"
-          
+          if [ -n "$TYPE" ]; then
+            # Usamos semver para sumar (ej: 4.4.0 + patch = 4.4.1)
+            NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$TYPE')")
+            echo "🚀 Próxima versión: $NEXT_VERSION ($TYPE)"
             echo "should_release=true" >> $GITHUB_OUTPUT
             echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ No hay cambios para release."
             echo "should_release=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Execute Release (Manual Mode)
+      # --- PASO 2: GENERAR ARCHIVOS Y COMMIT ---
+      - name: Apply Version & Generate Changelog
         if: steps.analyze.outputs.should_release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXT_VER: ${{ steps.analyze.outputs.next_version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          echo "🛠️ Aplicando versión $NEXT_VER manualmente..."
-
-          # 1. ACTUALIZAR ARCHIVOS JSON (Usando npm nativo, NO standard-version)
-          # Esto evita el error "null" porque npm es más robusto editando el archivo.
+          # 1. Actualizar JSONs (npm es más seguro que standard-version para esto)
           npm version $NEXT_VER --no-git-tag-version --allow-same-version
 
-          # 2. GENERAR CHANGELOG (Usando standard-version solo para esto)
-          # --skip.bump: Ya lo hicimos con npm
-          # --skip.tag: Lo haremos manual
-          # --skip.commit: Lo haremos manual
+          # 2. Generar Changelog (standard-version solo escribe texto aquí)
           npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
 
-          # 3. VERIFICAR QUE NO HAYA "vnull" EN CHANGELOG
-          # Si standard-version falló al leer el tag, corregimos el encabezado del changelog
+          # 3. Limpieza de emergencia por si standard-version pone [null]
           sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
-          sed -i "s/vnull/v$NEXT_VER/g" CHANGELOG.md || true
-
-          # 4. COMMIT Y TAG MANUAL
+          
+          # 4. Commit de Release
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): v$NEXT_VER [skip ci]"
-          
-          echo "🏷️ Creando tag v$NEXT_VER"
-          git tag v$NEXT_VER
 
-          # 5. PUSH
-          git push origin master --follow-tags
+      # --- PASO 3: PUBLICAR (TAG Y RELEASE UI) ---
+      - name: Push Tag & Create GitHub Release
+        if: steps.analyze.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.analyze.outputs.next_version }}
+          name: v${{ steps.analyze.outputs.next_version }}
+          body_path: CHANGELOG.md # Usa el changelog completo o puedes filtrar
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- PASO 4: SINCRONIZAR MASTER ---
+      - name: Push Changes to Master
+        if: steps.analyze.outputs.should_release == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true # Esto asegura que los tags se suban sí o sí
