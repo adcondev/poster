@@ -1,6 +1,6 @@
 {
   "name": "@adcondev/poster",
-  "version": "4.4.0",
+  "version": null,
   "private": true,
   "description": "A professional, production-ready Go library for controlling ESC/POS thermal printers",
   "keywords": [
