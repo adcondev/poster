@@ -393,8 +393,17 @@ func (p *Printer) printQRAsImage(data string, opts *graphics.QROptions) error {
 		return fmt.Errorf("generate QR image: %w", err)
 	}
 
+	targetWidth := opts.PixelWidth
+	generatedWidth := img.Bounds().Dx()
+
+	if generatedWidth > targetWidth {
+		log.Printf("QR: Generated width %d > requested %d. Using generated size.",
+			generatedWidth, targetWidth)
+		targetWidth = generatedWidth
+	}
+
 	imgOpts := &graphics.ImgOptions{
-		PixelWidth:     opts.PixelWidth,
+		PixelWidth:     targetWidth,
 		Threshold:      128,
 		Scaling:        graphics.NearestNeighbor,
 		Dithering:      graphics.Threshold,

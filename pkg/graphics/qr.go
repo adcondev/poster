@@ -191,9 +191,9 @@ func (qro *QROptions) validateAndAdjustPixelWidth() {
 			qro.PixelWidth, maxPixelWidth)
 		qro.PixelWidth = maxPixelWidth
 	default:
-		qro.Qr.requestedWidth = qro.PixelWidth
 		log.Printf("QR: using requested pixel_width %d", qro.PixelWidth)
 	}
+	qro.Qr.requestedWidth = qro.PixelWidth
 }
 
 func (qro *QROptions) validateGridSize() error {
