@@ -2,6 +2,62 @@
 
 All notable changes to Poster will be documented in this file.
 
+## [4.4.0](https://github.com/adcondev/poster/compare/v4.3.0...v4.4.0) (2026-01-27)
+
+
+### ♻️ Code Refactoring
+
+* **linters:** improve golangci-lint configuration for better analysis ([ee2d80b](https://github.com/adcondev/poster/commit/ee2d80b553763810fb95f6c08b7e0e150bb4994c))
+* **poster:** optimize command buffer allocation and improve readability ([1a6e148](https://github.com/adcondev/poster/commit/1a6e14832e42bbe88eaff01ea92d4cf3656ff6bd))
+
+
+### 📦 Dependencies
+
+* **gh-actions:** bump toshimaru/auto-author-assign from 2.1.1 to 3.0.1 ([#95](https://github.com/adcondev/poster/issues/95)) ([e6ba3ac](https://github.com/adcondev/poster/commit/e6ba3ac6aa4ce1feb812e6d799975c6d8003a262))
+
+
+### 🤖 Continuous Integration
+
+* **gh-actions:** enhance Github Actions workflows ([#91](https://github.com/adcondev/poster/issues/91)) ([480b2ea](https://github.com/adcondev/poster/commit/480b2eaa8b7daadfb734cb7a10a29564ebb66396)), closes [#92](https://github.com/adcondev/poster/issues/92)
+* **gh-actions:** update release workflow for improved version synchronization [skip ci] ([c1bb2aa](https://github.com/adcondev/poster/commit/c1bb2aa3d011cdc21efce7c5790a30f5cd6bfe03))
+* **github:** add self-healing version sync to release workflow [skip ci] ([ae6dc12](https://github.com/adcondev/poster/commit/ae6dc12ee542ea585ee092838cc857a9ae39e118))
+* **github:** update release workflow for versioning and changelog generation [skip ci] ([33484dd](https://github.com/adcondev/poster/commit/33484dda3b0edc774bf1d7f3c0a6d4f14229bbd6))
+* **release:** add gh-release action to fix missing ui release [skip ci] ([967dc5f](https://github.com/adcondev/poster/commit/967dc5f386e829878d2b9118cc7472cfd3efddd3))
+* **release:** add smart sync to prevent non-fast-forward errors [skip ci] ([59bf5c7](https://github.com/adcondev/poster/commit/59bf5c7c2e1013974d44c87edd4b8e957dbffcad))
+* **release:** definitive workflow synchronization [skip ci] ([c52af41](https://github.com/adcondev/poster/commit/c52af416ae5a435e09b2ea940f3ffece4afce708))
+* **release:** filter tags strictly to avoid vnull errors [skip ci] ([14a7839](https://github.com/adcondev/poster/commit/14a783908676ccd92431b7ad39788d7b25c05265))
+* **release:** restore app token to bypass protection rules [skip ci] ([98e366a](https://github.com/adcondev/poster/commit/98e366a8f65ffc6ef243706ae48ec67e595eed36))
+* **release:** switch to manual release strategy to fix null error [skip ci] ([318016a](https://github.com/adcondev/poster/commit/318016a1c08b6d490224f5cb79d708358ae947e6))
+
+
+### ✨ Features
+
+* **ci:** launch v4.4.0 production release ([70aa414](https://github.com/adcondev/poster/commit/70aa4142226c8044c3ed7a7b953e8ce2291858a9))
+* **connection:** enhance printer listing functionality for Windows ([1794548](https://github.com/adcondev/poster/commit/1794548ad27c2bb2671e752aee24545eb2503667))
+* **connection:** enhance printer listing functionality for Windows ([#100](https://github.com/adcondev/poster/issues/100)) ([48118b8](https://github.com/adcondev/poster/commit/48118b8c117374e68e41518ded6c6e09ee837604)), closes [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R22-R26](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R22-R26) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R76](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34R76) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L100-R150](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L100-R150) [/#diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L141-R165](https://github.com/adcondev/poster/issues/diff-87db21a973eed4fef5f32b267aa60fcee5cbdf03c67fafdc2a9b553bb0b15f34L141-R165) [/#diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L2](https://github.com/adcondev/poster/issues/diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L2) [/#diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L18-R45](https://github.com/adcondev/poster/issues/diff-7a68c862ed13ecb99f59c4f61a92bbbc265afe66afa76b17bb9739a8cce7cab1L18-R45) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL21-R38](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL21-R38) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL54-R63](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL54-R63) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL73-R103](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deL73-R103) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR148-R153](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR148-R153) [/#diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR164-R228](https://github.com/adcondev/poster/issues/diff-02effedb378056307ac3c7278d22cf5d4e84596b606179bd8e550ab1e95cb4deR164-R228) [/#diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaR1-R6](https://github.com/adcondev/poster/issues/diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaR1-R6) [/#diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL15-R66](https://github.com/adcondev/poster/issues/diff-85b77b574161b5fe9ba5d18209e374200eae93e42abf3286dd6845915d624faaL15-R66)
+* **connection:** implement printer enumeration and details for Windows ([e7a9735](https://github.com/adcondev/poster/commit/e7a9735d1627f462023a20a3ab849de11fd1ce60))
+* **schema:** add PulseCommand and BeepCommand to document schema ([5edba5e](https://github.com/adcondev/poster/commit/5edba5e4a9d9c0422cf3f959ee987ee1f1a468fc))
+
+
+### 🐛 Bug Fixes
+
+* **ci:** trigger release pipeline validation ([6762271](https://github.com/adcondev/poster/commit/67622711e063c54487a5977c0df4704a3b65d824))
+* **ci:** trigger release test for v4.4.1 ([9e41e9d](https://github.com/adcondev/poster/commit/9e41e9d2cddabb00fc456673cf3d2e38338cd892))
+* **ci:** trigger release v4.4.0 final test ([fe51537](https://github.com/adcondev/poster/commit/fe515371c022ac527674c7f460a31b5889fb60a5))
+* **ci:** trigger release with app token ([a1882f8](https://github.com/adcondev/poster/commit/a1882f8aaa3adade91741d621efb3ea0aeaeea2c))
+* **github:** update release workflow and improve changelog management ([096db5d](https://github.com/adcondev/poster/commit/096db5de66d71db6610ab8cab0c9163a05efcf3c))
+* **go.mod:** remove version suffix from module path ([1f85a12](https://github.com/adcondev/poster/commit/1f85a12b578c1189ec0d1797a63a7b363c4d9604))
+* **go.mod:** update module path to include version v4 ([e113ed3](https://github.com/adcondev/poster/commit/e113ed3abd0fadd9c8b6af486962b0b0efe075f4))
+* **npm:** restore package version from null to 4.3.0 ([79508d3](https://github.com/adcondev/poster/commit/79508d3fc3c51c09f8e0767ff64ff48d2d6c10c1))
+* **npm:** restore package version from null to 4.3.0 ([9517910](https://github.com/adcondev/poster/commit/95179103055e1b64caa3b210b289729e87663195))
+* **npm:** update package name and dependencies for poster library ([#94](https://github.com/adcondev/poster/issues/94)) ([ac2ce69](https://github.com/adcondev/poster/commit/ac2ce69b3ff279e73ee962673afa752876e9d80f)), closes [#92](https://github.com/adcondev/poster/issues/92)
+* **qrcode:** adjust pixel width handling for QR code generation ([c78765f](https://github.com/adcondev/poster/commit/c78765f868414d839040aefa087e75b7711e2ef7))
+* **qrcode:** adjust pixel width handling for QR code generation ([#102](https://github.com/adcondev/poster/issues/102)) ([7bae47c](https://github.com/adcondev/poster/commit/7bae47c7b0b63276c954498d5261620eecc3971d)), closes [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L76-R78](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L76-R78) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L120-R123](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L120-R123) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L134-R140](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L134-R140) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L387-R395](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L387-R395) [/#diff-26ae8a1db618a19061609229b1f988ac67c79401beb9abf7622f2c3d7aaa8563L59-R59](https://github.com/adcondev/poster/issues/diff-26ae8a1db618a19061609229b1f988ac67c79401beb9abf7622f2c3d7aaa8563L59-R59) [/#diff-19f22fdc54baf31435098aff5fcefb4825faadf4a454ff2e9d1e04b37501f25dL336-R336](https://github.com/adcondev/poster/issues/diff-19f22fdc54baf31435098aff5fcefb4825faadf4a454ff2e9d1e04b37501f25dL336-R336) [/#diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421](https://github.com/adcondev/poster/issues/diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421) [/#diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5L80-R80](https://github.com/adcondev/poster/issues/diff-c1473fbe2c123dff34107f23da1a509dd9c8195e70fad5adeb41225f254677e5L80-R80) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L120-R123](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L120-R123) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308) [/#diff-36043890c52c8201a8bc84238c219be45ce07bf172d89f693c7c54ffe70d046eR17-R20](https://github.com/adcondev/poster/issues/diff-36043890c52c8201a8bc84238c219be45ce07bf172d89f693c7c54ffe70d046eR17-R20) [/#diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421](https://github.com/adcondev/poster/issues/diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421) [/#diff-bc390ab84f066ac653ecc30558ed5468a92e9337d4fe00dbf7996379d2f4d3e6L57-R69](https://github.com/adcondev/poster/issues/diff-bc390ab84f066ac653ecc30558ed5468a92e9337d4fe00dbf7996379d2f4d3e6L57-R69) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L153-R308) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L15-L24](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L15-L24) [/#diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L76-R78](https://github.com/adcondev/poster/issues/diff-354b6159761dd6b7169ff1834450df0c77e3fa6bf5ebefcb83e6d6d495122d31L76-R78) [/#diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421](https://github.com/adcondev/poster/issues/diff-e80b0c06233d84988a06eddd83cd81032a37445a6c37436f0b49d9dcb36dc0edL328-R421)
+* **qrcode:** update QR options and constants for improved handling ([1f51b19](https://github.com/adcondev/poster/commit/1f51b19070398232625dc980ee26720784a4aabb))
+* **release:** force full release generation ([da190df](https://github.com/adcondev/poster/commit/da190dfeb397b6b10ebfda289deb7bc3e3e5dfd8))
+* **release:** retry release for v4.4.1 ([8982fca](https://github.com/adcondev/poster/commit/8982fcafa4d76f4c617be87145b755c958f07380))
+* **Taskfile:** update golangci-lint command to use absolute path ([9492552](https://github.com/adcondev/poster/commit/9492552e545340ef09aa6c3529b44643d394c688))
+
 ## [4.4.0](https://github.com/adcondev/poster/compare/v4.3.0...v4.4.0) (2026-01-21)
 
 
