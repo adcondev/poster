@@ -54,19 +54,19 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 	}
 
 	// Mapear corrección de errores (default: Q según schema)
-	correction := "Q"
+	correction := constants.DefaultQrErrorCorrection.String()
 	if cmd.Correction != "" {
 		correction = strings.ToUpper(cmd.Correction)
 	}
 
 	switch correction {
-	case "L":
+	case constants.L.String():
 		opts.ErrorCorrection = posqr.LevelL
-	case "M":
+	case constants.M.String():
 		opts.ErrorCorrection = posqr.LevelM
-	case "Q":
+	case constants.Q.String():
 		opts.ErrorCorrection = posqr.LevelQ
-	case "H":
+	case constants.H.String():
 		opts.ErrorCorrection = posqr.LevelH
 	default:
 		return fmt.Errorf("invalid QR correction level: %s (valid: L, M, Q, H)", cmd.Correction)

@@ -325,18 +325,27 @@ func (p *Printer) SetCodeTable(codeTable character.CodeTable) error {
 // ============================================================================
 
 // PrintQR imprime un QR con detección automática y fallback
-func (p *Printer) PrintQR(data string, opts *graphics.QROptions) error {
-	if opts == nil {
+func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
+	if qropts == nil {
 		// TODO: Automatic options based on profile (DPI and Paper PixelWidth config to calculate Dots Per Line)
-		opts = graphics.DefaultQROptions()
+		qropts = graphics.DefaultQROptions()
+	}
+
+	switch p.Profile.PaperWidth {
+	case constants.Paper58mm:
+		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
+	case constants.Paper80mm:
+		qropts.MaxPixelWidth = constants.PaperPxWidth80mm
+	default:
+		qropts.MaxPixelWidth = constants.Paper58mm
 	}
 
 	// Intentar QR nativo si está soportado
-	opts.Qr = graphics.QrInfo{}
-	opts.Logo = graphics.LogoInfo{}
+	qropts.Qr = graphics.QrInfo{}
+	qropts.Logo = graphics.LogoInfo{}
 
 	if p.Profile.HasQR {
-		err := p.printQRNative(data, opts)
+		err := p.printQRNative(data, qropts)
 		if err == nil {
 			return nil
 		}
@@ -344,49 +353,55 @@ func (p *Printer) PrintQR(data string, opts *graphics.QROptions) error {
 	}
 
 	// Fallback a imagen
-	return p.printQRAsImage(data, opts)
+	return p.printQRAsImage(data, qropts)
 }
 
 // printQRNative imprime usando protocolo ESC/POS nativo
-func (p *Printer) printQRNative(data string, opts *graphics.QROptions) error {
-	// Configurar modelo
-	if cmd, err := p.Protocol.QRCode.SelectQRCodeModel(opts.Model, 0); err != nil {
+func (p *Printer) printQRNative(data string, qropts *graphics.QrOptions) error {
+	// 1. Select Model
+	if cmd, err := p.Protocol.QRCode.SelectQRCodeModel(qropts.Model, 0); err != nil {
 		return err
 	} else if err := p.Write(cmd); err != nil {
 		return err
 	}
 
-	// Configurar tamaño de módulo
-	_, err := opts.GenerateQR(data)
+	// 2. Calculate Module Size (Pure Go calculation)
+	// Note: GenerateQR modifies opts.Qr.moduleSize based on opts.PixelWidth and Data
+	_, err := qropts.GenerateQR(data)
 	if err != nil {
 		return err
 	}
-	if cmd, err := p.Protocol.QRCode.SetQRCodeModuleSize(opts.GetModuleSize()); err != nil {
+
+	// 3. Set Module Size
+	if cmd, err := p.Protocol.QRCode.SetQRCodeModuleSize(qropts.GetModuleSize()); err != nil {
 		return err
 	} else if err := p.Write(cmd); err != nil {
 		return err
 	}
 
-	// Configurar corrección de errores
-	if cmd, err := p.Protocol.QRCode.SetQRCodeErrorCorrectionLevel(opts.ErrorCorrection); err != nil {
+	// 4. Set Error Correction Level
+	// [Check] Ensure we are sending the user-defined EC, not a reset value.
+	// The previous GenerateQR call validates it but preserves valid values (48-51).
+	log.Printf("QR: Setting Native EC Level to %d", qropts.ErrorCorrection) // [Optional Debug]
+	if cmd, err := p.Protocol.QRCode.SetQRCodeErrorCorrectionLevel(qropts.ErrorCorrection); err != nil {
 		return err
 	} else if err := p.Write(cmd); err != nil {
 		return err
 	}
 
-	// Almacenar datos
+	// 5. Store Data
 	if cmd, err := p.Protocol.QRCode.StoreQRCodeData([]byte(data)); err != nil {
 		return err
 	} else if err := p.Write(cmd); err != nil {
 		return err
 	}
 
-	// Imprimir
+	// 6. Print
 	return p.Write(p.Protocol.QRCode.PrintQRCode())
 }
 
 // printQRAsImage genera y imprime QR como imagen
-func (p *Printer) printQRAsImage(data string, opts *graphics.QROptions) error {
+func (p *Printer) printQRAsImage(data string, opts *graphics.QrOptions) error {
 	// Generar imagen QR
 	img, err := graphics.ProcessQRImage(data, opts)
 	if err != nil {
