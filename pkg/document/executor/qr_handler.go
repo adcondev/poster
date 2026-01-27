@@ -49,11 +49,11 @@ func (e *Executor) handleQR(printer *service.Printer, data json.RawMessage) erro
 		}
 		opts.PixelWidth = cmd.PixelWidth
 	} else {
-		// Default: 128
+		// Default: 256 según schema
 		opts.PixelWidth = constants.DefaultQrPixelWidth
 	}
 
-	// Mapear corrección de errores (default: Q según schema)
+	// Mapear corrección de errores (default: M según schema)
 	correction := constants.DefaultQrErrorCorrection.String()
 	if cmd.Correction != "" {
 		correction = strings.ToUpper(cmd.Correction)

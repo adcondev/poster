@@ -337,7 +337,7 @@ func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
 	case constants.Paper80mm:
 		qropts.MaxPixelWidth = constants.PaperPxWidth80mm
 	default:
-		qropts.MaxPixelWidth = constants.Paper58mm
+		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
 	}
 
 	// Intentar QR nativo si está soportado
