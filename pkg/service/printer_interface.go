@@ -56,7 +56,7 @@ type PrinterActions interface {
 
 	// Graphics
 	PrintBitmap(bitmap *graphics.MonochromeBitmap) error
-	PrintQR(data string, opts *graphics.QROptions) error
+	PrintQR(data string, opts *graphics.QrOptions) error
 	PrintBarcode(cfg graphics.BarcodeConfig, data []byte) error
 
 	// Character encoding

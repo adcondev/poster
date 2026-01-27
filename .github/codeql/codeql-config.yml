@@ -25,7 +25,7 @@ paths-ignore:
   - 'testdata/**'
 
   # Build artifacts
-  - '*. exe'
+  - '*.exe'
   - '*.dll'
   - '*.so'
 

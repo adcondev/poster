@@ -14,6 +14,10 @@ const (
 	PaperPxWidth58mm = 384
 	// PaperPxWidth80mm = 72mm printable area * 8 dots/mm = 576 pixels
 	PaperPxWidth80mm = 576
+	// Paper58mm is 58mm paper width
+	Paper58mm = 58
+	// Paper80mm is 80mm paper width
+	Paper80mm = 80
 )
 
 // ============================================================================
