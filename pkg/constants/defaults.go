@@ -77,7 +77,7 @@ const (
 	// DefaultQrAlignment is the default alignment for QR codes
 	DefaultQrAlignment = Center
 	// DefaultQrErrorCorrection is the default error correction level for QR codes
-	DefaultQrErrorCorrection = Q
+	DefaultQrErrorCorrection = M
 )
 
 // Barcode defaults

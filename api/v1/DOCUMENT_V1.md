@@ -202,8 +202,8 @@ Genera códigos QR:
 |----------------|---------|-----------|------------------------------------------------|---------|---------------------|
 | `data`         | string  | ✓         | Datos del QR (URL, texto, etc.)                |         |                     |
 | `human_text`   | string  |           | Texto a mostrar debajo del QR                  |         |                     |
-| `pixel_width`  | integer |           | Ancho del QR en píxeles                        | 128     | Mínimo: 87          |
-| `correction`   | string  |           | Nivel de corrección de errores                 | Q       | L, M, Q, H          |
+| `pixel_width`  | integer |           | Ancho del QR en píxeles                        | 256     | Mínimo: 87          |
+| `correction`   | string  |           | Nivel de corrección de errores                 | M       | L, M, Q, H          |
 | `align`        | string  |           | Alineación del QR                              | center  | left, center, right |
 | `logo`         | string  |           | Logo en Base64                                 |         |                     |
 | `circle_shape` | boolean |           | Usar bloques circulares (solo para QR < 256px) |         |                     |
