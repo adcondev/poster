@@ -165,11 +165,11 @@ func (p *Pipeline) applyAtkinson(gray *image.Gray) *MonochromeBitmap {
 	mono := NewMonochromeBitmap(width, height)
 
 	// Create a working copy for error diffusion
-	work := make([][]int, height)
+	work := make([]int, width*height)
 	for y := 0; y < height; y++ {
-		work[y] = make([]int, width)
+		rowOffset := y * width
 		for x := 0; x < width; x++ {
-			work[y][x] = int(gray.GrayAt(x, y).Y)
+			work[rowOffset+x] = int(gray.GrayAt(x, y).Y)
 		}
 	}
 
@@ -180,8 +180,13 @@ func (p *Pipeline) applyAtkinson(gray *image.Gray) *MonochromeBitmap {
 	// Error is distributed as 1/8 to each neighbor (total 6/8 = 3/4)
 
 	for y := 0; y < height; y++ {
+		rowOffset := y * width
+		nextRowOffset := (y + 1) * width
+		nextNextRowOffset := (y + 2) * width
+
 		for x := 0; x < width; x++ {
-			oldPixel := work[y][x]
+			idx := rowOffset + x
+			oldPixel := work[idx]
 			newPixel := 0
 			if oldPixel > int(p.opts.Threshold) {
 				newPixel = 255
@@ -199,22 +204,22 @@ func (p *Pipeline) applyAtkinson(gray *image.Gray) *MonochromeBitmap {
 
 			// Distribute to neighbors
 			if x+1 < width {
-				work[y][x+1] += diffusedError
+				work[idx+1] += diffusedError
 			}
 			if x+2 < width {
-				work[y][x+2] += diffusedError
+				work[idx+2] += diffusedError
 			}
 			if y+1 < height {
 				if x-1 >= 0 {
-					work[y+1][x-1] += diffusedError
+					work[nextRowOffset+(x-1)] += diffusedError
 				}
-				work[y+1][x] += diffusedError
+				work[nextRowOffset+x] += diffusedError
 				if x+1 < width {
-					work[y+1][x+1] += diffusedError
+					work[nextRowOffset+(x+1)] += diffusedError
 				}
 			}
 			if y+2 < height {
-				work[y+2][x] += diffusedError
+				work[nextNextRowOffset+x] += diffusedError
 			}
 		}
 	}

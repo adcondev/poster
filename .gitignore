@@ -104,6 +104,7 @@ coverage.txt
 coverage-summary.txt
 benchmark-comment.md
 RELEASE_NOTES.md
+node_modules
 
 # ✨ ADD: CodeQL results
 .codeql/

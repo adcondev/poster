@@ -333,7 +333,7 @@ func (m *MockPrinter) PrintBitmap(bitmap *graphics.MonochromeBitmap) error {
 }
 
 // PrintQR simulates printing a QR code
-func (m *MockPrinter) PrintQR(data string, opts *graphics.QROptions) error {
+func (m *MockPrinter) PrintQR(data string, opts *graphics.QrOptions) error {
 	m.record("PrintQR", data, opts)
 	m.PrintedQRs = append(m.PrintedQRs, data)
 	return m.checkError("PrintQR")
