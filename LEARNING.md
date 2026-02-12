@@ -129,6 +129,7 @@ Defined a versioned JSON document format that describes *what* to print, not *ho
 ### 🖼️ Hybrid QR & Barcode Support
 
 - **Smart Fallback**: The system checks the printer profile. If the hardware supports native QR commands (faster, sharper), it uses them. If not (common in cheap generic models), it automatically renders the QR code as a bitmap image in software.
+- **Dynamic Sizing**: Automatically calculates the optimal QR code size based on the printer's `DotsPerLine` (or derived from paper width and DPI) to maximize readability without overflowing the paper.
 - **Logo Support**: QR codes can include embedded logos.
 - **Multiple Symbologies**: Full support for CODE128, EAN13, EAN8, UPC-A, UPC-E, CODE39, ITF, CODABAR.
 
