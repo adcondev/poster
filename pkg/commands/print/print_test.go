@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/adcondev/poster/internal/testutils"
 	"github.com/adcondev/poster/pkg/commands/print"
 	"github.com/adcondev/poster/pkg/commands/shared"
 )
@@ -106,12 +107,8 @@ func TestCommands_Text(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "buffer overflow",
-			// FIXME: change anonymous func to utils helpers
-			text: func() string {
-				overflow := make([]byte, shared.MaxBuf+1)
-				return string(overflow)
-			}(),
+			name:    "buffer overflow",
+			text:    testutils.GenerateString(shared.MaxBuf+1, 0),
 			want:    nil,
 			wantErr: true,
 		},
