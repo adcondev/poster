@@ -425,3 +425,12 @@ const (
 	// TopMarginMultiplier is used to calculate initial top margin
 	TopMarginMultiplier = 2
 )
+
+// ============================================================================
+// File Size Constants
+// ============================================================================
+
+const (
+	// MaxJSONSize is the maximum size in bytes for a JSON document (10MB)
+	MaxJSONSize = 10 * 1024 * 1024
+)
