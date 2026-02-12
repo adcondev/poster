@@ -161,11 +161,21 @@ The table system goes beyond simple formatting to provide hardware-aware renderi
 - **Font A Enforcement**: Consistent 12-dot character width for predictable layouts
 - **Paper Support**: 58mm (32 chars) and 80mm (48 chars) at 203 DPI
 
+### 🧪 Quality Assurance & Testing
+
+- **Table-Driven Testing**: Implemented comprehensive table-driven unit tests for the `TableEngine` to verify rendering logic, ensuring support for:
+  - Header visibility toggling (explicit vs. data-driven).
+  - Column alignment (Left, Center, Right) with precise padding calculations.
+  - Word wrapping functionality for long text.
+  - Edge cases like nil data, invalid definitions, and empty rows.
+- **Mocking & Buffering**: Utilized `bytes.Buffer` as an `io.Writer` to capture and inspect ESC/POS command output without physical hardware, enabling deterministic verification of control codes (e.g., bold toggling `ESC E`).
+
 ```go
 // Example:  Table that would overflow gets auto-reduced
 // Original: [20, 5, 12] = 39 chars (exceeds 32 max for 58mm)
 // After:     [13, 5, 12] = 32 chars (fits perfectly)
 // Log:  "Table auto-reduced:  39 → 32 chars (7 reductions applied)"
+```
 
 ## Module Dependencies
 
