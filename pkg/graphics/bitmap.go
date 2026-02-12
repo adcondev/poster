@@ -8,18 +8,20 @@ import (
 
 // MonochromeBitmap represents a black and white bitmap optimized for ESC/POS
 type MonochromeBitmap struct {
-	Width  int
-	Height int
-	data   []byte // Packed bit data
+	Width       int
+	Height      int
+	bytesPerRow int    // Cached calculation: (Width + 7) / 8
+	data        []byte // Packed bit data
 }
 
 // NewMonochromeBitmap creates a new monochrome bitmap
 func NewMonochromeBitmap(width, height int) *MonochromeBitmap {
 	bytesPerRow := (width + 7) / 8
 	return &MonochromeBitmap{
-		Width:  width,
-		Height: height,
-		data:   make([]byte, bytesPerRow*height),
+		Width:       width,
+		Height:      height,
+		bytesPerRow: bytesPerRow,
+		data:        make([]byte, bytesPerRow*height),
 	}
 }
 
@@ -31,8 +33,7 @@ func (m *MonochromeBitmap) SetPixel(x, y int, black bool) {
 
 	// TODO: Make sure linter suppression is safe here
 
-	bytesPerRow := (m.Width + 7) / 8
-	byteIndex := y*bytesPerRow + x/8
+	byteIndex := y*m.bytesPerRow + x/8
 	bitIndex := uint(7 - (x % 8)) //nolint:gosec
 
 	if black {
@@ -48,8 +49,7 @@ func (m *MonochromeBitmap) GetPixel(x, y int) bool {
 		return false
 	}
 
-	bytesPerRow := (m.Width + 7) / 8
-	byteIndex := y*bytesPerRow + x/8
+	byteIndex := y*m.bytesPerRow + x/8
 	bitIndex := uint(7 - (x % 8)) //nolint:gosec
 
 	return (m.data[byteIndex] & (1 << bitIndex)) != 0
@@ -62,7 +62,7 @@ func (m *MonochromeBitmap) GetRasterData() []byte {
 
 // GetWidthBytes returns the width in bytes (for ESC/POS commands)
 func (m *MonochromeBitmap) GetWidthBytes() int {
-	return (m.Width + 7) / 8
+	return m.bytesPerRow
 }
 
 // ToImage converts the packed monochrome bitmap back to a drawable RGBA image.
@@ -75,11 +75,9 @@ func (m *MonochromeBitmap) ToImage() *image.RGBA {
 	black := color.RGBA{A: 255}
 	white := color.RGBA{R: 255, G: 255, B: 255, A: 255}
 
-	bytesPerRow := (m.Width + 7) / 8
-
 	for y := 0; y < m.Height; y++ {
-		rowStart := y * bytesPerRow
-		for byteIdx := 0; byteIdx < bytesPerRow; byteIdx++ {
+		rowStart := y * m.bytesPerRow
+		for byteIdx := 0; byteIdx < m.bytesPerRow; byteIdx++ {
 			b := m.data[rowStart+byteIdx]
 			for bit := 0; bit < 8; bit++ {
 				x := byteIdx*8 + bit
