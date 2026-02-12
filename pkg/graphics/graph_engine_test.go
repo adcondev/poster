@@ -145,3 +145,57 @@ func TestPipeline_Resize_Limit(t *testing.T) {
 		t.Errorf("Output width = %d, want 576 (capped)", mono.Width)
 	}
 }
+
+func TestPipeline_Process_Atkinson_DiffusionLogic(t *testing.T) {
+	opts := graphics.DefaultOptions()
+	opts.Dithering = graphics.Atkinson
+	opts.Threshold = 128
+	// Use small width to force manual checking and avoid resize
+	opts.PixelWidth = 3
+	p := graphics.NewPipeline(opts)
+
+	// We test each neighbor independently to avoid cascade interference
+	tests := []struct {
+		name   string
+		source image.Point
+		target image.Point
+	}{
+		{"Right_x+1", image.Point{0, 0}, image.Point{1, 0}},
+		{"Right_x+2", image.Point{0, 0}, image.Point{2, 0}},
+		{"Below_y+1_x", image.Point{0, 0}, image.Point{0, 1}},
+		{"Diag_y+1_x+1", image.Point{0, 0}, image.Point{1, 1}},
+		{"Below_y+2_x", image.Point{0, 0}, image.Point{0, 2}},
+		{"Diag_y+1_x-1", image.Point{1, 0}, image.Point{0, 1}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			img := image.NewGray(image.Rect(0, 0, 3, 3))
+			// Clear
+			for i := 0; i < 9; i++ {
+				img.SetGray(i%3, i/3, color.Gray{Y: 0})
+			}
+
+			// Set source to 100. Error = 100-0 = 100. Diff = 12.
+			img.SetGray(tc.source.X, tc.source.Y, color.Gray{Y: 100})
+
+			// Set target to 120. 120+12 = 132 > 128 -> White.
+			img.SetGray(tc.target.X, tc.target.Y, color.Gray{Y: 120})
+
+			mono, err := p.Process(img)
+			if err != nil {
+				t.Fatalf("Process failed: %v", err)
+			}
+
+			// Source should be Black
+			if !mono.GetPixel(tc.source.X, tc.source.Y) {
+				t.Errorf("Pixel(%d,%d) should be Black", tc.source.X, tc.source.Y)
+			}
+
+			// Target should be White
+			if mono.GetPixel(tc.target.X, tc.target.Y) {
+				t.Errorf("Pixel(%d,%d) should be White (received diffusion)", tc.target.X, tc.target.Y)
+			}
+		})
+	}
+}
