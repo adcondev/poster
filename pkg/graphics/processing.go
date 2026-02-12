@@ -27,6 +27,10 @@ func DefaultResizeOptions(paperWidth int) *ResizeOptions {
 	}
 }
 
+// MaxImagePixelHeight is the maximum allowed height for a processed image to prevent
+// excessive memory allocation (DoS). 32000 pixels is approx 4 meters at 203 DPI.
+const MaxImagePixelHeight = 32000
+
 // ResizeImage scales an image to the target width while optionally preserving aspect ratio.
 func ResizeImage(img image.Image, opts *ResizeOptions) image.Image {
 	if img == nil {
@@ -56,6 +60,11 @@ func ResizeImage(img image.Image, opts *ResizeOptions) image.Image {
 	targetH := srcH
 	if opts.PreserveAspect && srcW > 0 {
 		targetH = (srcH * targetW) / srcW
+	}
+
+	// Safety check: Clamp height to prevent OOM
+	if targetH > MaxImagePixelHeight {
+		targetH = MaxImagePixelHeight
 	}
 
 	// Create destination image
