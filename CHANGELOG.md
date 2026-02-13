@@ -2,6 +2,13 @@
 
 All notable changes to Poster will be documented in this file.
 
+### [4.6.1](https://github.com/adcondev/poster/compare/v4.6.0...v4.6.1) (2026-02-13)
+
+
+### ✅ Tests
+
+* **tables:** add unit tests for TabEngine.Render ([#125](https://github.com/adcondev/poster/issues/125)) ([708647b](https://github.com/adcondev/poster/commit/708647ba95addd7fdee6ea504714ccf4717d3878))
+
 ## [4.4.0](https://github.com/adcondev/poster/compare/v4.3.0...v4.4.0) (2026-02-12)
 
 
