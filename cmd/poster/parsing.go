@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/adcondev/poster/internal/load"
+	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
 )
 
@@ -26,10 +28,31 @@ func loadJSON(filePath string) ([]byte, error) {
 		return nil, fmt.Errorf("security check failed: %w", err)
 	}
 
-	// Read file
-	data, err := os.ReadFile(securePath) //nolint:gosec
+	// Read file securely
+	file, err := os.Open(securePath)
 	if err != nil {
 		return nil, err
+	}
+	defer file.Close()
+
+	// Check file size
+	fi, err := file.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat file: %w", err)
+	}
+	if fi.Size() > int64(constants.MaxJSONSize) {
+		return nil, fmt.Errorf("file too large: %d bytes (max %d bytes)", fi.Size(), constants.MaxJSONSize)
+	}
+
+	// Read with limit reader to prevent TOCTOU issues if file grows
+	reader := io.LimitReader(file, int64(constants.MaxJSONSize)+1)
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) > constants.MaxJSONSize {
+		return nil, fmt.Errorf("file too large (exceeded %d bytes during read)", constants.MaxJSONSize)
 	}
 
 	// Validate JSON
