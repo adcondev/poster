@@ -327,18 +327,37 @@ func (p *Printer) SetCodeTable(codeTable character.CodeTable) error {
 // PrintQR imprime un QR con detección automática y fallback
 func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
 	if qropts == nil {
-		// TODO: Automatic options based on profile (DPI and Paper PixelWidth config to calculate Dots Per Line)
+		// Automatic options based on profile (DPI and Paper PixelWidth config to calculate Dots Per Line)
 		qropts = graphics.DefaultQROptions()
 	}
 
-	switch p.Profile.PaperWidth {
-	case constants.Paper58mm:
-		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
-	case constants.Paper80mm:
-		qropts.MaxPixelWidth = constants.PaperPxWidth80mm
-	default:
-		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
+	// Calculate MaxPixelWidth based on profile
+	var maxPixelWidth int
+
+	if p.Profile.DotsPerLine > 0 {
+		maxPixelWidth = p.Profile.DotsPerLine
+	} else {
+		// Fallback: Calculate from PrintWidth or PaperWidth
+		dpi := float64(p.Profile.DPI)
+		if dpi == 0 {
+			dpi = float64(constants.DefaultDPI)
+		}
+
+		var printWidthMm float64
+		if p.Profile.PrintWidth > 0 {
+			printWidthMm = float64(p.Profile.PrintWidth)
+		} else {
+			// Heuristic based on common paper sizes
+			if p.Profile.PaperWidth >= 78 { // ~80mm
+				printWidthMm = 72.0
+			} else { // ~58mm or smaller
+				printWidthMm = 48.0
+			}
+		}
+		maxPixelWidth = int(printWidthMm * dpi / 25.4)
 	}
+
+	qropts.MaxPixelWidth = maxPixelWidth
 
 	// Intentar QR nativo si está soportado
 	qropts.Qr = graphics.QrInfo{}
