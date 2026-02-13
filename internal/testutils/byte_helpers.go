@@ -31,6 +31,11 @@ func RepeatByte(length int, value byte) []byte {
 	return result
 }
 
+// GenerateString creates a string of specified length filled with value
+func GenerateString(length int, value byte) string {
+	return string(RepeatByte(length, value))
+}
+
 // ============================================================================
 // Command Builders
 // ============================================================================
