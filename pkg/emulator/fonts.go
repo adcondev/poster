@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"log"
 	"math"
+	"sync"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -34,9 +35,9 @@ type ScaledFont struct {
 
 // FontManager handles font loading and scaling for thermal printer emulation
 type FontManager struct {
-	fonts map[string]*ScaledFont
-	// FIXME: he scaledFaces map is accessed from multiple methods without synchronization.
+	fonts       map[string]*ScaledFont
 	scaledFaces map[string]font.Face // Cache:  "fontName_scaleW_scaleH" -> face
+	mu          sync.RWMutex
 	useFallback bool
 }
 
@@ -124,7 +125,9 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 
 	// Pre-cache the 1x1 scale for this font
 	cacheKey := fmt.Sprintf("%s_1.0_1.0", name)
+	fm.mu.Lock()
 	fm.scaledFaces[cacheKey] = bestFace
+	fm.mu.Unlock()
 
 	return nil
 }
@@ -179,9 +182,12 @@ func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH flo
 	key := fmt.Sprintf("%s_%.1f_%.1f", fontName, scaleW, scaleH)
 
 	// Check cache first
+	fm.mu.RLock()
 	if face, ok := fm.scaledFaces[key]; ok {
+		fm.mu.RUnlock()
 		return face, nil
 	}
+	fm.mu.RUnlock()
 
 	// Get the base font
 	sf, err := fm.GetFont(fontName)
@@ -238,7 +244,18 @@ func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH flo
 	}
 
 	// Cache the result
+	fm.mu.Lock()
+	// Double check cache in case another goroutine populated it
+	if face, ok := fm.scaledFaces[key]; ok {
+		fm.mu.Unlock()
+		if bestFace != nil {
+			_ = bestFace.Close()
+		}
+		return face, nil
+	}
 	fm.scaledFaces[key] = bestFace
+	fm.mu.Unlock()
+
 	log.Printf("[FontManager] Created and cached scaled face:  %s at %.1fx%.1f", fontName, scaleW, scaleH)
 
 	return bestFace, nil
@@ -343,5 +360,11 @@ func (fm *FontManager) drawFallbackCharScaled(dst draw.Image, char rune, x, y, w
 // ClearScaledFaceCache clears the cached scaled font faces
 // Useful when resetting the engine or changing fonts
 func (fm *FontManager) ClearScaledFaceCache() {
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+
+	for _, face := range fm.scaledFaces {
+		_ = face.Close()
+	}
 	fm.scaledFaces = make(map[string]font.Face)
 }
