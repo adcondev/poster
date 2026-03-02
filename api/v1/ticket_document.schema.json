@@ -377,7 +377,7 @@
           "type": "integer",
           "description": "Desired QR code width in pixels",
           "minimum": 87,
-          "default": 256
+          "default": 128
         },
         "correction": {
           "type": "string",
@@ -388,7 +388,7 @@
             "H"
           ],
           "description": "Error correction level",
-          "default": "M"
+          "default": "Q"
         },
         "align": {
           "type": "string",
