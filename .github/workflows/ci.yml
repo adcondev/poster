@@ -275,7 +275,7 @@ jobs:
           ./compare.sh > benchmark-comment.md
 
       - name: Post benchmark results to PR
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
