@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	github.com/stretchr/testify v1.11.1
-	github.com/yeqown/go-qrcode/v2 v2.2.5
+	github.com/yeqown/go-qrcode/v2 v2.3.0
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
 	golang.org/x/image v0.34.0
 	golang.org/x/text v0.32.0
