@@ -55,7 +55,7 @@ jobs:
 
     steps:
       - name: Auto assign PR author
-        uses: toshimaru/auto-author-assign@v3.0.1
+        uses: toshimaru/auto-author-assign@v3.1.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
 
