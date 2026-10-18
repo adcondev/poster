@@ -8,6 +8,7 @@ import (
 	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/profile"
 	"github.com/adcondev/poster/pkg/service"
 )
 
@@ -105,16 +106,7 @@ func (e *Executor) Execute(doc *schema.Document) error {
 
 // setCodeTable configures the character code table with fallback to Windows-1252.
 func (e *Executor) setCodeTable(tableName string) error {
-	tables := map[string]character.CodeTable{
-		"PC437":   character.PC437,
-		"PC850":   character.PC850,
-		"PC852":   character.PC852,
-		"WPC1252": character.WPC1252,
-		"PC866":   character.PC866,
-		"PC858":   character.PC858,
-	}
-
-	table, ok := tables[tableName]
+	table, ok := profile.ParseCodeTable(tableName)
 	if !ok {
 		return e.printer.SetCodeTable(character.WPC1252)
 	}
@@ -165,10 +157,14 @@ func (e *Executor) applyProfileFromDocument(doc *schema.Document) error {
 // applyProfileOrDefaults applies default profile settings when omitted in JSON.
 func (e *Executor) applyProfileOrDefaults(config schema.ProfileConfig) error {
 	prof := e.printer.GetProfile()
-	if config.PaperWidth == 0 {
-		prof.PaperWidth = constants.Paper80mm
-	} else {
+	if config.PaperWidth > 0 {
 		prof.PaperWidth = float64(config.PaperWidth)
+	} else {
+		if preset, ok := profile.ProfileFromModel(config.Model); ok && preset.PaperWidth > 0 {
+			prof.PaperWidth = preset.PaperWidth
+		} else if prof.PaperWidth <= 0 {
+			prof.PaperWidth = constants.Paper80mm
+		}
 	}
 
 	if config.CodeTable == "" {

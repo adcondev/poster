@@ -31,6 +31,11 @@ type Escpos struct {
 	// Code table and encoding configuration
 	CodeTable character.CodeTable
 
+	// Encoding behavior options
+	StrictEncoding     bool                  // Return error on unencodable runes instead of '?' replacement
+	AutoSwitchCodePage bool                  // Automatically switch code tables inline (ESC t n) for mixed UTF-8
+	FallbackCodePages  []character.CodeTable // Candidate code tables for AutoSwitchCodePage
+
 	// Configuración avanzada (opcional)
 	ImageThreshold int                 // Umbral para conversión B/N (0-255)
 	Dithering      graphics.DitherMode // Tipo de dithering por defecto
@@ -40,7 +45,6 @@ type Escpos struct {
 }
 
 // CreatePt210 crea un perfil para impresora térmica de 58mm PT-58N
-// TODO: Hardcoded Models: Factory functions for specific models might become hard to maintain. Consider configuration-based approach.
 func CreatePt210() *Escpos {
 	p := CreateProfile58mm()
 	p.Model = "58mm PT-210"
@@ -67,8 +71,8 @@ func CreateProfile58mm() *Escpos {
 
 		PaperWidth:  58,
 		DPI:         203,
-		DotsPerLine: 384, // Típico para 58mm a 203 DPI
-		PrintWidth:  48,  // Ancho de impresión efectivo
+		DotsPerLine: shared.Dpl58mm203dpi, // Típico para 58mm a 203 DPI
+		PrintWidth:  48,                   // Ancho de impresión efectivo
 
 		SupportsGraphics: true,
 		SupportsBarcode:  true,
@@ -77,6 +81,8 @@ func CreateProfile58mm() *Escpos {
 		SupportsDrawer:   false,
 
 		CodeTable: character.PC850,
+
+		ImageThreshold: 128,
 	}
 }
 
@@ -95,6 +101,7 @@ func CreateProfile80mm() *Escpos {
 		PaperWidth:  80,
 		DPI:         203,
 		DotsPerLine: shared.Dpl80mm203dpi, // Típico para 80mm (72mm) a 203 DPI
+		PrintWidth:  72,
 
 		SupportsGraphics: true,
 		SupportsBarcode:  true,

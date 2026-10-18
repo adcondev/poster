@@ -132,11 +132,11 @@ func (p *Printer) Write(data []byte) error {
 
 // Print sends text without line feed
 func (p *Printer) Print(text string) error {
-	encText, err := p.Profile.EncodeString(text)
+	encoded, err := p.Profile.EncodeBytesSafe(text)
 	if err != nil {
 		return err
 	}
-	cmd, err := p.Protocol.Print.Text(encText)
+	cmd, err := p.Protocol.Print.Text(string(encoded))
 	if err != nil {
 		return err
 	}
