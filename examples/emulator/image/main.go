@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/adcondev/poster/internal/load"
 	"github.com/adcondev/poster/pkg/composer"
 	"github.com/adcondev/poster/pkg/connection"
 	"github.com/adcondev/poster/pkg/constants"
@@ -247,7 +246,7 @@ func printReceipt(baseDir, fileName, printerName string) error {
 	// ============================================================================
 	// Load and Process Image
 	// ============================================================================
-	img, err := load.ImgFromFile(baseDir, fileName)
+	img, _, err := graphics.LoadImageFromFile(baseDir, fileName)
 	if err != nil {
 		return fmt.Errorf("load image: %w", err)
 	}
