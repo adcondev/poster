@@ -10,8 +10,6 @@ import (
 	"strings"
 
 	"github.com/adcondev/poster/pkg/connection"
-	"github.com/adcondev/poster/pkg/document/schema"
-	"github.com/adcondev/poster/pkg/profile"
 )
 
 func detectPrinter() string {
@@ -76,17 +74,24 @@ func createConnection(config *Config) (connection.Connector, error) {
 		if runtime.GOOS != win {
 			return nil, errors.New("windows connection type requires Windows OS")
 		}
-		if config.PrinterName == "" {
+		printerName := config.PrinterName
+		if printerName == "" {
+			printerName = detectPrinter()
+		}
+		if printerName == "" {
 			return nil, fmt.Errorf("printer name required for Windows connection")
 		}
-		return connection.NewWindowsPrintConnector(config.PrinterName)
+		return connection.NewWindowsPrintConnector(printerName)
 
-	case "network":
-		if config.NetworkAddr == "" {
-			return nil, fmt.Errorf("network address required")
+	case "network", "tcp":
+		target := config.PrinterName
+		if target == "" {
+			target = config.NetworkAddr
 		}
-		// TODO: Implement when available in library
-		return nil, fmt.Errorf("network connection not yet implemented")
+		if target == "" {
+			return nil, fmt.Errorf("printer name or address required for network/tcp connection")
+		}
+		return connection.NewTCPConnector(target)
 
 	case "serial":
 		if config.SerialPort == "" {
@@ -96,50 +101,16 @@ func createConnection(config *Config) (connection.Connector, error) {
 		return nil, fmt.Errorf("serial connection not yet implemented")
 
 	case "file":
-		// TODO: Implement file output connector
-		return nil, fmt.Errorf("file output not yet implemented")
+		targetPath := config.OutputFile
+		if targetPath == "" {
+			targetPath = config.PrinterName
+		}
+		if targetPath == "" {
+			return nil, fmt.Errorf("output file path required for file connection (use -output or -p)")
+		}
+		return connection.NewFileConnector(targetPath)
 
 	default:
 		return nil, fmt.Errorf("unknown connection type: %s", config.ConnectionType)
 	}
-}
-
-func createProfile(doc *schema.Document) *profile.Escpos {
-	var prof *profile.Escpos
-
-	// Select profile based on paper width or model
-	if doc.Profile.Model != "" {
-		switch strings.ToLower(doc.Profile.Model) {
-		case "80mm ec-pm-80250", "ec-pm-80250":
-			prof = profile.CreateECPM80250()
-		case "58mm pt-210", "pt-210":
-			prof = profile.CreatePt210()
-		case "58mm gp-58n", "gp-58n":
-			prof = profile.CreateGP58N()
-		default:
-			if doc.Profile.PaperWidth >= 80 {
-				prof = profile.CreateProfile80mm()
-			} else {
-				prof = profile.CreateProfile58mm()
-			}
-		}
-	} else {
-		// Default based on paper width
-		if doc.Profile.PaperWidth >= 80 {
-			prof = profile.CreateProfile80mm()
-		} else {
-			prof = profile.CreateProfile58mm()
-		}
-	}
-
-	// Apply JSON overrides
-	if doc.Profile.Model != "" {
-		prof.Model = doc.Profile.Model
-	}
-	if doc.Profile.DPI > 0 {
-		prof.DPI = doc.Profile.DPI
-	}
-	prof.HasQR = doc.Profile.HasQR
-
-	return prof
 }

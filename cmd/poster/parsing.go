@@ -7,10 +7,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/adcondev/poster/internal/load"
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/profile"
 )
 
 func loadJSON(filePath string) ([]byte, error) {
@@ -147,5 +149,46 @@ func getPrinterNameFromDocument(config *Config, jsonData []byte) (string, error)
 		return detected, nil
 	}
 
-	return "", fmt.Errorf("no printer specified and none found in JSON profile. model")
+	return "", fmt.Errorf("no printer specified and none found in JSON profile.model")
 }
+
+func createProfile(doc *schema.Document) *profile.Escpos {
+	var prof *profile.Escpos
+
+	// Select profile based on paper width or model
+	if doc.Profile.Model != "" {
+		switch strings.ToLower(doc.Profile.Model) {
+		case "80mm ec-pm-80250", "ec-pm-80250":
+			prof = profile.CreateECPM80250()
+		case "58mm pt-210", "pt-210":
+			prof = profile.CreatePt210()
+		case "58mm gp-58n", "gp-58n":
+			prof = profile.CreateGP58N()
+		default:
+			if doc.Profile.PaperWidth >= 80 {
+				prof = profile.CreateProfile80mm()
+			} else {
+				prof = profile.CreateProfile58mm()
+			}
+		}
+	} else {
+		// Default based on paper width
+		if doc.Profile.PaperWidth >= 80 {
+			prof = profile.CreateProfile80mm()
+		} else {
+			prof = profile.CreateProfile58mm()
+		}
+	}
+
+	// Apply JSON overrides
+	if doc.Profile.Model != "" {
+		prof.Model = doc.Profile.Model
+	}
+	if doc.Profile.DPI > 0 {
+		prof.DPI = doc.Profile.DPI
+	}
+	prof.HasQR = doc.Profile.HasQR
+
+	return prof
+}
+
