@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/graphics"
 	"github.com/adcondev/poster/pkg/profile"
 )
@@ -44,16 +45,21 @@ type MockCall struct {
 	Args   []interface{}
 }
 
+const (
+	defaultMockFont      = "A"
+	defaultUnderlineMode = "none"
+)
+
 // NewMockPrinter creates a new MockPrinter with default settings
 func NewMockPrinter() *MockPrinter {
 	return &MockPrinter{
 		Calls:            []MockCall{},
 		FailOn:           make(map[string]error),
 		InitializeOK:     true,
-		CurrentAlignment: "left",
-		CurrentFont:      "A",
-		CurrentSize:      "1x1",
-		UnderlineMode:    "none",
+		CurrentAlignment: constants.Left.String(),
+		CurrentFont:      defaultMockFont,
+		CurrentSize:      constants.Normal.String(),
+		UnderlineMode:    defaultUnderlineMode,
 		MockProfile: profile.Escpos{
 			Model:       "MockPrinter",
 			PaperWidth:  80,
@@ -111,12 +117,12 @@ func (m *MockPrinter) Reset() {
 	m.WrittenBytes = [][]byte{}
 	m.PrintedQRs = []string{}
 	m.PrintedBitmaps = nil
-	m.CurrentAlignment = "left"
-	m.CurrentFont = "A"
+	m.CurrentAlignment = constants.Left.String()
+	m.CurrentFont = defaultMockFont
 	m.BoldEnabled = false
 	m.InverseEnabled = false
-	m.CurrentSize = "1x1"
-	m.UnderlineMode = "none"
+	m.CurrentSize = constants.Normal.String()
+	m.UnderlineMode = defaultUnderlineMode
 }
 
 // ============================================================================

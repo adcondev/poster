@@ -220,25 +220,25 @@ func (qo *QrOptions) calculateModuleSize(data string) {
 		// This case should be unreachable given minGridSize validation.
 		panic(fmt.Sprintf("bug: invalid total modules after validation: %d", totalModules))
 	}
-	qo.Qr.moduleSize = posqr.ModuleSize(qo.Qr.requestedWidth / totalModules)
+	rawModSize := qo.Qr.requestedWidth / totalModules
 
 	log.Printf("QR: data='%s' (len=%d), grid=%dx%d, border=%d modules, total=%d modules",
 		truncateString(data, 50), len(data), qo.Qr.gridSize, qo.Qr.gridSize, minBorderWidth, totalModules)
-	log.Printf("QR: requested=%dpx, calculated_module_size=%d", qo.Qr.requestedWidth, qo.Qr.moduleSize)
 
 	// Aplicar límites al module size
 	switch {
-	case qo.Qr.moduleSize < posqr.DefaultModuleSize:
+	case rawModSize < int(posqr.DefaultModuleSize):
 		qo.Qr.moduleSize = posqr.DefaultModuleSize
 		log.Printf("QR: calculated module size %d too small, using default %d",
-			qo.Qr.moduleSize, posqr.DefaultModuleSize)
-	case qo.Qr.moduleSize > posqr.MaxModuleSize:
+			rawModSize, posqr.DefaultModuleSize)
+	case rawModSize > int(posqr.MaxModuleSize):
 		qo.Qr.moduleSize = posqr.MaxModuleSize
-		log.Printf("QR: calculated module size %d too large, using maximum %d",
-			qo.Qr.moduleSize, posqr.MaxModuleSize)
+		log.Printf("QR: calculated module size %d too large, using max %d",
+			rawModSize, posqr.MaxModuleSize)
 	default:
-		log.Printf("QR: using calculated module size %d", qo.Qr.moduleSize)
+		qo.Qr.moduleSize = posqr.ModuleSize(rawModSize)
 	}
+	log.Printf("QR: requested=%dpx, calculated_module_size=%d", qo.Qr.requestedWidth, qo.Qr.moduleSize)
 }
 
 func (qo *QrOptions) calculateFinalDimensions() {

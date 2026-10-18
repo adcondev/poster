@@ -482,7 +482,7 @@ func TestRenderImage_ThermalPreviewAtkinson(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 100, 50))
 	for y := 0; y < 50; y++ {
 		for x := 0; x < 100; x++ {
-			gray := uint8((x * 255) / 100) //nolint:gosec
+			gray := uint8((x * 255) / 100)
 			img.Set(x, y, color.RGBA{R: gray, G: gray, B: gray, A: 255})
 		}
 	}

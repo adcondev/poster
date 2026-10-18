@@ -8,10 +8,11 @@ import (
 	"image"
 	_ "image/jpeg" // Register JPEG decoder
 	_ "image/png"  // Register PNG decoder
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	_ "golang.org/x/image/bmp" // Register BMP decoder
 )
 
 // ImgFromFile loads an image from a file path within baseDir.
@@ -30,19 +31,15 @@ func ImgFromFile(baseDir, relPath string) (image.Image, error) {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Printf("failed to close file: %v\n", err)
-		}
+		_ = file.Close()
 	}(file)
 
 	// Decode image
-	img, format, err := image.Decode(file)
+	img, _, err := image.Decode(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	log.Printf("Loaded image format: %s\n", format)
 	return img, nil
 }
 
@@ -54,13 +51,12 @@ func ImgFromBase64(data string) (image.Image, string, error) {
 		return nil, "", fmt.Errorf("failed to decode base64 string: %w", err)
 	}
 
-	// Convert to image.image
+	// Convert to image.Image
 	img, format, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	log.Printf("Decoded image format: %s\n", format)
 	return img, format, nil
 }
 

@@ -214,8 +214,7 @@ func (c *GraphicsCommands) StoreRasterGraphicsInBuffer(tone GraphicsTone, horizo
 		return nil, ErrDataTooLarge
 	}
 
-	pL := byte((totalSize) & 0xFF)
-	pH := byte(((totalSize) >> 8) & 0xFF)
+	pL, pH := shared.ToLittleEndian(uint16(totalSize))
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
@@ -436,8 +435,7 @@ func (c *GraphicsCommands) StoreColumnGraphicsInBuffer(horizontalScale, vertical
 		return nil, ErrDataTooLarge
 	}
 
-	pL := byte((totalSize) & 0xFF)
-	pH := byte(((totalSize) >> 8) & 0xFF)
+	pL, pH := shared.ToLittleEndian(uint16(totalSize))
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 

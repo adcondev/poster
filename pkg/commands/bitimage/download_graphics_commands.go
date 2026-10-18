@@ -279,12 +279,11 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphics(tone GraphicsTone, kc1
 		return nil, ErrDataTooLarge
 	}
 
-	pL := byte((totalSize) & 0xFF)
-	pH := byte(((totalSize) >> 8) & 0xFF)
+	pL, pH := shared.ToLittleEndian(uint16(totalSize)) //nolint:gosec // totalSize <= MaxStandardCommandSize (65535)
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH} //nolint:gosec // len(colorData) bounded to [1, 4]
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -390,7 +389,7 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsLarge(tone GraphicsTone
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x53, byte(tone), kc1, kc2, byte(len(colorData)), xL, xH, yL, yH} //nolint:gosec // len(colorData) bounded to [1, 4]
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -488,12 +487,11 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumn(kc1, kc2 byte, w
 		return nil, ErrDataTooLarge
 	}
 
-	pL := byte((totalSize) & 0xFF)
-	pH := byte(((totalSize) >> 8) & 0xFF)
+	pL, pH := shared.ToLittleEndian(uint16(totalSize)) //nolint:gosec // totalSize <= MaxStandardCommandSize (65535)
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '(', 'L', pL, pH, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH} //nolint:gosec // len(colorData) bounded to [1, 2]
 
 	// Append color data groups
 	for _, cd := range colorData {
@@ -595,7 +593,7 @@ func (c *DownloadGraphicsCommands) DefineDownloadGraphicsColumnLarge(kc1, kc2 by
 	xL, xH := shared.ToLittleEndian(width)
 	yL, yH := shared.ToLittleEndian(height)
 
-	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH}
+	cmd := []byte{shared.GS, '8', 'L', p1, p2, p3, p4, 0x30, 0x54, 0x30, kc1, kc2, byte(len(colorData)), xL, xH, yL, yH} //nolint:gosec // len(colorData) bounded to [1, 2]
 
 	// Append color data groups
 	for _, cd := range colorData {

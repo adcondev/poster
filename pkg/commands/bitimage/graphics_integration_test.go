@@ -128,7 +128,7 @@ func TestIntegration_Graphics_CompleteWorkflow(t *testing.T) {
 
 		for i, color := range colors {
 			// Create different patterns for each color
-			pattern := byte(0x11 << uint(i)) //nolint:gosec
+			pattern := byte(0x11 << uint(i))
 			data := testutils.RepeatByte(dataSize, pattern)
 
 			storeCmd, err := cmd.StoreRasterGraphicsInBuffer(

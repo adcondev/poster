@@ -523,7 +523,7 @@ func TestProcessingPipeline_ResizeAndGrayscale(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 200, 100))
 	for y := 0; y < 100; y++ {
 		for x := 0; x < 200; x++ {
-			img.Set(x, y, color.RGBA{R: uint8(x), G: uint8(y), B: 128, A: 255}) //nolint:gosec
+			img.Set(x, y, color.RGBA{R: uint8(x), G: uint8(y), B: 128, A: 255})
 		}
 	}
 

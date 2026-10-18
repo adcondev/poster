@@ -37,6 +37,7 @@ func RepeatByte(length int, value byte) []byte {
 
 // BuildCommand constructs a command with variable parameters
 func BuildCommand(cmd byte, subcmd byte, params ...byte) []byte {
-	result := []byte{cmd, subcmd}
+	result := make([]byte, 0, 2+len(params))
+	result = append(result, cmd, subcmd)
 	return append(result, params...)
 }

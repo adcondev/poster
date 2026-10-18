@@ -89,9 +89,11 @@ func (e *Executor) handleFeed(printer *service.Printer, data json.RawMessage) er
 
 	if cmd.Lines <= 0 {
 		cmd.Lines = constants.DefaultFeedLines
+	} else if cmd.Lines > 255 {
+		cmd.Lines = 255
 	}
 
-	return printer.FeedLines(byte(cmd.Lines))
+	return printer.FeedLines(byte(cmd.Lines)) //nolint:gosec // bounded to [1, 255]
 }
 
 // handleCut manages cut commands
@@ -104,11 +106,13 @@ func (e *Executor) handleCut(printer *service.Printer, data json.RawMessage) err
 	// Default feed antes del corte según schema
 	if cmd.Feed == 0 {
 		cmd.Feed = constants.DefaultCutFeed
+	} else if cmd.Feed > 255 {
+		cmd.Feed = 255
 	}
 
 	// Avance antes del corte si se especifica
 	if cmd.Feed > 0 {
-		if err := printer.FeedLines(byte(cmd.Feed)); err != nil {
+		if err := printer.FeedLines(byte(cmd.Feed)); err != nil { //nolint:gosec // bounded to [1, 255]
 			return err
 		}
 	}
@@ -144,16 +148,20 @@ func (e *Executor) handlePulse(printer *service.Printer, data json.RawMessage) e
 	// Set defaults
 	if cmd.OnTime <= 0 {
 		cmd.OnTime = constants.DefaultPulseOnTime // 50ms default
+	} else if cmd.OnTime > 510 {
+		cmd.OnTime = 510
 	}
 	if cmd.OffTime <= 0 {
 		cmd.OffTime = constants.DefaultPulseOffTime // 100ms default
+	} else if cmd.OffTime > 510 {
+		cmd.OffTime = 510
 	}
 
 	// ESC p m t1 t2 - Generate pulse on connector pin
 	// m = 0 or 1 (pin selection)
 	// t1 = on time (t1 * 2 ms)
 	// t2 = off time (t2 * 2 ms)
-	bytes := []byte{0x1B, 0x70, byte(cmd.Pin), byte(cmd.OnTime / 2), byte(cmd.OffTime / 2)}
+	bytes := []byte{0x1B, 0x70, byte(cmd.Pin), byte(cmd.OnTime / 2), byte(cmd.OffTime / 2)} //nolint:gosec // bounded above
 	return printer.Write(bytes)
 }
 
@@ -167,12 +175,16 @@ func (e *Executor) handleBeep(printer *service.Printer, data json.RawMessage) er
 	// Set defaults
 	if cmd.Times <= 0 {
 		cmd.Times = constants.DefaultBeepTimes
+	} else if cmd.Times > 255 {
+		cmd.Times = 255
 	}
 	if cmd.Lapse <= 0 {
 		cmd.Lapse = constants.DefaultBeepLapse
+	} else if cmd.Lapse > 255 {
+		cmd.Lapse = 255
 	}
 
 	// ESC B n t - Beep command (non-standard, hardware-specific)
-	bytes := []byte{0x1B, 0x42, byte(cmd.Times), byte(cmd.Lapse)}
+	bytes := []byte{0x1B, 0x42, byte(cmd.Times), byte(cmd.Lapse)} //nolint:gosec // bounded to [1, 255]
 	return printer.Write(bytes)
 }

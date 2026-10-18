@@ -34,7 +34,7 @@ func (m *MonochromeBitmap) SetPixel(x, y int, black bool) {
 	// TODO: Make sure linter suppression is safe here
 
 	byteIndex := y*m.bytesPerRow + x/8
-	bitIndex := uint(7 - (x % 8)) //nolint:gosec
+	bitIndex := uint(7 - (x % 8))
 
 	if black {
 		m.data[byteIndex] |= 1 << bitIndex
@@ -50,7 +50,7 @@ func (m *MonochromeBitmap) GetPixel(x, y int) bool {
 	}
 
 	byteIndex := y*m.bytesPerRow + x/8
-	bitIndex := uint(7 - (x % 8)) //nolint:gosec
+	bitIndex := uint(7 - (x % 8))
 
 	return (m.data[byteIndex] & (1 << bitIndex)) != 0
 }

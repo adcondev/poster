@@ -263,7 +263,7 @@ func (c *Commands) buildFunctionB(symbology Symbology, data []byte) ([]byte, err
 
 	// Build command: GS k m n data...
 	cmd := make([]byte, 0, 4+len(data))
-	cmd = append(cmd, shared.GS, 'k', byte(symbology), byte(len(data)))
+	cmd = append(cmd, shared.GS, 'k', byte(symbology), byte(len(data))) //nolint:gosec // len(data) bounded to [1, 255]
 	cmd = append(cmd, data...)
 	return cmd, nil
 }
