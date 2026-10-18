@@ -1,15 +1,14 @@
 package executor
 
 import (
-	"log"
 	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/service"
 )
 
-func (e *Executor) applyAlign(printer *service.Printer, align *string) error {
-	alignValue := constants.DefaultTextAlignment.String() // default
+func (e *Executor) applyAlign(printer service.PrinterActions, align *string) error {
+	alignValue := constants.DefaultTextAlignment.String()
 	if align != nil {
 		alignValue = strings.ToLower(*align)
 	}
@@ -22,12 +21,11 @@ func (e *Executor) applyAlign(printer *service.Printer, align *string) error {
 	case constants.Left.String():
 		return printer.AlignLeft()
 	default:
-		log.Printf("Unknown alignment: %s, using left", alignValue)
 		return printer.AlignLeft()
 	}
 }
 
-func (e *Executor) applySize(printer *service.Printer, size string) error {
+func (e *Executor) applySize(printer service.PrinterActions, size string) error {
 	switch ss := strings.ToLower(size); ss {
 	case constants.Normal.String():
 		return printer.SingleSize()
@@ -46,7 +44,6 @@ func (e *Executor) applySize(printer *service.Printer, size string) error {
 	case constants.Octa.String():
 		return printer.OctaSize()
 	default:
-		// Intentar parsear tamaño personalizado WxH
 		if len(ss) == 3 && ss[1] == 'x' {
 			parts := strings.Split(ss, "x")
 			widthMultiplier := parts[0][0] - '0'
@@ -56,12 +53,11 @@ func (e *Executor) applySize(printer *service.Printer, size string) error {
 				return printer.CustomSize(widthMultiplier, heightMultiplier)
 			}
 		}
-		log.Printf("Unknown text size: %s, using single size", size)
 		return printer.SingleSize()
 	}
 }
 
-func (e *Executor) applyUnderline(printer *service.Printer, underline string) error {
+func (e *Executor) applyUnderline(printer service.PrinterActions, underline string) error {
 	switch strings.ToLower(underline) {
 	case constants.NoDot.String():
 		return printer.NoDot()
@@ -70,19 +66,17 @@ func (e *Executor) applyUnderline(printer *service.Printer, underline string) er
 	case constants.TwoDot.String():
 		return printer.TwoDot()
 	default:
-		log.Printf("Unknown underline style: %s, using none", underline)
 		return printer.NoDot()
 	}
 }
 
-func (e *Executor) applyFont(printer *service.Printer, font string) error {
+func (e *Executor) applyFont(printer service.PrinterActions, font string) error {
 	switch strings.ToLower(font) {
 	case "", "a":
 		return printer.FontA()
 	case "b":
 		return printer.FontB()
 	default:
-		log.Printf("Unknown font: %s, using Font A", font)
 		return printer.FontA()
 	}
 }

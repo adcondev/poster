@@ -76,8 +76,8 @@ func TestCutCommand_Parsing(t *testing.T) {
 				if cmd.Mode != "partial" {
 					t.Errorf("Expected mode 'partial', got '%s'", cmd.Mode)
 				}
-				if cmd.Feed != 3 {
-					t.Errorf("Expected feed 3, got %d", cmd.Feed)
+				if cmd.Feed == nil || *cmd.Feed != 3 {
+					t.Errorf("Expected feed 3, got %v", cmd.Feed)
 				}
 			},
 		},
@@ -113,8 +113,8 @@ func TestCutCommand_Defaults(t *testing.T) {
 	if cmd.Mode != "" {
 		t.Error("Expected empty mode (handler applies default)")
 	}
-	if cmd.Feed != 0 {
-		t.Error("Expected feed 0 (handler applies default)")
+	if cmd.Feed != nil {
+		t.Error("Expected feed nil (handler applies default)")
 	}
 }
 

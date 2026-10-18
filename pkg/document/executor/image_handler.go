@@ -3,41 +3,30 @@ package executor
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/adcondev/poster/internal/load"
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 	"github.com/adcondev/poster/pkg/graphics"
 	"github.com/adcondev/poster/pkg/service"
 )
 
 // ImageCommand for image handler
-type ImageCommand struct {
-	Code string `json:"code"`
-	// Format     string `json:"format,omitempty"`
-	PixelWidth int    `json:"pixel_width,omitempty"`
-	Align      string `json:"align,omitempty"`
-	Threshold  byte   `json:"threshold,omitempty"`
-	Dithering  string `json:"dithering,omitempty"`
-	Scaling    string `json:"scaling,omitempty"`
-}
+type ImageCommand = schema.ImageCommand
 
 // handleImage manages image commands
-func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) error {
+func (e *Executor) handleImage(printer service.PrinterActions, data json.RawMessage) error {
 	var cmd ImageCommand
 	if err := json.Unmarshal(data, &cmd); err != nil {
 		return fmt.Errorf("failed to parse image command: %w", err)
 	}
 
-	// Decodificar imagen desde base64
-	img, format, err := load.ImgFromBase64(cmd.Code)
+	img, _, err := load.ImgFromBase64(cmd.Code)
 	if err != nil {
 		return fmt.Errorf("failed to load image: %w", err)
 	}
-	log.Printf("Loaded image with format: %s", format)
 
-	// Configurar opciones de procesamiento
 	opts := &graphics.ImgOptions{
 		PixelWidth:     cmd.PixelWidth,
 		Threshold:      cmd.Threshold,
@@ -45,17 +34,14 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		AutoRotate:     false,
 	}
 
-	// Si no se especifica ancho, usar valor por defecto
 	if opts.PixelWidth <= 0 {
 		opts.PixelWidth = constants.DefaultImagePixelWidth
 	}
 
-	// Si no se especifica threshold, usar valor por defecto
-	if opts.Threshold <= 0 {
+	if opts.Threshold == 0 {
 		opts.Threshold = constants.DefaultImageThreshold
 	}
 
-	// Configurar dithering
 	switch strings.ToLower(cmd.Dithering) {
 	case constants.Atkinson.String():
 		opts.Dithering = graphics.Atkinson
@@ -69,28 +55,24 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		cmd.Align = constants.DefaultImageAlignment.String()
 	}
 
-	// Aplicar alineación
 	switch strings.ToLower(cmd.Align) {
 	case constants.Center.String():
-		err := printer.AlignCenter()
-		if err != nil {
+		if err := printer.AlignCenter(); err != nil {
 			return err
 		}
 	case constants.Right.String():
-		err := printer.AlignRight()
-		if err != nil {
+		if err := printer.AlignRight(); err != nil {
 			return err
 		}
 	default:
-		err := printer.AlignLeft()
-		if err != nil {
+		if err := printer.AlignLeft(); err != nil {
 			return err
 		}
 	}
 
-	// Configurar escalado
+	// Accept both "nns" (schema enum) and "nearest_neighbor"
 	switch strings.ToLower(cmd.Scaling) {
-	case constants.NearestNeighbor.String():
+	case "nns", constants.NearestNeighbor.String():
 		opts.Scaling = graphics.NearestNeighbor
 	case constants.Bilinear.String():
 		opts.Scaling = graphics.BiLinear
@@ -98,23 +80,15 @@ func (e *Executor) handleImage(printer *service.Printer, data json.RawMessage) e
 		opts.Scaling = graphics.ScaleMap[constants.DefaultImageScaling]
 	}
 
-	// Procesar imagen
 	pipeline := graphics.NewPipeline(opts)
 	bitmap, err := pipeline.Process(img)
 	if err != nil {
 		return fmt.Errorf("failed to process image: %w", err)
 	}
 
-	// Imprimir bitmap
 	if err := printer.PrintBitmap(bitmap); err != nil {
 		return fmt.Errorf("failed to print bitmap: %w", err)
 	}
 
-	// Resetear alineación
-	err = printer.AlignLeft()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return printer.AlignLeft()
 }

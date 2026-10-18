@@ -4,22 +4,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 	"github.com/adcondev/poster/pkg/service"
 )
 
 // RawCommand for raw handler
-type RawCommand struct {
-	Hex      string `json:"hex"`
-	Format   string `json:"format,omitempty"`
-	Comment  string `json:"comment,omitempty"`
-	SafeMode bool   `json:"safe_mode,omitempty"`
-}
-
-// TODO: Identify advanced patterns as RegExp, for now Execute Macro: (1D 5E ** ** >01<)
+type RawCommand = schema.RawCommand
 
 var criticalCommands = []struct {
 	pattern []byte
@@ -47,24 +40,17 @@ var bidirectionalCommands = []struct {
 }
 
 // handleRaw manages raw command execution
-func (e *Executor) handleRaw(printer *service.Printer, data json.RawMessage) error {
+func (e *Executor) handleRaw(printer service.PrinterActions, data json.RawMessage) error {
 	var cmd RawCommand
 	if err := json.Unmarshal(data, &cmd); err != nil {
 		return fmt.Errorf("failed to parse raw command: %w", err)
 	}
 
-	// Log the raw command attempt
-	if cmd.Comment != "" {
-		log.Printf("Raw command: %s", cmd.Comment)
-	}
-
-	// Determine format
 	format := strings.ToLower(cmd.Format)
 	if format == "" {
-		format = constants.DefaultRawFormat.String() // default
+		format = constants.DefaultRawFormat.String()
 	}
 
-	// Parse bytes based on format
 	var bytes []byte
 	var err error
 
@@ -74,7 +60,6 @@ func (e *Executor) handleRaw(printer *service.Printer, data json.RawMessage) err
 		if err != nil {
 			return fmt.Errorf("failed to parse hex string: %w", err)
 		}
-	// TODO: Verify if base64 handling works as intended
 	case constants.Base64.String():
 		bytes, err = base64.StdEncoding.DecodeString(cmd.Hex)
 		if err != nil {
@@ -84,39 +69,19 @@ func (e *Executor) handleRaw(printer *service.Printer, data json.RawMessage) err
 		return fmt.Errorf("unsupported format: %s (valid: hex, base64)", cmd.Format)
 	}
 
-	// Validate byte length
 	if len(bytes) == 0 {
 		return fmt.Errorf("raw command cannot be empty")
 	}
-	if len(bytes) > constants.RawMaxBytes { // 4KB limit
+	if len(bytes) > constants.RawMaxBytes {
 		return fmt.Errorf("raw command too large: %d bytes (max %d)", len(bytes), constants.RawMaxBytes)
 	}
 
-	// Safety checks if enabled (AFTER parsing bytes)
 	if cmd.SafeMode {
 		if warning := CheckCriticalCommands(bytes); warning != "" {
-			// CRÍTICO: Bloquear ejecución en modo seguro
-			err := fmt.Errorf("unsafe command blocked in safe mode: %s", warning)
-			log.Printf("[SECURITY] %v", err)
-			log.Printf("[SECURITY] To bypass, set safe_mode to false (AT YOUR OWN RISK)")
-			return err
+			return fmt.Errorf("unsafe command blocked in safe mode: %s", warning)
 		}
-		log.Printf("[SECURITY] Raw command passed safety checks")
 	}
 
-	// Advertencia sobre comandos bidireccionales (solo log, no bloquea)
-	if ContainsBidirectionalCommand(bytes) {
-		log.Printf("[WARNING] This raw command may expect a response.  Raw commands are write-only.")
-		log.Printf("[WARNING] Any printer responses will remain unread and may cause issues.")
-	}
-
-	// Log hex representation for debugging
-	if printer.Profile.DebugLog {
-		log.Printf("Raw bytes to send: % 02X", bytes)
-		log.Printf("Raw bytes length: %d", len(bytes))
-	}
-
-	// Send raw bytes directly to printer
 	if err := printer.Write(bytes); err != nil {
 		return fmt.Errorf("failed to write raw command: %w", err)
 	}

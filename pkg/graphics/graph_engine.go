@@ -3,7 +3,6 @@ package graphics
 import (
 	"fmt"
 	"image"
-	"log"
 
 	"github.com/adcondev/poster/pkg/constants"
 )
@@ -121,7 +120,6 @@ func (p *Pipeline) resize(img image.Image) image.Image {
 	maxWidth := constants.PaperPxWidth80mm
 	if p.opts.PixelWidth > maxWidth {
 		p.opts.PixelWidth = maxWidth
-		log.Printf("resize: limiting target width to %d pixels", p.opts.PixelWidth)
 	}
 
 	return ResizeImage(img, &ResizeOptions{

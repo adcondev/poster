@@ -41,14 +41,14 @@ func TestTableCommand_Parsing(t *testing.T) {
 				if cmd.Options == nil {
 					t.Fatal("Expected options to be set")
 				}
-				if !cmd.Options.HeaderBold {
+				if cmd.Options.HeaderBold == nil || !*cmd.Options.HeaderBold {
 					t.Error("Expected header_bold to be true")
 				}
-				if cmd.Options.WordWrap {
+				if cmd.Options.WordWrap == nil || *cmd.Options.WordWrap {
 					t.Error("Expected word_wrap to be false")
 				}
-				if cmd.Options.ColumnSpacing != 2 {
-					t.Errorf("Expected column_spacing 2, got %d", cmd.Options.ColumnSpacing)
+				if cmd.Options.ColumnSpacing == nil || *cmd.Options.ColumnSpacing != 2 {
+					t.Errorf("Expected column_spacing 2, got %v", cmd.Options.ColumnSpacing)
 				}
 			},
 		},
@@ -60,7 +60,7 @@ func TestTableCommand_Parsing(t *testing.T) {
 				"show_headers": true
 			}`,
 			checkFunc: func(t *testing.T, cmd TableCommand) {
-				if !cmd.ShowHeaders {
+				if cmd.ShowHeaders == nil || !*cmd.ShowHeaders {
 					t.Error("Expected show_headers to be true")
 				}
 			},
@@ -156,14 +156,14 @@ func TestTableCommand_Defaults(t *testing.T) {
 			},
 		},
 		{
-			name: "show_headers defaults to false",
+			name: "show_headers defaults to nil (handler applies true)",
 			json: `{
 				"definition": {"columns":  [{"name": "Col", "width":  10}]},
 				"rows":  [["Data"]]
 			}`,
 			checkFunc: func(t *testing.T, cmd TableCommand) {
-				if cmd.ShowHeaders {
-					t.Error("Expected show_headers to default to false")
+				if cmd.ShowHeaders != nil {
+					t.Error("Expected show_headers to be nil when omitted")
 				}
 			},
 		},

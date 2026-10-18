@@ -13,7 +13,7 @@ import (
 
 // AlignScope executes a function with the specified alignment, then resets to left.
 // This eliminates repetitive align/reset patterns across handlers.
-func AlignScope(printer *service.Printer, align string, fn func() error) error {
+func AlignScope(printer service.PrinterActions, align string, fn func() error) error {
 	if err := ApplyAlignment(printer, align); err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func AlignScope(printer *service.Printer, align string, fn func() error) error {
 }
 
 // ApplyAlignment applies the specified alignment to the printer.
-func ApplyAlignment(printer *service.Printer, align string) error {
+func ApplyAlignment(printer service.PrinterActions, align string) error {
 	switch strings.ToLower(align) {
 	case constants.Center.String():
 		return printer.AlignCenter()

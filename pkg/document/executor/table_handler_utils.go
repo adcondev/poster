@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/tables"
 )
 
@@ -37,9 +38,17 @@ func CalculateTotalWidth(columnWidth, columnCount, spacing int) int {
 func RenderTable(cmd *TableCommand, opts *tables.Options) (string, error) {
 	engine := tables.NewEngine(&cmd.Definition, opts)
 
+	showHeaders := constants.DefaultTableShowHeaders
+	if cmd.ShowHeaders != nil {
+		showHeaders = *cmd.ShowHeaders
+	}
+	if opts != nil {
+		showHeaders = opts.ShowHeaders
+	}
+
 	tableData := &tables.Data{
 		Definition:  cmd.Definition,
-		ShowHeaders: cmd.ShowHeaders,
+		ShowHeaders: showHeaders,
 		Rows:        make([]tables.Row, len(cmd.Rows)),
 	}
 

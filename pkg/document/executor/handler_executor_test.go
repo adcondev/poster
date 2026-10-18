@@ -6,20 +6,62 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // ============================================================================
-// NewExecutor Tests
+// NewExecutor & Execute Integration Tests
 // ============================================================================
 
-func TestNewExecutor_NilPrinter_Panics(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expected panic for nil printer, got none")
-		}
-	}()
+func TestNewExecutor_NilPrinter_DoesNotPanicAndFailsExecute(t *testing.T) {
+	exec := NewExecutor(nil)
+	if exec == nil {
+		t.Fatal("Expected non-nil Executor even when printer is nil")
+	}
 
-	NewExecutor(nil)
+	doc := &schema.Document{
+		Version:  "1.0",
+		Profile:  schema.ProfileConfig{Model: "Test"},
+		Commands: []schema.Command{{Type: "feed", Data: json.RawMessage(`{"lines": 1}`)}},
+	}
+	if err := exec.Execute(doc); err == nil {
+		t.Error("Expected Execute to return error for nil printer, got nil")
+	}
+}
+
+func TestExecutor_Execute_WithMockPrinter(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	jsonData := []byte(`{
+		"version": "1.0",
+		"profile": {"model": "Test80", "paper_width": 80, "dpi": 203},
+		"commands": [
+			{"type": "text", "data": {"content": {"text": "Hello"}}},
+			{"type": "separator", "data": {"char": "-", "length": 10}},
+			{"type": "table", "data": {
+				"definition": {"columns": [{"name": "A", "width": 5}, {"name": "B", "width": 5}]},
+				"show_headers": false,
+				"options": {"header_bold": false, "word_wrap": false, "column_spacing": 0},
+				"rows": [["12345", "67890"]]
+			}},
+			{"type": "cut", "data": {"mode": "partial", "feed": 0}}
+		]
+	}`)
+
+	if err := exec.ExecuteJSON(jsonData); err != nil {
+		t.Fatalf("ExecuteJSON failed: %v", err)
+	}
+
+	if mock.GetProfile().DotsPerLine != 576 {
+		t.Errorf("Expected 576 dots per line for 80mm @ 203 DPI, got %d", mock.GetProfile().DotsPerLine)
+	}
+	if mock.CallCount("FeedLines") != 0 {
+		t.Errorf("Expected 0 FeedLines calls when cut.feed is explicitly 0, got %d", mock.CallCount("FeedLines"))
+	}
+	if len(mock.PrintedText) < 2 || mock.PrintedText[1] != "----------\n" {
+		t.Errorf("Expected exact 10-char separator, got %q", mock.PrintedText)
+	}
 }
 
 // ============================================================================
@@ -300,7 +342,7 @@ func TestCommandData_TableWithAllFields(t *testing.T) {
 	if len(cmd.Definition.Columns) != 3 {
 		t.Errorf("Expected 3 columns, got %d", len(cmd.Definition.Columns))
 	}
-	if !cmd.ShowHeaders {
+	if cmd.ShowHeaders == nil || !*cmd.ShowHeaders {
 		t.Error("Expected show_headers true")
 	}
 	if len(cmd.Rows) != 2 {
@@ -309,11 +351,11 @@ func TestCommandData_TableWithAllFields(t *testing.T) {
 	if cmd.Options == nil {
 		t.Fatal("Expected options")
 	}
-	if !cmd.Options.HeaderBold {
+	if cmd.Options.HeaderBold == nil || !*cmd.Options.HeaderBold {
 		t.Error("Expected header_bold true")
 	}
-	if cmd.Options.ColumnSpacing != 2 {
-		t.Errorf("Expected column_spacing 2, got %d", cmd.Options.ColumnSpacing)
+	if cmd.Options.ColumnSpacing == nil || *cmd.Options.ColumnSpacing != 2 {
+		t.Errorf("Expected column_spacing 2, got %v", cmd.Options.ColumnSpacing)
 	}
 }
 

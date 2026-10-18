@@ -3,7 +3,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
@@ -54,7 +53,6 @@ func (p *Printer) Initialize() error {
 		ct, _ = p.Protocol.Character.SelectCharacterCodeTable(p.Profile.CodeTable)
 	} else {
 		ct, _ = p.Protocol.Character.SelectCharacterCodeTable(character.WPC1252)
-		log.Printf("warning: unsupported code table %v, falling back to Windows-1252", p.Profile.CodeTable)
 	}
 
 	init := append(p.Protocol.InitializePrinter(), ct...)
@@ -164,7 +162,6 @@ func (p *Printer) SetAlignment(align string) error {
 	case constants.Right.String():
 		return p.AlignRight()
 	default:
-		log.Printf("warning: unknown alignment '%s', doing nothing", align)
 		return nil
 	}
 }
@@ -306,7 +303,6 @@ func (p *Printer) SetCodeTable(codeTable character.CodeTable) error {
 	var err error
 	if !p.Profile.IsSupported(codeTable) {
 		cmd, err = p.Protocol.Character.SelectCharacterCodeTable(character.WPC1252)
-		log.Printf("warning: unsupported code table %v, falling back to Windows-1252", codeTable)
 	} else {
 		cmd, err = p.Protocol.Character.SelectCharacterCodeTable(codeTable)
 	}
@@ -340,19 +336,20 @@ func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
 		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
 	}
 
-	// Intentar QR nativo si está soportado
+	// Use native ESC/POS QR only when supported AND neither logo nor circle_shape is requested
 	qropts.Qr = graphics.QrInfo{}
-	qropts.Logo = graphics.LogoInfo{}
+	if qropts.Logo.Image == nil {
+		qropts.Logo = graphics.LogoInfo{}
+	}
 
-	if p.Profile.HasQR {
+	if p.Profile.HasQR && qropts.LogoData == "" && qropts.Logo.Image == nil && !qropts.CircleShape {
 		err := p.printQRNative(data, qropts)
 		if err == nil {
 			return nil
 		}
-		log.Printf("Native QR failed, falling back to image: %v", err)
 	}
 
-	// Fallback a imagen
+	// Fallback / software bitmap rendering (required for logo, circle_shape, or HasQR == false)
 	return p.printQRAsImage(data, qropts)
 }
 
@@ -380,9 +377,6 @@ func (p *Printer) printQRNative(data string, qropts *graphics.QrOptions) error {
 	}
 
 	// 4. Set Error Correction Level
-	// [Check] Ensure we are sending the user-defined EC, not a reset value.
-	// The previous GenerateQR call validates it but preserves valid values (48-51).
-	log.Printf("QR: Setting Native EC Level to %d", qropts.ErrorCorrection) // [Optional Debug]
 	if cmd, err := p.Protocol.QRCode.SetQRCodeErrorCorrectionLevel(qropts.ErrorCorrection); err != nil {
 		return err
 	} else if err := p.Write(cmd); err != nil {
@@ -412,8 +406,6 @@ func (p *Printer) printQRAsImage(data string, opts *graphics.QrOptions) error {
 	generatedWidth := img.Bounds().Dx()
 
 	if generatedWidth > targetWidth {
-		log.Printf("QR: Generated width %d > requested %d. Using generated size.",
-			generatedWidth, targetWidth)
 		targetWidth = generatedWidth
 	}
 
@@ -461,8 +453,7 @@ func (p *Printer) PrintBarcode(cfg graphics.BarcodeConfig, data []byte) error {
 	return p.Write(fullCommand)
 }
 
-// GetProfile returns the printer's profile configuration
+// GetProfile returns a pointer to the printer's profile configuration
 func (p *Printer) GetProfile() *profile.Escpos {
-	prof := p.Profile
-	return &prof
+	return &p.Profile
 }

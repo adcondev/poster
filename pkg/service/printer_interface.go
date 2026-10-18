@@ -11,6 +11,7 @@ import (
 type PrinterActions interface {
 	// Basic operations
 	Initialize() error
+	Close() error
 	Write(data []byte) error
 
 	// Text printing
@@ -62,11 +63,12 @@ type PrinterActions interface {
 	// Character encoding
 	SetCodeTable(codeTable character.CodeTable) error
 
-	// Profile access - allows handlers to read printer configuration
+	// Profile access - allows handlers to read/modify printer configuration
 	GetProfile() *profile.Escpos
 }
 
-// Ensure service. Printer implements PrinterActions
-// This is a compile-time check that will fail if the interface doesn't match
-// Note:  Uncomment this after adding the import for service package
-// var _ PrinterActions = (*service.Printer)(nil)
+// Compile-time checks that Printer and MockPrinter implement PrinterActions
+var (
+	_ PrinterActions = (*Printer)(nil)
+	_ PrinterActions = (*MockPrinter)(nil)
+)

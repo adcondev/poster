@@ -72,10 +72,9 @@ func NewMockPrinter() *MockPrinter {
 	}
 }
 
-// GetProfile returns a copy of the mock profile
+// GetProfile returns a pointer to the mock profile
 func (m *MockPrinter) GetProfile() *profile.Escpos {
-	prof := m.MockProfile
-	return &prof
+	return &m.MockProfile
 }
 
 // record adds a call to the call log
@@ -136,6 +135,12 @@ func (m *MockPrinter) Initialize() error {
 		return fmt.Errorf("initialize failed")
 	}
 	return m.checkError("Initialize")
+}
+
+// Close simulates closing the printer connection
+func (m *MockPrinter) Close() error {
+	m.record("Close")
+	return m.checkError("Close")
 }
 
 // Write simulates writing raw bytes to the printer
