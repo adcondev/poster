@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/adcondev/poster/pkg/composer"
 	"github.com/adcondev/poster/pkg/connection"
@@ -107,7 +108,8 @@ func parseArgs() *Config {
 	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e.g., 192.168.1.100:9100)")
 	flag.StringVar(&config.SerialPort, "serial", "", "Serial port (e.g., COM1, /dev/ttyUSB0)")
 	flag.IntVar(&config.BaudRate, "baud", 9600, "Serial baud rate")
-	flag.StringVar(&config.OutputFile, "output", "output.prn", "Output file for file type")
+	flag.StringVar(&config.OutputFile, "output", "", "Output file path for file connection mode (-t file)")
+	flag.StringVar(&config.OutputFile, "o", "", "Output file path (shorthand)")
 	flag.StringVar(&config.PreviewPath, "preview", "", "Render visual PNG receipt preview to file (no hardware printer required)")
 
 	flag.BoolVar(&config.DryRun, "dry-run", false, "Validate without printing")
@@ -130,7 +132,7 @@ func parseArgs() *Config {
 		config.PrinterName = args[1]
 	}
 
-	if !config.DryRun && config.PreviewPath == "" && config.PrinterName == "" && config.ConnectionType == win {
+	if !config.DryRun && config.PreviewPath == "" && config.PrinterName == "" && strings.ToLower(config.ConnectionType) == win {
 		config.PrinterName = detectPrinter()
 	}
 
@@ -287,11 +289,14 @@ func executePrint(config *Config) error {
 		return emuPrinter.SavePNG(config.PreviewPath)
 	}
 
-	printerName, err := getPrinterNameFromDocument(config, jsonData)
-	if err != nil && config.ConnectionType == win {
-		return err
+	connType := strings.ToLower(config.ConnectionType)
+	if connType == win && config.PrinterName == "" {
+		printerName, err := getPrinterNameFromDocument(config, jsonData)
+		if err != nil {
+			return err
+		}
+		config.PrinterName = printerName
 	}
-	config.PrinterName = printerName
 
 	conn, err := createConnection(config)
 	if err != nil {
