@@ -12,8 +12,10 @@ import (
 
 	"github.com/adcondev/poster/pkg/composer"
 	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/executor"
 	"github.com/adcondev/poster/pkg/document/schema"
+	"github.com/adcondev/poster/pkg/emulator"
 	"github.com/adcondev/poster/pkg/service"
 )
 
@@ -42,6 +44,7 @@ type Config struct {
 	SerialPort     string
 	BaudRate       int
 	OutputFile     string
+	PreviewPath    string
 }
 
 func main() {
@@ -105,6 +108,7 @@ func parseArgs() *Config {
 	flag.StringVar(&config.SerialPort, "serial", "", "Serial port (e.g., COM1, /dev/ttyUSB0)")
 	flag.IntVar(&config.BaudRate, "baud", 9600, "Serial baud rate")
 	flag.StringVar(&config.OutputFile, "output", "output.prn", "Output file for file type")
+	flag.StringVar(&config.PreviewPath, "preview", "", "Render visual PNG receipt preview to file (no hardware printer required)")
 
 	flag.BoolVar(&config.DryRun, "dry-run", false, "Validate without printing")
 	flag.BoolVar(&config.Debug, "debug", false, "Enable debug logging")
@@ -126,7 +130,7 @@ func parseArgs() *Config {
 		config.PrinterName = args[1]
 	}
 
-	if !config.DryRun && config.PrinterName == "" && config.ConnectionType == win {
+	if !config.DryRun && config.PreviewPath == "" && config.PrinterName == "" && config.ConnectionType == win {
 		config.PrinterName = detectPrinter()
 	}
 
@@ -149,6 +153,7 @@ USAGE:
 EXAMPLES:
   %s ticket.json
   %s ticket.json "POS-80"
+  %s --preview receipt.png ticket.json
   %s -t file -output receipt.prn ticket.json
   %s --dry-run ticket.json
   %s --list
@@ -156,7 +161,7 @@ EXAMPLES:
   %s --list-physical
 
 OPTIONS:
-`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
+`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
 
 	flag.PrintDefaults()
 
@@ -250,6 +255,36 @@ func executePrint(config *Config) error {
 	// Dry run validation executes before attempting hardware connection/detection
 	if config.DryRun {
 		return validateDocument(&doc)
+	}
+
+	if config.PreviewPath != "" {
+		prof := createProfile(&doc)
+		if prof.PaperWidth == 0 && doc.Profile.PaperWidth > 0 {
+			prof.PaperWidth = float64(doc.Profile.PaperWidth)
+		}
+		if prof.DotsPerLine == 0 {
+			if doc.Profile.PaperWidth == 58 {
+				prof.DotsPerLine = constants.PaperPxWidth58mm
+			} else {
+				prof.DotsPerLine = constants.PaperPxWidth80mm
+			}
+		}
+		if prof.DPI == 0 {
+			if doc.Profile.DPI > 0 {
+				prof.DPI = doc.Profile.DPI
+			} else {
+				prof.DPI = constants.DefaultDPI
+			}
+		}
+		emuPrinter, err := emulator.NewPrinter(prof)
+		if err != nil {
+			return fmt.Errorf("failed to create emulator printer: %w", err)
+		}
+		exec := executor.NewExecutor(emuPrinter)
+		if err := exec.Execute(&doc); err != nil {
+			return fmt.Errorf("failed to execute document in preview: %w", err)
+		}
+		return emuPrinter.SavePNG(config.PreviewPath)
 	}
 
 	printerName, err := getPrinterNameFromDocument(config, jsonData)
