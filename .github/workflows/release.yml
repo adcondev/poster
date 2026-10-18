@@ -5,24 +5,34 @@ on:
     workflows: [ "CI" ]
     types:
       - completed
-    branches: [ master ]
+    branches:
+      - master
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
   packages: write
   issues: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
     if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      !contains(github.event.workflow_run.head_commit.message, 'chore(release)') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        !contains(github.event.workflow_run.head_commit.message, 'chore(release)') &&
+        !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
+      )
 
     steps:
-      # 1. AUTENTICACIÓN
+      # 1. AUTHENTICATION (GitHub App token to bypass tag/branch rulesets)
       - name: Generate GitHub App token
         id: generate_token
         uses: tibdex/github-app-token@v2
@@ -30,98 +40,167 @@ jobs:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      # 2. CHECKOUT COMPLETO
+      # 2. FULL CHECKOUT
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
 
       - name: Install dependencies
         run: npm ci
 
-      # 3. CÁLCULO MANUAL (Infalible)
+      # 3. DETERMINISTIC SEMVER CALCULATION & VALIDATION
       - name: Calculate Next Version
         id: calc
         run: |
+          set -euo pipefail
           git fetch --tags --force
-          
-          # Buscar último tag válido
-          LATEST_TAG=$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)
-          [ -z "$LATEST_TAG" ] && LATEST_TAG="v0.0.0"
-          CLEAN_VERSION=${LATEST_TAG#v}
-          
-          # Analizar commits
-          if [ "$LATEST_TAG" = "v0.0.0" ]; then
-            COMMITS=$(git log --pretty=format:"%s" HEAD)
-          else
-            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s")
+
+          # 1. Strictly match only valid SemVer tags (vX.Y.Z), ignoring any malformed tags
+          LATEST_TAG=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
           fi
-          
-          # Determinar tipo
+          CLEAN_TAG_VERSION="${LATEST_TAG#v}"
+
+          # 2. Validate package.json version and heal if null/invalid
+          RAW_PKG_VERSION=$(node -pe "require('./package.json').version || ''")
+          VALID_PKG_VERSION=$(node -pe "require('semver').valid('$RAW_PKG_VERSION') || ''")
+          if [ -z "$VALID_PKG_VERSION" ]; then
+            echo "⚠️ Invalid package.json version ('$RAW_PKG_VERSION'); healing to $CLEAN_TAG_VERSION"
+            VALID_PKG_VERSION="$CLEAN_TAG_VERSION"
+          fi
+
+          # 3. Choose the highest valid baseline so tag and package.json never collide
+          BASE_VERSION=$(node -pe "require('semver').gt('$VALID_PKG_VERSION', '$CLEAN_TAG_VERSION') ? '$VALID_PKG_VERSION' : '$CLEAN_TAG_VERSION'")
+          echo "🏷️ Latest Git Tag: $LATEST_TAG (Baseline: $BASE_VERSION)"
+
+          # 4. Collect non-release commits since LATEST_TAG
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s" HEAD | grep -vE "^chore\(release\):|\[skip ci\]" || true)
+          else
+            COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s" | grep -vE "^chore\(release\):|\[skip ci\]" || true)
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            echo "ℹ️ No releasable commits found since $LATEST_TAG. Skipping release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "🔍 Commits to release:"
+          echo "$COMMITS"
+
+          # 5. Determine bump type from Conventional Commits
           if echo "$COMMITS" | grep -qE "BREAKING[ -]CHANGE|^[a-z]+(\([^)]+\))?!:"; then
             TYPE="major"
-          elif echo "$COMMITS" | grep -q "^feat"; then
+          elif echo "$COMMITS" | grep -qE "^feat(\([^)]+\))?:"; then
             TYPE="minor"
           else
             TYPE="patch"
           fi
 
-          # Calcular siguiente versión con Node
-          NEXT_VERSION=$(node -pe "require('semver').inc('$CLEAN_VERSION', '$TYPE')")
-          
-          echo "🚀 Versión calculada: $NEXT_VERSION ($TYPE)"
-          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          # 6. Compute and strictly validate NEXT_VERSION
+          NEXT_VERSION=$(node -pe "require('semver').inc('$BASE_VERSION', '$TYPE') || ''")
+          if ! echo "$NEXT_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Error: Calculated invalid SemVer '$NEXT_VERSION' from base '$BASE_VERSION' ($TYPE)"
+            exit 1
+          fi
 
-      # 4. EJECUCIÓN (Dividida para evitar errores)
+          # Ensure tag does not already exist
+          while git rev-parse -q --verify "refs/tags/v${NEXT_VERSION}" >/dev/null 2>&1; do
+            NEXT_VERSION=$(node -pe "require('semver').inc('$NEXT_VERSION', 'patch')")
+          done
+
+          echo "🚀 Calculated Next Version: v$NEXT_VERSION ($TYPE)"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "next_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+
+      # 4. ATOMIC VERSION BUMP, CHANGELOG & TAG-FIRST PUSH
       - name: Apply Version & Push
+        if: steps.calc.outputs.should_release == 'true'
         env:
+          BASE_VER: ${{ steps.calc.outputs.base_version }}
           NEXT_VER: ${{ steps.calc.outputs.next_version }}
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          TARGET_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
-          echo "📝 Aplicando versión $NEXT_VER..."
+          # Rebase onto latest target branch before generating artifacts
+          git pull --rebase origin "$TARGET_BRANCH"
 
-          # A) ACTUALIZAR JSONs (Usamos npm nativo, nunca falla)
-          npm version $NEXT_VER --no-git-tag-version --allow-same-version
+          # Heal baseline in package.json before running standard-version if needed
+          npm version "$BASE_VER" --no-git-tag-version --allow-same-version
 
-          # B) GENERAR CHANGELOG (Usamos standard-version SOLO para texto)
-          # --skip.bump: No toques el json
-          # --skip.tag: No crees tags
-          # --skip.commit: No hagas commit
-          npx standard-version --release-as $NEXT_VER --skip.bump --skip.tag --skip.commit
+          echo "📝 Running standard-version for v$NEXT_VER..."
+          # Do NOT pass --skip.bump: letting standard-version run its bump lifecycle with
+          # --release-as guarantees newVersion is passed into changelog generation (never null).
+          npx standard-version --release-as "$NEXT_VER" --skip.tag --skip.commit
 
-          # Limpieza preventiva
-          sed -i "s/\[null\]/\[$NEXT_VER\]/g" CHANGELOG.md || true
+          # Guard against any literal null in generated files
+          if grep -qE "\[null\]|vnull|\"version\": *null" CHANGELOG.md package.json; then
+            echo "❌ Error: Detected 'null' version artifact in CHANGELOG.md or package.json"
+            exit 1
+          fi
 
-          # C) GIT COMMIT & TAG MANUAL
+          # Extract release notes for only this version
+          awk '/^#{2,3} \['"${NEXT_VER//./\\.}"'\]/{flag=1; next} /^#{2,3} \[[0-9]+\.[0-9]+\.[0-9]+\]/{flag=0} flag' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Release v${NEXT_VER}" > RELEASE_NOTES.md
+          fi
+
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): v$NEXT_VER [skip ci]"
+          git tag -a "v$NEXT_VER" -m "Release v$NEXT_VER"
 
-          # Configurar URL con token de App
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
-          
-          echo "🏷️ Creando tag v$NEXT_VER..."
-          git tag v$NEXT_VER
-          
-          echo "🚀 Subiendo..."
-          git push origin master
-          git push origin v$NEXT_VER
+          # Push tag FIRST: if tag protection rejects the tag, fail before polluting the branch
+          echo "🏷️ Pushing tag v$NEXT_VER..."
+          git push origin "refs/tags/v$NEXT_VER"
 
-      # 5. RELEASE VISUAL
+          echo "🚀 Pushing release commit to $TARGET_BRANCH..."
+          git push origin "HEAD:$TARGET_BRANCH"
+
+      # 5. BUILD CLI BINARIES WITH INJECTED VERSION
+      - name: Build Release Binaries
+        if: steps.calc.outputs.should_release == 'true'
+        env:
+          NEXT_VER: ${{ steps.calc.outputs.next_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          LDFLAGS="-s -w -X main.AppVersion=v${NEXT_VER}"
+          GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "dist/poster-windows-amd64.exe" ./cmd/poster
+          GOOS=linux   GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "dist/poster-linux-amd64" ./cmd/poster
+          GOOS=darwin  GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "dist/poster-darwin-amd64" ./cmd/poster
+          GOOS=darwin  GOARCH=arm64 go build -ldflags "$LDFLAGS" -o "dist/poster-darwin-arm64" ./cmd/poster
+
+      # 6. GITHUB RELEASE
       - name: Create GitHub Release
+        if: steps.calc.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.calc.outputs.next_version }}
-          name: v${{ steps.calc.outputs.next_version }}
-          body_path: CHANGELOG.md
+          name: Release v${{ steps.calc.outputs.next_version }}
+          body_path: RELEASE_NOTES.md
+          files: dist/*
           token: ${{ steps.generate_token.outputs.token }}
           make_latest: true

@@ -75,6 +75,13 @@ jobs:
             builder
             constants
             emulator
+            calculate
+            load
+            schema
+            shared
+            release
+            ci
+            docs
           requireScope: true
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |
@@ -100,7 +107,7 @@ jobs:
 
       - name: Run tests with race detection
         shell: bash
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./pkg/...
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Generate coverage report
         if: matrix.os == 'ubuntu-latest'
@@ -114,7 +121,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets. CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
           flags: unittests,${{ matrix.os }}
           name: codecov-${{ matrix.os }}

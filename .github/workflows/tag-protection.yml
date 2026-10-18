@@ -10,20 +10,43 @@ on:
 
 jobs:
   protect:
+    name: Validate Release Tag Integrity
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Document tag creation
+      - name: Validate SemVer Tag & Lineage
         run: |
+          set -euo pipefail
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-          echo "✅ New version tag created: $TAG_NAME"
-          echo "📝 Tag protection must be configured manually in repository settings:"
-          echo "   1. Go to Settings > Tags"
-          echo "   2. Add a tag protection rule"
-          echo "   3. Pattern: v*"
-          echo ""
-          echo "Tag: $TAG_NAME" >> $GITHUB_STEP_SUMMARY
-          echo "Created by: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || [ "$TAG_NAME" = "$GITHUB_REF" ]; then
+            echo "ℹ️ Manual dispatch; skipping tag ref check."
+            exit 0
+          fi
+
+          echo "🔍 Validating tag: $TAG_NAME"
+
+          # 1. Block vnull or non-SemVer tags
+          if ! echo "$TAG_NAME" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "❌ Invalid tag format '$TAG_NAME'. Expected strict SemVer (e.g., v4.6.2)."
+            exit 1
+          fi
+
+          # 2. Verify tagged commit belongs to default branch history
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          git fetch origin "$DEFAULT_BRANCH" --depth=50
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH"; then
+            echo "⚠️ Warning: Tag $TAG_NAME ($GITHUB_SHA) is not yet an ancestor of origin/$DEFAULT_BRANCH."
+          fi
+
+          {
+            echo "### ✅ Release Tag Verified: \`$TAG_NAME\`"
+            echo "- **Commit**: \`$GITHUB_SHA\`"
+            echo "- **Actor**: \`${{ github.actor }}\`"
+            echo "- **Ruleset**: Active repository tag ruleset (\`refs/tags/v*\`)"
+            echo "- **Timestamp**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          } >> "$GITHUB_STEP_SUMMARY"

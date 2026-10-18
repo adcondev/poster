@@ -42,10 +42,13 @@ linters:
     - gosec          # Inspects source code for security problems (SQL injection, weak crypto, etc.).
 
     # --- 4. Performance (Optional) ---
-    - gosec          # Inspects source code for security problems (SQL injection, weak crypto, etc.).
-
-    # --- 5. Performance (Optional) ---
     - prealloc       # Finds slice declarations that could potentially be preallocated.
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - goconst
 
 issues:
   # Maximum issues count per one linter. Set to 0 to disable.

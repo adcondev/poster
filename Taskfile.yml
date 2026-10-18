@@ -3,8 +3,8 @@
 version: '3'
 
 vars:
-  POSTER: ./bin/poster.exe
-  TEST_FLAGS: -coverprofile=coverage.txt -covermode=atomic
+  POSTER: ./bin/poster
+  TEST_FLAGS: -race -coverprofile=coverage.txt -covermode=atomic
   LINT_FLAGS: --timeout=5m
   BANNER: |
     ╔══════════════════════════════════════════════════════════╗
@@ -16,9 +16,8 @@ vars:
     ║   ██║     ╚██████╔╝███████║   ██║   ███████╗██║  ██║     ║
     ║   ╚═╝      ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝     ║
     ║                                                          ║
-    ║                  The POS daemon for Go                   ║
-    ║                  ESCPOS · ZPL · Scale                    ║
-    ║           Serial · USB · Network · Bluetooth             ║
+    ║            ESC/POS Thermal Printer Utility               ║
+    ║         JSON Schema v1.0 · Windows Spooler · PNG         ║
     ║                                                          ║
     ╚══════════════════════════════════════════════════════════╝
 
@@ -80,25 +79,24 @@ tasks:
       - lint
     cmds:
       - echo "Building the project..."
-      - go build -o ./bin/poster.exe ./cmd/poster
+      - go build -o {{.POSTER}} ./cmd/poster
   lint:
     cmds:
       - echo "Running linters..."
-      - '"C:\Users\RED 2000\golangci-lint\2.8.0\golangci-lint.exe" run {{.LINT_FLAGS}}'
+      - golangci-lint run {{.LINT_FLAGS}}
   test:
     cmds:
       - echo "Running all tests in detail..."
-      - go test {{.TEST_FLAGS}} ./pkg/...
+      - go test {{.TEST_FLAGS}} ./...
   deps:
     cmds:
       - echo "Tidying and downloading dependencies..."
       - go mod tidy
       - go mod download
   poster:
-    desc: Procesa un archivo existente
-    # Requiere que se pase un argumento Y que el archivo exista
+    desc: Process an existing ticket JSON file
     preconditions:
       - sh: test -f {{.CLI_ARGS | q}}
-        msg: "El archivo '{{.CLI_ARGS}}' no existe o no se especificó."
+        msg: "File '{{.CLI_ARGS}}' does not exist or was not specified."
     cmds:
       - "{{.POSTER}} {{.CLI_ARGS | q}}"

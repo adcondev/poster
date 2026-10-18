@@ -39,7 +39,14 @@
         "executor",
         "builder",
         "constants",
-        "emulator"
+        "emulator",
+        "calculate",
+        "load",
+        "schema",
+        "shared",
+        "release",
+        "ci",
+        "docs"
       ]
     ],
     "type-enum": [

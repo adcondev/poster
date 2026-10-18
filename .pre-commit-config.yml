@@ -23,7 +23,7 @@ repos:
         args: [ '--fix=lf' ]
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.62.2  # Updated to latest version
+    rev: v2.8.0
     hooks:
       - id: golangci-lint
         args: [ '--timeout=5m' ]
@@ -57,7 +57,7 @@ repos:
       - id: go-tests
         name: Go Tests
         entry: go test
-        args: [ '-race', '-short', './pkg/... ' ]
+        args: [ '-race', '-short', './...' ]
         language: system
         pass_filenames: false
         types: [ go ]

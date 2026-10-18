@@ -1,4 +1,6 @@
 module.exports = {
+    tagPrefix: "v",
+
     types: [
         {type: "feat", section: "✨ Features"},
         {type: "fix", section: "🐛 Bug Fixes"},
@@ -19,12 +21,17 @@ module.exports = {
     issueUrlFormat: "https://github.com/adcondev/poster/issues/{{id}}",
     userUrlFormat: "https://github.com/{{user}}",
 
-    // FIX: Restore 'v' prefix logic and skip-ci to prevent loops
     releaseCommitMessageFormat: "chore(release): v{{currentTag}} [skip ci]",
 
     header: "# Changelog\n\nAll notable changes to Poster will be documented in this file.\n",
 
-    // FIX: Update both package and lock file
+    packageFiles: [
+        {
+            filename: "package.json",
+            type: "json"
+        }
+    ],
+
     bumpFiles: [
         {
             filename: "package.json",
@@ -36,7 +43,6 @@ module.exports = {
         }
     ],
 
-    // FIX: Removed Go-specific scripts that crash the Node.js environment
     scripts: {
         prebump: "echo 'Preparing release...'",
         postbump: "echo 'Version bumped to {{currentTag}}'",
