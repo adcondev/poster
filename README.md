@@ -26,84 +26,85 @@ A professional, production-ready Go library and command-line utility for control
 - **JSON Document Protocol**: Define print jobs using a clean, versioned JSON schema (`v1.0`). Decouples business logic from hardware commands with full schema validation.
 - **Native Windows Integration**: Prints directly via the Windows Print Spooler API (`winspool.drv`), supporting USB, Serial, and Network printers installed in Windows.
 - **Advanced Graphics Engine**:
-    - High-quality image printing with **Atkinson Dithering**.
-    - Automatic scaling with bilinear interpolation.
-    - Supports PNG, JPG, BMP formats.
-- **Smart QR & Barcodes**: Automatically chooses between native printer firmware commands (fastest) or software rendering (maximum compatibility) based on the printer profile.
-- **Dynamic Table Layout**: Built-in engine for generating perfectly aligned receipts with word wrapping, multi-column
-  support, configurable spacing, **automatic overflow detection**, and **smart column auto-reduction** that preserves
-  small columns while shrinking larger ones to fit paper width.
-- **Visual Emulator**: Render print jobs as PNG images for preview and testing without physical hardware.
-- **Hardware Agnostic**: Includes profiles for standard 80mm (Epson-compatible), 58mm (generic), PT-210, GP-58N, and
-  EC-PM-80250 printers.
-- **Smart Printer Discovery**: Auto-detects thermal/POS printers from installed Windows devices, filtering virtual
-  printers and matching common hardware patterns.
-- **11 Command Types**: `text`, `image`, `barcode`, `qr`, `table`, `separator`, `feed`, `cut`, `raw`, `pulse`, `beep`.
-- **Raw Command Support**: Send raw ESC/POS bytes when full control is needed.
+    - High-quality monochrome rasterization with **Atkinson** and **Threshold** dithering.
+    - Configurable image scaling (`bilinear` and `nns` / `nearest_neighbor`).
+    - Supports PNG, JPEG, and BMP formats (file paths or Base64).
+- **Smart QR & Native Barcodes**:
+    - **QR Codes**: Automatically selects between native printer firmware commands (`GS ( k`) and software bitmap rendering (`pkg/graphics`) when custom **logo overlays**, **circular modules** (`circle_shape`), or non-QR profiles are used.
+    - **1D Barcodes**: Fast native ESC/POS (`GS k`) generation supporting `CODE128` (auto Set A/B/C), `EAN13`, `EAN8`, `UPCA`, `UPCE`, `CODE39`, `ITF`, and `CODABAR`.
+- **Dynamic Table Layout**: Built-in engine for generating aligned receipts with UTF-8 word wrapping, multi-column support, configurable column spacing (`0+`), **automatic overflow detection**, and **smart widest-column-first auto-reduction** (`ReduceToFit`).
+- **Visual Emulator**: Standalone 2D receipt preview engine (`pkg/emulator`) with embedded TrueType fonts (`JetBrainsMono`, `Ticketing`) and 5x7 ASCII fallback that renders print jobs to PNG images without physical hardware.
+- **Hardware Profiles & Encodings**: Built-in profiles for standard 80mm (`576` dots), 58mm (`384` dots), PT-210, GP-58N, and EC-PM-80250 printers with 23 single-byte and Shift-JIS character code tables.
+- **Smart Printer Discovery**: Enumerates and filters physical vs. virtual thermal/POS printers installed in the Windows Print Spooler.
+- **11 Document Command Types**: `text`, `image`, `barcode`, `qr`, `table`, `separator`, `feed`, `cut`, `raw`, `pulse`, `beep`.
+- **Raw Command Support**: Send raw hex ESC/POS byte sequences with safety checks against bidirectional lockups.
 
 ## 🏗️ Architecture
 
-The project follows a layered architecture to ensure modularity and testability:
+Poster follows a strict layered architecture separating JSON schema contracts, high-level orchestration, pure ESC/POS command generation, and OS transport:
 
 ```mermaid
-graph TD
-    JSON["JSON Document<br/>(v1.0 Schema)"] --> Parser["Parser & Validator<br/>(pkg/document/schema)"]
-    Parser --> Builder["Command Builder<br/>(pkg/document/builder)"]
-    Builder --> Executor["Command Executor<br/>(pkg/document/executor)"]
-    Executor --> Service["Printer Service<br/>(pkg/service)"]
+flowchart TD
+    JSON["JSON Document<br/>(api/v1 Schema)"] --> Schema["Parser & Validator<br/>(pkg/document/schema)"]
+    Builder["Fluent Go Builder<br/>(pkg/document/builder)"] --> Schema
+    Schema --> Executor["Command Executor<br/>(pkg/document/executor)"]
+    Executor --> Actions["PrinterActions Interface<br/>(pkg/service)"]
 
-    subgraph "Core Logic"
+    subgraph "Core Service Layer"
+        Actions --> Service["Printer Service<br/>(pkg/service)"]
+        Actions --> Mock["MockPrinter<br/>(pkg/service)"]
         Service --> Protocol["ESC/POS Composer<br/>(pkg/composer)"]
-        Service --> Profile["Device Profile<br/>(pkg/profile)"]
-        Service --> Graphics["Graphics Engine<br/>(pkg/graphics)"]
-        Service --> Tables["Table Engine<br/>(pkg/tables)"]
+        Service --> Profile["Device Profile & Encoding<br/>(pkg/profile)"]
+        Service --> Graphics["Graphics & QR Engine<br/>(pkg/graphics)"]
+        Executor --> Tables["Table Layout Engine<br/>(pkg/tables)"]
     end
 
-    subgraph "Command Modules (pkg/commands)"
-        Protocol --> Barcode["Barcode"]
-        Protocol --> BitImage["Bit Image"]
-        Protocol --> Character["Character"]
-        Protocol --> LineSpacing["Line Spacing"]
-        Protocol --> MechControl["Mechanism Control"]
-        Protocol --> PrintCmd["Print"]
-        Protocol --> PrintPos["Print Position"]
-        Protocol --> QRCode["QR Code"]
+    subgraph "Stateless Command Modules (pkg/commands)"
+        Protocol --> Barcode["barcode"]
+        Protocol --> BitImage["bitimage"]
+        Protocol --> Character["character"]
+        Protocol --> LineSpacing["linespacing"]
+        Protocol --> MechControl["mechanismcontrol"]
+        Protocol --> PrintCmd["print"]
+        Protocol --> PrintPos["printposition"]
+        Protocol --> QRCode["qrcode"]
+        Protocol --> Shared["shared"]
     end
 
-    Service --> Connector["Connection Interface<br/>(pkg/connection)"]
-
-    subgraph "Output Layer"
+    subgraph "Transport & Preview"
+        Service --> Connector["Connector (io.WriteCloser)<br/>(pkg/connection)"]
         Connector --> WinAPI["Windows Spooler API<br/>(winspool.drv)"]
-        Connector --> Network["Network<br/>(TCP/9100)"]
-        Connector --> Serial["Serial<br/>(COM Port)"]
-        Connector --> FileOut["File<br/>(Debug Output)"]
-        Connector --> Emulator["Visual Emulator<br/>(pkg/emulator)"]
-        WinAPI --> Device["Physical Printer"]
-        Emulator --> PNG["PNG Image"]
+        WinAPI --> Device["Physical Thermal Printer"]
+        Emulator["Visual Emulator<br/>(pkg/emulator)"] --> PNG["PNG Receipt Preview"]
     end
 ```
 
 ### Package Structure
 
-| Package          | Description                                                                                                                 |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `pkg/commands`   | ESC/POS command implementations (barcode, bitimage, character, linespacing, mechanismcontrol, print, printposition, qrcode) |
-| `pkg/composer`   | ESC/POS byte sequence generation and protocol composition                                                                   |
-| `pkg/connection` | Connection interfaces — Windows Spooler, Network, Serial, File                                                              |
-| `pkg/constants`  | Shared constants, unit conversions, and default values                                                                      |
-| `pkg/document`   | Document parsing, building, and execution (schema, builder, executor)                                                       |
-| `pkg/emulator`   | Visual emulator for rendering print jobs as PNG images                                                                      |
-| `pkg/graphics`   | Image processing pipeline — dithering, scaling, bitmap handling                                                             |
-| `pkg/profile`    | Printer profiles and character encoding tables                                                                              |
-| `pkg/service`    | High-level printer service facade (`PrinterActions` interface)                                                              |
-| `pkg/tables`     | Table engine — column alignment, word wrapping, header styling, auto-reduction                                              |
+| Package | Description |
+|---|---|
+| `api/v1` | Canonical JSON Schema (`ticket_document.schema.json`) and protocol specification (`TICKET_DOCUMENT_V1.md`) |
+| `cmd/poster` | CLI utility for printer discovery, JSON validation (`--dry-run`), and Windows Spooler printing |
+| `internal/calculate` | Millimeter, DPI, and dot-per-line math utilities |
+| `internal/load` | Path-traversal-safe file loader and PNG/JPEG/BMP image decoding (file & Base64) |
+| `internal/testutils` | Shared unit test assertions, byte slice validators, and mock helpers |
+| `pkg/commands` | Pure, stateless ESC/POS command builders (`barcode`, `bitimage`, `character`, `linespacing`, `mechanismcontrol`, `print`, `printposition`, `qrcode`, `shared`) |
+| `pkg/composer` | High-level ESC/POS protocol facade (`EscposProtocol`) |
+| `pkg/connection` | Transport interfaces (`Connector`, `PrinterService`) and Windows Spooler (`winspool.drv`) implementation |
+| `pkg/constants` | Shared typed enums, standard paper/dot geometry (`576` / `384` dots), and schema-aligned defaults |
+| `pkg/document` | JSON document AST & validator (`schema`), fluent Go DSL (`builder`), and command runner (`executor`) |
+| `pkg/emulator` | Standalone 2D visual receipt emulator rendering PNG images with embedded TTF fonts |
+| `pkg/graphics` | Image scaling, Atkinson/Threshold dithering, 1-bit bitmaps, and QR image rendering |
+| `pkg/profile` | Hardware capability profiles (`80mm`, `58mm`, `PT-210`, `GP-58N`, `EC-PM-80250`) and character code tables |
+| `pkg/service` | Stateful printer service (`Printer`), `PrinterActions` interface, and `MockPrinter` |
+| `pkg/tables` | Multi-column table engine with UTF-8 word wrapping, header styling, and `ReduceToFit` auto-balancing |
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- **Go** 1.24 or higher
-- **Windows OS** (for native spooler support; cross-platform for library/emulator use)
+- **Go** `1.24.6` or higher
+- **Windows OS** for native `winspool.drv` hardware printing (all library packages, tests, and the visual emulator run cross-platform on Linux, macOS, and Windows)
 
 ### As a Go Module
 
@@ -118,10 +119,10 @@ go get github.com/adcondev/poster@latest
 git clone https://github.com/adcondev/poster.git
 cd poster
 
-# Build the binary
-go build -o poster.exe ./cmd/poster
+# Build the CLI binary
+go build -o ./bin/poster ./cmd/poster
 
-# Or use Taskfile
+# Or run tests, linter, and build via Taskfile
 task build
 ```
 
@@ -129,34 +130,31 @@ task build
 
 ### Command Line Interface (CLI)
 
-The `poster` utility takes a JSON document and sends it to a specified printer.
+The `poster` CLI validates and prints JSON ticket documents via the Windows Print Spooler:
 
 ```bash
-# Print a document to a specific printer
-poster.exe -file receipt.json -printer "EPSON TM-T88V"
+# Print a JSON document to a specific Windows printer
+poster -file receipt.json -printer "EPSON TM-T88V"
 
-# Dry-run (validate JSON without printing)
-poster.exe -file receipt.json --dry-run
+# Auto-detect the default/first thermal printer and print
+poster -file receipt.json
 
-# List all installed printers (Windows only)
-poster.exe --list
+# Dry-run (validate JSON schema and commands without touching hardware)
+poster -file receipt.json --dry-run
 
-# List thermal/POS printers only
-poster.exe --list-thermal
-
-# List physical printers only (exclude virtual)
-poster.exe --list-physical
-
-# Output printer list as JSON
-poster.exe --list --json
+# List installed printers (Windows only)
+poster --list
+poster --list-thermal
+poster --list-physical
+poster --list --json
 
 # Show version
-poster.exe -v
+poster -v
 ```
 
-### JSON Document Example
+### JSON Document Example (`api/v1`)
 
-Create a file named `ticket.json`:
+Create a file named `ticket.json` conforming to [`api/v1/ticket_document.schema.json`](api/v1/ticket_document.schema.json):
 
 ```json
 {
@@ -173,10 +171,10 @@ Create a file named `ticket.json`:
       "data": {
         "content": {
           "text": "STORE NAME",
+          "align": "center",
           "content_style": {
             "bold": true,
-            "size": "2x2",
-            "align": "center"
+            "size": "2x2"
           }
         }
       }
@@ -184,7 +182,8 @@ Create a file named `ticket.json`:
     {
       "type": "separator",
       "data": {
-        "char": "-"
+        "char": "-",
+        "length": 48
       }
     },
     {
@@ -192,8 +191,8 @@ Create a file named `ticket.json`:
       "data": {
         "definition": {
           "columns": [
-            { "header": "Item", "width": 20, "align":  "left" },
-            { "header":  "Price", "width": 10, "align": "right" }
+            { "name": "Item", "width": 20, "align": "left" },
+            { "name": "Price", "width": 10, "align": "right" }
           ]
         },
         "show_headers": true,
@@ -214,12 +213,14 @@ Create a file named `ticket.json`:
       "data": {
         "data": "https://example.com",
         "align": "center",
-        "pixel_width": 150
+        "pixel_width": 256,
+        "correction": "Q"
       }
     },
     {
       "type": "cut",
       "data": {
+        "mode": "partial",
         "feed": 3
       }
     }
@@ -229,12 +230,66 @@ Create a file named `ticket.json`:
 
 ### Library Usage (Go)
 
-You can also use the packages directly in your Go application:
+#### 1. Fluent Document Builder + Executor
 
 ```go
 package main
 
 import (
+	"log"
+
+	"github.com/adcondev/poster/pkg/composer"
+	"github.com/adcondev/poster/pkg/connection"
+	"github.com/adcondev/poster/pkg/document/builder"
+	"github.com/adcondev/poster/pkg/document/executor"
+	"github.com/adcondev/poster/pkg/profile"
+	"github.com/adcondev/poster/pkg/service"
+)
+
+func main() {
+	doc, err := builder.NewDocument().
+		SetProfile("Generic 80mm", 80).
+		AddText(func(tb *builder.TextBuilder) {
+			tb.Text("STORE NAME").Center().Bold().Size("2x2")
+		}).
+		Separator().
+		AddQR(func(qb *builder.QRBuilder) {
+			qb.Data("https://example.com").Center().PixelWidth(256)
+		}).
+		PartialCut().
+		Build()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := connection.NewWindowsPrintConnector("POS-80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = conn.Close() }()
+
+	prof := profile.CreateProfile80mm()
+	printer, err := service.NewPrinter(composer.NewEscpos(), &prof, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = printer.Close() }()
+
+	exec := executor.NewExecutor(printer)
+	if err := exec.Execute(doc); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+#### 2. Direct `service.Printer` Imperative API
+
+```go
+package main
+
+import (
+	"log"
+
 	"github.com/adcondev/poster/pkg/composer"
 	"github.com/adcondev/poster/pkg/connection"
 	"github.com/adcondev/poster/pkg/profile"
@@ -242,86 +297,104 @@ import (
 )
 
 func main() {
-	// 1. Configure Profile
 	prof := profile.CreateProfile80mm()
 
-	// 2. Connect to Printer
-	conn, _ := connection.NewWindowsPrintConnector("POS-80")
-	defer conn.Close()
+	conn, err := connection.NewWindowsPrintConnector("POS-80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = conn.Close() }()
 
-	// 3. Initialize Service
 	proto := composer.NewEscpos()
-	printer, _ := service.NewPrinter(proto, prof, conn)
-	defer printer.Close()
+	printer, err := service.NewPrinter(proto, &prof, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = printer.Close() }()
 
-	// 4. Print
-	printer.Initialize()
-	printer.PrintLine("Hello World!")
-	printer.FullFeedAndCut(2)
+	_ = printer.Initialize()
+	_ = printer.PrintLine("Hello World!")
+	_ = printer.FullFeedAndCut(2)
 }
 ```
 
-## 📋 Supported Commands
+## 📋 Supported Document Commands
 
-| Command     | Description                                                         |
-|-------------|---------------------------------------------------------------------|
-| `text`      | Print formatted text with styles (bold, underline, inverse, sizing) |
-| `image`     | Print images with dithering and scaling options                     |
-| `barcode`   | Generate barcodes (CODE128, EAN13, UPC-A, CODE39, etc.)             |
-| `qr`        | Generate QR codes with optional logos and human-readable text       |
-| `table`     | Create formatted tables with column alignment and word wrapping     |
-| `separator` | Print separator lines                                               |
-| `feed`      | Advance paper by specified lines                                    |
-| `cut`       | Perform full or partial paper cut                                   |
-| `raw`       | Send raw ESC/POS bytes directly                                     |
-| `pulse`     | Send electrical pulse to open cash drawer                           |
-| `beep`      | Emit buzzer alert sound                                             |
+| Command | Description |
+|---|---|
+| `text` | Formatted text with optional key-value `label`, alignment, bold, underline (`1dot`/`2dot`), inverse, font (`A`/`B`), and scaling (`1x1`..`8x8`) |
+| `image` | Base64 PNG/JPEG/BMP raster printing with `atkinson` or `threshold` dithering and `bilinear` or `nns` scaling |
+| `barcode` | Native ESC/POS 1D barcodes (`CODE128`, `EAN13`, `EAN8`, `UPCA`, `UPCE`, `CODE39`, `ITF`, `CODABAR`) with HRI text options |
+| `qr` | Native or software-rendered QR codes with optional center `logo` and `circle_shape` modules |
+| `table` | Multi-column tables with column alignment, UTF-8 word wrapping, bold headers, and `auto_reduce` |
+| `separator` | Horizontal character repeat separator lines |
+| `feed` | Paper advance (`1`–`255` lines) |
+| `cut` | `full` or `partial` paper cut with configurable pre-cut `feed` (`0`–`255`) |
+| `raw` | Hex-encoded raw ESC/POS command bytes with bidirectional safety validation |
+| `pulse` | Cash drawer kick pulse (`ESC p`) on pin `0` or `1` |
+| `beep` | Printer buzzer alert (`ESC B`) with configurable times and duration |
 
-For complete documentation, see [api/v1/DOCUMENT_V1.md](api/v1/DOCUMENT_V1.md).
+For complete protocol documentation and JSON schema definitions, see [`api/v1/TICKET_DOCUMENT_V1.md`](api/v1/TICKET_DOCUMENT_V1.md) and [`api/v1/ticket_document.schema.json`](api/v1/ticket_document.schema.json).
 
 ## ⚙️ Configuration
 
-### Connection Types
+### Connection & Output Targets
 
-| Type      | Status        | Description                                                                 |
-|-----------|---------------|-----------------------------------------------------------------------------|
-| `windows` | ✅ Implemented | Windows Print Spooler (default). USB/Network printers installed in Windows. |
-| `network` | 🔜 Planned    | Direct network connection via Raw TCP/9100                                  |
-| `serial`  | 🔜 Planned    | Serial/USB direct connection (COM ports)                                    |
-| `file`    | 🔜 Planned    | Output to file for debugging or emulator testing                            |
+| Target | Status | Description |
+|---|---|---|
+| `WindowsPrintConnector` | ✅ Implemented | Native Windows Print Spooler (`winspool.drv`) supporting USB, Serial, and Network printers installed in Windows |
+| `MockPrinter` / `io.WriteCloser` | ✅ Implemented | In-memory mock and custom `io.WriteCloser` streams for unit testing and byte inspection |
 
-### Printer Profiles
+### Built-in Printer Profiles (`pkg/profile`)
 
-The library includes built-in profiles for common hardware:
-
-| Profile               | Description                                |
-|-----------------------|--------------------------------------------|
-| `CreateProfile80mm()` | Standard ESC/POS 80mm (Epson TM-T88, etc.) |
-| `CreateProfile58mm()` | Generic 58mm thermal printers              |
-| `CreatePt210()`       | PT-210 portable printer with QR support    |
-| `CreateGP58N()`       | GP-58N 58mm thermal printer                |
-| `CreateECPM80250()`   | EC-PM-80250 80mm thermal printer           |
+| Profile | Paper Width | Printable Width (203 DPI) | Description |
+|---|---|---|---|
+| `CreateProfile80mm()` | 80mm | 576 dots (48 chars Font A) | Standard 80mm ESC/POS (Epson TM-T88 series, etc.) |
+| `CreateProfile58mm()` | 58mm | 384 dots (32 chars Font A) | Generic 58mm thermal printers |
+| `CreatePt210()` | 58mm | 384 dots (32 chars Font A) | GOOJPRT PT-210 portable printer with QR support |
+| `CreateGP58N()` | 58mm | 384 dots (32 chars Font A) | Gainscha GP-58N 58mm thermal printer |
+| `CreateECPM80250()` | 80mm | 576 dots (48 chars Font A) | EC Line EC-PM-80250 80mm thermal printer |
 
 ## 🎨 Visual Emulator
 
-The `pkg/emulator` package provides a visual emulator that renders print jobs as PNG images:
+The `pkg/emulator` package provides a standalone 2D visual receipt renderer that outputs PNG previews without physical hardware:
 
 ```go
+package main
+
 import (
+	"os"
+
 	"github.com/adcondev/poster/pkg/emulator"
 )
 
-// Create emulator with configuration
-emu, _ := emulator.NewEngine(emulator.DefaultConfig())
+func main() {
+	emu, _ := emulator.NewEngine(emulator.DefaultConfig())
 
-// Render text
-emu.SetBold(true)
-emu.SetSize(2, 2)
-emu.AlignCenter()
-emu.PrintLine("STORE NAME")
+	emu.SetBold(true)
+	emu.SetSize(2, 2)
+	emu.AlignCenter()
+	emu.PrintLine("STORE NAME")
+	emu.Separator("-", 48)
+	emu.Cut(true)
 
-// Render and save as PNG
-img := emu.Render()
+	f, _ := os.Create("preview.png")
+	defer f.Close()
+	_ = emu.WritePNG(f)
+}
+```
+
+## 🛠️ Development & Testing
+
+```bash
+# Run all tests with race detection and coverage
+go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+# Run static analysis and linters (golangci-lint v2)
+golangci-lint run --timeout=5m
+
+# Tidy module dependencies
+go mod tidy
 ```
 
 ## 📊 Code Coverage
@@ -329,14 +402,13 @@ img := emu.Render()
 <details>
 <summary>📈 Coverage Trends</summary>
 
-[![Coverage Graph](https://codecov.io/github/adcondev/poster/graphs/sunburst.svg?token=X9KVG99DDZ
-)](https://codecov.io/gh/adcondev/poster)
+[![Coverage Graph](https://codecov.io/github/adcondev/poster/graphs/sunburst.svg?token=X9KVG99DDZ)](https://codecov.io/gh/adcondev/poster)
 </details>
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to submit pull requests.
-This project uses [Conventional Commits](https://conventionalcommits.org) and enforces semantic PR titles.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) for architectural invariants and guidelines.
+This project uses [Conventional Commits](https://conventionalcommits.org) (`.commitlintrc.json`) and enforces semantic PR titles.
 
 ## 📄 License
 
