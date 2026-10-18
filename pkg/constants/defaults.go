@@ -33,7 +33,11 @@ var (
 	ValidDPIs = []int{DefaultDPI, 300, 600}
 
 	// ValidCodeTables for character encoding
-	ValidCodeTables = []string{"WPC1252", "PC850", "PC437", "PC858"}
+	ValidCodeTables = []string{
+		"PC437", "PC850", "PC852", "PC855", "PC858", "PC860", "PC862", "PC863", "PC865", "PC866",
+		"WPC1250", "WPC1251", "WPC1252", "WPC1253", "WPC1254", "WPC1255", "WPC1256", "WPC1257", "WPC1258",
+		"ISO88592", "ISO88597", "ISO885915", "Katakana", "Hiragana", "ShiftJIS",
+	}
 )
 
 // Text defaults

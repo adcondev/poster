@@ -52,6 +52,13 @@ func TestEncodeString(t *testing.T) {
 			expectedError: false,
 			expectedBytes: []byte("test"),
 		},
+		{
+			name:          "Typography normalization in EncodeString",
+			codeTable:     character.PC437,
+			input:         "“Hello”",
+			expectedError: false,
+			expectedBytes: []byte("\"Hello\""),
+		},
 	}
 
 	p := profile.CreateProfile58mm()

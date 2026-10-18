@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
 	"github.com/adcondev/poster/pkg/service"
 )
@@ -653,3 +655,97 @@ func BenchmarkCommandUnmarshal_Table(b *testing.B) {
 		_ = json.Unmarshal(data, &cmd)
 	}
 }
+
+// ============================================================================
+// CodeTable Resolution & Preset Profile Tests
+// ============================================================================
+
+func TestSetCodeTable_AllSupportedTablesAndFallback(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected character.CodeTable
+	}{
+		{"PC437", "PC437", character.PC437},
+		{"CP437 alias", "CP437", character.PC437},
+		{"PC850", "PC850", character.PC850},
+		{"PC852", "PC852", character.PC852},
+		{"PC855", "PC855", character.PC855},
+		{"PC858", "PC858", character.PC858},
+		{"PC860", "PC860", character.PC860},
+		{"PC862", "PC862", character.PC862},
+		{"PC863", "PC863", character.PC863},
+		{"PC865", "PC865", character.PC865},
+		{"PC866", "PC866", character.PC866},
+		{"WPC1250", "WPC1250", character.WPC1250},
+		{"WPC1251", "WPC1251", character.WPC1251},
+		{"WPC1252", "WPC1252", character.WPC1252},
+		{"WPC1253", "WPC1253", character.WPC1253},
+		{"WPC1254", "WPC1254", character.WPC1254},
+		{"WPC1255", "WPC1255", character.WPC1255},
+		{"WPC1256", "WPC1256", character.WPC1256},
+		{"WPC1257", "WPC1257", character.WPC1257},
+		{"WPC1258", "WPC1258", character.WPC1258},
+		{"ISO88592", "ISO88592", character.ISO88592},
+		{"ISO88597", "ISO88597", character.ISO88597},
+		{"ISO885915", "ISO885915", character.ISO885915},
+		{"Katakana", "Katakana", character.Katakana},
+		{"Hiragana", "Hiragana", character.Hiragana},
+		{"ShiftJIS", "ShiftJIS", character.Katakana},
+		{"Unknown fallback", "UNKNOWN_TABLE", character.WPC1252},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := exec.setCodeTable(tc.input)
+			if err != nil {
+				t.Fatalf("setCodeTable(%s) failed: %v", tc.input, err)
+			}
+			lastCall := mock.LastCall()
+			if lastCall == nil || lastCall.Method != "SetCodeTable" {
+				t.Fatalf("expected SetCodeTable call on mock")
+			}
+			got := lastCall.Args[0].(character.CodeTable)
+			if got != tc.expected {
+				t.Errorf("setCodeTable(%s): got %v, expected %v", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestExecutor_Execute_58mmPresetPreservesPaperWidth(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	// Document has Model = "58mm PT-210" and PaperWidth = 0 (omitted / default)
+	doc := &schema.Document{
+		Version: "1.0",
+		Profile: schema.ProfileConfig{
+			Model:      "58mm PT-210",
+			PaperWidth: 0,
+			DPI:        203,
+		},
+		Commands: []schema.Command{
+			{
+				Type: "feed",
+				Data: json.RawMessage(`{"lines": 1}`),
+			},
+		},
+	}
+
+	if err := exec.Execute(doc); err != nil {
+		t.Fatalf("exec.Execute failed: %v", err)
+	}
+
+	prof := mock.GetProfile()
+	if prof.PaperWidth != 58 {
+		t.Errorf("expected PaperWidth == 58, got %v", prof.PaperWidth)
+	}
+	if prof.DotsPerLine != constants.PaperPxWidth58mm {
+		t.Errorf("expected DotsPerLine == %d, got %d", constants.PaperPxWidth58mm, prof.DotsPerLine)
+	}
+}
+
