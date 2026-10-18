@@ -4,7 +4,6 @@ package fonts
 import (
 	"embed"
 	"fmt"
-	"log"
 )
 
 // Note: Place your .ttf files in this directory.
@@ -54,20 +53,7 @@ func ListFonts() []string {
 	return fonts
 }
 
-// DiagnoseEmbedding prints diagnostic info about embedded fonts
+// DiagnoseEmbedding checks the embedded fonts directory.
 func DiagnoseEmbedding() {
-	entries, err := fs.ReadDir(".")
-	if err != nil {
-		log.Printf("[fonts] ERROR reading embed directory: %v", err)
-		return
-	}
-	log.Printf("[fonts] Found %d entries in embedded filesystem:", len(entries))
-	for _, entry := range entries {
-		info, _ := entry.Info()
-		if info != nil {
-			log.Printf("[fonts]   - %s (%d bytes)", entry.Name(), info.Size())
-		} else {
-			log.Printf("[fonts]   - %s (size unknown)", entry.Name())
-		}
-	}
+	_, _ = fs.ReadDir(".")
 }
