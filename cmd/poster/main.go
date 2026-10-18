@@ -155,6 +155,7 @@ USAGE:
 EXAMPLES:
   %s ticket.json
   %s ticket.json "POS-80"
+  %s -t tcp -network 192.168.1.100:9100 ticket.json
   %s --preview receipt.png ticket.json
   %s -t file -output receipt.prn ticket.json
   %s --dry-run ticket.json
@@ -163,14 +164,15 @@ EXAMPLES:
   %s --list-physical
 
 OPTIONS:
-`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
+`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
 
 	flag.PrintDefaults()
 
 	fmt.Println(`
 CONNECTION TYPES:
-  windows  - Windows Print Spooler (default)
-  file     - Output raw ESC/POS bytes to file
+  windows          - Windows Print Spooler (default on Windows)
+  tcp, network     - Direct raw TCP printing (host:9100) via -network or -p
+  file             - Output raw ESC/POS bytes to file or device via -output or -p
 
 PRINTER LISTING (Windows only):
   --list          List all installed printers
