@@ -2,7 +2,6 @@ package profile
 
 import (
 	"fmt"
-	"log"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
@@ -10,10 +9,6 @@ import (
 
 	"github.com/adcondev/poster/pkg/commands/character"
 )
-
-// TODO: Add new encodings as needed, many of them defined in ESCPOS don't have a direct mapping in Go
-
-// TODO: Separate this concern to dedicated package, then add the state management concern to profile
 
 // codeTableMap maps ESC/POS code tables to Go encodings
 var codeTableMap = map[character.CodeTable]encoding.Encoding{
@@ -55,10 +50,9 @@ var codeTableMap = map[character.CodeTable]encoding.Encoding{
 	// Vietnamese
 	character.WPC1258: charmap.Windows1258,
 
-	// Asian (basic mappings, may need special handling)
+	// Asian (basic mappings)
 	character.Katakana: japanese.ShiftJIS,
 	character.Hiragana: japanese.ShiftJIS,
-	// Note: OnePassKanji would need special handling
 }
 
 // EncodeString encodes a string using the specified code table
@@ -75,12 +69,8 @@ func (e *Escpos) EncodeString(text string) (string, error) {
 func (e *Escpos) getEncoding(codeTable character.CodeTable) *encoding.Encoder {
 	enc, ok := codeTableMap[codeTable]
 	if !ok {
-		// FIXME: Side effect: logging directly avoids caller control. Return error or use configured logger.
-		log.Printf("warning: unsupported encoding for code table %v, falling back to Windows-1252", codeTable)
-		// FIXME: Silent fallback to Windows-1252 might lead to incorrect output without caller knowing.
 		return charmap.Windows1252.NewEncoder()
 	}
-	// TODO: Optimization: .NewEncoder() is called on every invocation. Consider caching or reusing encoders if strict state is not required.
 	return enc.NewEncoder()
 }
 

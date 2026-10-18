@@ -3,7 +3,7 @@ package calculate
 
 // DotsPerLine calcula los puntos por línea basándose en el ancho del papel en mm y la resolución en dpi.
 func DotsPerLine(paperWidthMM float64, dpi int) int {
-	return int((paperWidthMM * float64(dpi)) / 25.4)
+	return MmToDots(paperWidthMM, dpi)
 }
 
 // MmToDots convierte una medida en milímetros a puntos, según la resolución en dpi.

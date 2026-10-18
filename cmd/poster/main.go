@@ -18,11 +18,13 @@ import (
 )
 
 const (
-	AppName    = "poster"
-	AppVersion = "4.4.0"
-	AppAuthor  = "adcondev"
-	win        = "windows"
+	AppName   = "poster"
+	AppAuthor = "adcondev"
+	win       = "windows"
 )
+
+// AppVersion is the CLI version string, overridden at build time via -ldflags "-X main.AppVersion=..."
+var AppVersion = "dev"
 
 type Config struct {
 	JSONFile       string
@@ -43,42 +45,51 @@ type Config struct {
 }
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	config := parseArgs()
 
 	if config.Version {
 		showVersion()
-		return
+		return 0
 	}
 
 	if config.Help {
 		showHelp()
-		return
+		return 0
 	}
 
-	// Handle printer listing options
 	if config.ListPrinters || config.ListThermal || config.ListPhysical {
 		if runtime.GOOS != win {
-			log.Fatal("Printer listing is only available on Windows")
+			log.Printf("Printer listing is only available on Windows")
+			return 1
 		}
-		listPrinters(config)
-		return
+		if err := listPrinters(config); err != nil {
+			log.Printf("Failed to enumerate printers: %v", err)
+			return 1
+		}
+		return 0
 	}
 
 	if config.JSONFile == "" {
-		log.Fatal("Error: JSON file is required. Use -h for help")
+		log.Printf("Error: JSON file is required. Use -h for help")
+		return 1
 	}
 
 	if err := executePrint(config); err != nil {
-		log.Fatalf("Print failed: %v", err)
+		log.Printf("Print failed: %v", err)
+		return 1
 	}
 
 	log.Println("✅ Print completed successfully!")
+	return 0
 }
 
 func parseArgs() *Config {
 	config := &Config{}
 
-	// Short and long flags share the same destination variable
 	flag.StringVar(&config.JSONFile, "file", "", "JSON document file path")
 	flag.StringVar(&config.JSONFile, "f", "", "JSON document file path (shorthand)")
 
@@ -90,7 +101,6 @@ func parseArgs() *Config {
 	flag.StringVar(&config.ConnectionType, "type", win, "Connection type: windows, network, serial, file")
 	flag.StringVar(&config.ConnectionType, "t", win, "Connection type (short)")
 
-	// TODO: Following flags will work when connection is developed
 	flag.StringVar(&config.NetworkAddr, "network", "", "Network address (e.g., 192.168.1.100:9100)")
 	flag.StringVar(&config.SerialPort, "serial", "", "Serial port (e.g., COM1, /dev/ttyUSB0)")
 	flag.IntVar(&config.BaudRate, "baud", 9600, "Serial baud rate")
@@ -108,7 +118,6 @@ func parseArgs() *Config {
 
 	flag.Parse()
 
-	// Handle positional arguments
 	args := flag.Args()
 	if len(args) > 0 && config.JSONFile == "" {
 		config.JSONFile = args[0]
@@ -117,8 +126,7 @@ func parseArgs() *Config {
 		config.PrinterName = args[1]
 	}
 
-	// Auto-detect printer name for common models
-	if config.PrinterName == "" && config.ConnectionType == win {
+	if !config.DryRun && config.PrinterName == "" && config.ConnectionType == win {
 		config.PrinterName = detectPrinter()
 	}
 
@@ -126,14 +134,14 @@ func parseArgs() *Config {
 }
 
 func showVersion() {
-	fmt.Printf("%s v%s\n", AppName, AppVersion)
+	fmt.Printf("%s %s\n", AppName, AppVersion)
 	fmt.Printf("Author: %s\n", AppAuthor)
 	fmt.Printf("Go: %s\n", runtime.Version())
 	fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 }
 
 func showHelp() {
-	fmt.Printf(`%s v%s - ESC/POS Printer Driver
+	fmt.Printf(`%s %s - ESC/POS Printer Driver
 
 USAGE:
   %s [options] <json_file> [printer_name]
@@ -141,8 +149,6 @@ USAGE:
 EXAMPLES:
   %s ticket.json
   %s ticket.json "POS-80"
-  %s -t network -network 192.168.1.100:9100 ticket.json
-  %s -t serial -serial COM1 -baud 115200 ticket.json
   %s -t file -output receipt.prn ticket.json
   %s --dry-run ticket.json
   %s --list
@@ -150,16 +156,14 @@ EXAMPLES:
   %s --list-physical
 
 OPTIONS:
-`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
+`, AppName, AppVersion, AppName, AppName, AppName, AppName, AppName, AppName, AppName, AppName)
 
 	flag.PrintDefaults()
 
 	fmt.Println(`
 CONNECTION TYPES:
-  windows  - Windows printer (default)
-  network  - Network printer
-  serial   - Serial/USB printer
-  file     - Output to file
+  windows  - Windows Print Spooler (default)
+  file     - Output raw ESC/POS bytes to file
 
 PRINTER LISTING (Windows only):
   --list          List all installed printers
@@ -168,22 +172,19 @@ PRINTER LISTING (Windows only):
 
 NOTES:
   - If no printer is specified, attempts to auto-detect common models
-  - JSON files should follow the poster document format
+  - JSON files should follow the poster v1.0 document format
   - Use --dry-run to validate JSON without printing`)
 }
 
-func listPrinters(config *Config) {
+func listPrinters(config *Config) error {
 	printers, err := connection.ListAvailablePrinters()
 	if err != nil {
-		// In Windows, syscall errors may occur; fail only if no printers found
 		if len(printers) == 0 {
-			log.Fatalf("Failed to enumerate printers: %v", err)
+			return err
 		}
-		// Warning log but continue if there are some printers found
 		log.Printf("Warning during printer enumeration: %v", err)
 	}
 
-	// Apply filters
 	switch {
 	case config.ListThermal:
 		printers = connection.FilterThermalPrinters(printers)
@@ -197,12 +198,11 @@ func listPrinters(config *Config) {
 
 	if len(printers) == 0 {
 		fmt.Println("  No printers found.")
-		return
+		return nil
 	} else if config.JSONOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		_ = enc.Encode(printers)
-		return
+		return enc.Encode(printers)
 	}
 
 	fmt.Println()
@@ -219,36 +219,27 @@ func listPrinters(config *Config) {
 
 		fmt.Printf("  Name:    %s%s%s\n", p.Name, defaultMark, virtualMark)
 		fmt.Printf("  Port:    %s\n", p.Port)
-		fmt.Printf("  Driver: %s\n", p.Driver)
-		fmt.Printf("  Status: %s\n", p.Status)
+		fmt.Printf("  Driver:  %s\n", p.Driver)
+		fmt.Printf("  Status:  %s\n", p.Status)
 		fmt.Printf("  Type:    %s\n", p.PrinterType)
 		fmt.Println()
 	}
 
 	fmt.Printf("Total: %d printer(s)\n", len(printers))
+	return nil
 }
 
 func executePrint(config *Config) error {
-	// Load and validate JSON
 	jsonData, err := loadJSON(config.JSONFile)
 	if err != nil {
 		return fmt.Errorf("failed to load JSON: %w", err)
 	}
 
-	// Obtener nombre de impresora del JSON si no se especificó
-	printerName, err := getPrinterNameFromDocument(config, jsonData)
-	if err != nil && config.ConnectionType == win {
-		return err
-	}
-	config.PrinterName = printerName
-
-	// Parse document
 	var doc schema.Document
 	if err := json.Unmarshal(jsonData, &doc); err != nil {
 		return fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
-	// Debug info
 	if config.Debug {
 		log.Printf("Document version: %s", doc.Version)
 		log.Printf("Profile: %s (%dmm)", doc.Profile.Model, doc.Profile.PaperWidth)
@@ -256,45 +247,38 @@ func executePrint(config *Config) error {
 		log.Printf("Connection type: %s", config.ConnectionType)
 	}
 
-	// Dry run validation
+	// Dry run validation executes before attempting hardware connection/detection
 	if config.DryRun {
 		return validateDocument(&doc)
 	}
 
-	// Create connection
+	printerName, err := getPrinterNameFromDocument(config, jsonData)
+	if err != nil && config.ConnectionType == win {
+		return err
+	}
+	config.PrinterName = printerName
+
 	conn, err := createConnection(config)
 	if err != nil {
 		return fmt.Errorf("failed to create connection: %w", err)
 	}
-	defer func(conn connection.Connector) {
-		err := conn.Close()
-		if err != nil {
-			log.Panicf("failed to close connection: %v", err)
-		}
-	}(conn)
 
-	// Create profile
 	prof := createProfile(&doc)
-
-	// Create protocol
 	proto := composer.NewEscpos()
 
-	// Create printer
 	printerService, err := service.NewPrinter(proto, prof, conn)
 	if err != nil {
+		_ = conn.Close()
 		return fmt.Errorf("failed to create printer: %w", err)
 	}
-	defer func(printerService *service.Printer) {
-		err := printerService.Close()
-		if err != nil {
-			log.Panicf("failed to close printer: %v", err)
+	defer func() {
+		if closeErr := printerService.Close(); closeErr != nil && config.Debug {
+			log.Printf("warning: failed to close printer: %v", closeErr)
 		}
-	}(printerService)
+	}()
 
-	// Create exec
 	exec := executor.NewExecutor(printerService)
 
-	// Execute document
 	if config.Debug {
 		log.Println("Executing document...")
 	}
