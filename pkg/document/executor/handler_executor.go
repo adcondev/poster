@@ -45,6 +45,7 @@ func NewExecutor(printer service.PrinterActions) *Executor {
 	e.registerHandler("image", e.handleImage)
 	e.registerHandler("qr", e.handleQR)
 	e.registerHandler("barcode", e.handleBarcode)
+	e.registerHandler("pdf417", e.handlePDF417)
 
 	// Register layout & raw handlers
 	e.registerHandler("table", e.handleTable)

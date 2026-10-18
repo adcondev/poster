@@ -84,6 +84,17 @@ type QRCommand struct {
 	CircleShape bool   `json:"circle_shape,omitempty"`
 }
 
+// PDF417Command represents a 2D PDF417 barcode command payload.
+type PDF417Command struct {
+	Data            string `json:"data"`
+	Columns         int    `json:"columns,omitempty"`
+	Rows            int    `json:"rows,omitempty"`
+	ModuleWidth     int    `json:"module_width,omitempty"`
+	RowHeight       int    `json:"row_height,omitempty"`
+	ErrorCorrection int    `json:"error_correction,omitempty"`
+	Align           string `json:"align,omitempty"`
+}
+
 // BarcodeCommand represents a 1D barcode command payload.
 type BarcodeCommand struct {
 	Symbology   string  `json:"symbology"`

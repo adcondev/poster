@@ -199,3 +199,207 @@ func TestPipeline_Process_Atkinson_DiffusionLogic(t *testing.T) {
 		})
 	}
 }
+
+func TestDitherMap_Lookups(t *testing.T) {
+	tests := []struct {
+		key      string
+		expected graphics.DitherMode
+	}{
+		{"threshold", graphics.Threshold},
+		{"atkinson", graphics.Atkinson},
+		{"floyd_steinberg", graphics.FloydSteinberg},
+		{"ordered", graphics.Ordered},
+		{"bayer", graphics.Ordered},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			mode, ok := graphics.DitherMap[tt.key]
+			if !ok {
+				t.Fatalf("DitherMap missing key %q", tt.key)
+			}
+			if mode != tt.expected {
+				t.Errorf("DitherMap[%q] = %v, want %v", tt.key, mode, tt.expected)
+			}
+		})
+	}
+}
+
+func TestPipeline_Process_FloydSteinberg(t *testing.T) {
+	opts := graphics.DefaultOptions()
+	opts.Dithering = graphics.FloydSteinberg
+	opts.Threshold = 128
+	p := graphics.NewPipeline(opts)
+
+	// Test with mid-gray image
+	img := image.NewGray(image.Rect(0, 0, 8, 8))
+	for i := 0; i < 64; i++ {
+		img.SetGray(i%8, i/8, color.Gray{Y: 128})
+	}
+
+	mono, err := p.Process(img)
+	if err != nil {
+		t.Fatalf("Process failed: %v", err)
+	}
+
+	blackCount := 0
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			if mono.GetPixel(x, y) {
+				blackCount++
+			}
+		}
+	}
+
+	// Mid-gray should yield a mix of black and white pixels
+	if blackCount == 0 || blackCount == 64 {
+		t.Errorf("Floyd-Steinberg dithering produced uniform output for gray input: %d/64 black", blackCount)
+	}
+
+	// Test extreme inputs: all white should produce 0 black pixels
+	whiteImg := image.NewGray(image.Rect(0, 0, 4, 4))
+	for i := 0; i < 16; i++ {
+		whiteImg.SetGray(i%4, i/4, color.Gray{Y: 255})
+	}
+	whiteMono, err := p.Process(whiteImg)
+	if err != nil {
+		t.Fatalf("Process whiteImg failed: %v", err)
+	}
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			if whiteMono.GetPixel(x, y) {
+				t.Errorf("Expected white pixel at (%d, %d)", x, y)
+			}
+		}
+	}
+}
+
+func TestPipeline_Process_Ordered(t *testing.T) {
+	opts := graphics.DefaultOptions()
+	opts.Dithering = graphics.Ordered
+	opts.Threshold = 128
+	p := graphics.NewPipeline(opts)
+
+	// Mid-gray image (128)
+	img := image.NewGray(image.Rect(0, 0, 4, 4))
+	for i := 0; i < 16; i++ {
+		img.SetGray(i%4, i/4, color.Gray{Y: 128})
+	}
+
+	mono, err := p.Process(img)
+	if err != nil {
+		t.Fatalf("Process failed: %v", err)
+	}
+
+	blackCount := 0
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			if mono.GetPixel(x, y) {
+				blackCount++
+			}
+		}
+	}
+
+	// In a 4x4 Bayer matrix with base threshold 128, mid-gray produces a balanced pattern
+	if blackCount == 0 || blackCount == 16 {
+		t.Errorf("Ordered dithering produced uniform output for gray input: %d/16 black", blackCount)
+	}
+
+	// Test solid black input
+	blackImg := image.NewGray(image.Rect(0, 0, 4, 4))
+	for i := 0; i < 16; i++ {
+		blackImg.SetGray(i%4, i/4, color.Gray{Y: 0})
+	}
+	blackMono, err := p.Process(blackImg)
+	if err != nil {
+		t.Fatalf("Process blackImg failed: %v", err)
+	}
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			if !blackMono.GetPixel(x, y) {
+				t.Errorf("Expected black pixel at (%d, %d)", x, y)
+			}
+		}
+	}
+}
+
+func TestMonochromeBitmap_SubBand(t *testing.T) {
+	// Create a 16x10 bitmap
+	bm := graphics.NewMonochromeBitmap(16, 10)
+	// Set specific pixels
+	bm.SetPixel(0, 0, true)
+	bm.SetPixel(5, 2, true)
+	bm.SetPixel(10, 4, true)
+	bm.SetPixel(15, 7, true)
+	bm.SetPixel(7, 9, true)
+
+	t.Run("first band", func(t *testing.T) {
+		band := bm.SubBand(0, 4)
+		if band.Width != 16 || band.Height != 4 {
+			t.Fatalf("unexpected band dimensions: %dx%d, want 16x4", band.Width, band.Height)
+		}
+		if !band.GetPixel(0, 0) {
+			t.Error("expected pixel at (0, 0) to be black")
+		}
+		if !band.GetPixel(5, 2) {
+			t.Error("expected pixel at (5, 2) to be black")
+		}
+		if band.GetPixel(10, 3) {
+			t.Error("expected pixel at (10, 3) to be white")
+		}
+	})
+
+	t.Run("middle band", func(t *testing.T) {
+		band := bm.SubBand(4, 4)
+		if band.Width != 16 || band.Height != 4 {
+			t.Fatalf("unexpected band dimensions: %dx%d, want 16x4", band.Width, band.Height)
+		}
+		// Pixel at (10, 4) in original is at y=0 in band
+		if !band.GetPixel(10, 0) {
+			t.Error("expected pixel at (10, 0) in band to be black")
+		}
+		// Pixel at (15, 7) in original is at y=3 in band
+		if !band.GetPixel(15, 3) {
+			t.Error("expected pixel at (15, 3) in band to be black")
+		}
+	})
+
+	t.Run("tail band clamped to height", func(t *testing.T) {
+		band := bm.SubBand(8, 4) // 8 + 4 = 12 > 10, clamped to 2 rows
+		if band.Width != 16 || band.Height != 2 {
+			t.Fatalf("unexpected band dimensions: %dx%d, want 16x2", band.Width, band.Height)
+		}
+		// Pixel at (7, 9) in original is at y=1 in band
+		if !band.GetPixel(7, 1) {
+			t.Error("expected pixel at (7, 1) in band to be black")
+		}
+	})
+
+	t.Run("invalid bounds return empty bitmap", func(t *testing.T) {
+		invalidCases := []struct {
+			name   string
+			bm     *graphics.MonochromeBitmap
+			startY int
+			height int
+		}{
+			{"negative startY", bm, -1, 4},
+			{"startY at height", bm, 10, 2},
+			{"startY beyond height", bm, 15, 2},
+			{"zero height", bm, 0, 0},
+			{"negative height", bm, 0, -2},
+			{"nil bitmap", nil, 0, 4},
+		}
+
+		for _, ic := range invalidCases {
+			t.Run(ic.name, func(t *testing.T) {
+				sub := ic.bm.SubBand(ic.startY, ic.height)
+				if sub == nil {
+					t.Fatal("SubBand returned nil, expected empty bitmap")
+				}
+				if sub.Width != 0 || sub.Height != 0 {
+					t.Errorf("SubBand returned %dx%d, want 0x0", sub.Width, sub.Height)
+				}
+			})
+		}
+	})
+}

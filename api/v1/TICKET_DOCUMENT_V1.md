@@ -54,7 +54,7 @@ Define las características de la impresora:
 
 | Campo  | Tipo   | Requerido | Descripción                   | Valores                                               |
 |--------|--------|-----------|-------------------------------|-------------------------------------------------------|
-| `type` | string | ✓         | Tipo de comando               | text, image, separator, feed, cut, qr, table, barcode |
+| `type` | string | ✓         | Tipo de comando               | text, image, separator, feed, cut, qr, pdf417, table, barcode, raw, pulse, beep |
 | `data` | object | ✓         | Datos específicos del comando | Varía según el tipo                                   |
 
 ### 1. Text Command
@@ -147,7 +147,7 @@ Imprime imágenes en formato base64:
 | `pixel_width` | integer |           | Ancho deseado en píxeles  | 128      | Mínimo: 1           |
 | `align`       | string  |           | Alineación de la imagen   | center   | left, center, right |
 | `threshold`   | integer |           | Umbral B/N (0-255)        | 128      | 0-255               |
-| `dithering`   | string  |           | Algoritmo de dithering    | atkinson | threshold, atkinson |
+| `dithering`   | string  |           | Algoritmo de dithering    | atkinson | threshold, atkinson, floyd_steinberg, ordered |
 | `scaling`     | string  |           | Algoritmo de escalado     | bilinear | bilinear, nns       |
 
 ### 3. Barcode Command
@@ -171,7 +171,7 @@ Genera códigos de barras:
 
 | Campo          | Tipo    | Requerido | Descripción           | Default | Valores                                                |
 |----------------|---------|-----------|-----------------------|---------|--------------------------------------------------------|
-| `symbology`    | string  | ✓         | Tipo de simbología    |         | upca, upce, ean13, ean8, code39, code128, itf, codabar |
+| `symbology`    | string  | ✓         | Tipo de simbología    |         | upca, upce, ean13, ean8, code39, code128, itf, codabar, code93, gs1_128, code128_auto |
 | `data`         | string  | ✓         | Datos a codificar     |         | 1-25 caracteres                                        |
 | `width`        | integer |           | Ancho del módulo      |         | 2-6                                                    |
 | `height`       | integer |           | Altura en puntos      |         | 1-255                                                  |
@@ -207,6 +207,35 @@ Genera códigos QR:
 | `align`        | string  |           | Alineación del QR                              | center  | left, center, right |
 | `logo`         | string  |           | Logo en Base64                                 |         |                     |
 | `circle_shape` | boolean |           | Usar bloques circulares (solo para QR < 256px) |         |                     |
+
+### 4b. PDF417 Command
+
+Genera códigos bidimensionales PDF417:
+
+```json
+{
+  "type": "pdf417",
+  "data": {
+    "data": "PDF417-PAYLOAD-DATA",
+    "columns": 0,
+    "rows": 0,
+    "module_width": 3,
+    "row_height": 3,
+    "error_correction": 2,
+    "align": "center"
+  }
+}
+```
+
+| Campo              | Tipo    | Requerido | Descripción                                  | Default | Valores             |
+|--------------------|---------|-----------|----------------------------------------------|---------|---------------------|
+| `data`             | string  | ✓         | Datos a codificar en el PDF417               |         |                     |
+| `columns`          | integer |           | Número de columnas (0 = auto)                | 0       | 0-30                |
+| `rows`             | integer |           | Número de filas (0 = auto)                   | 0       | 0, 3-90             |
+| `module_width`     | integer |           | Ancho del módulo en dots                     | 3       | 2-8                 |
+| `row_height`       | integer |           | Multiplicador de altura de fila              | 3       | 2-8                 |
+| `error_correction` | integer |           | Nivel de corrección de errores               | 2       | 0-8                 |
+| `align`            | string  |           | Alineación del código                        | center  | left, center, right |
 
 ### 5. Table Command
 

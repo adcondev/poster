@@ -98,6 +98,11 @@ func (b *DocumentBuilder) QR(data string) *QRBuilder {
 	return newQRBuilder(b, data)
 }
 
+// PDF417 starts building a PDF417 2D barcode command
+func (b *DocumentBuilder) PDF417(data string) *PDF417Builder {
+	return newPDF417Builder(b, data)
+}
+
 // Barcode starts building a barcode command
 func (b *DocumentBuilder) Barcode(symbology, data string) *BarcodeBuilder {
 	return newBarcodeBuilder(b, symbology, data)

@@ -39,6 +39,7 @@ type Escpos struct {
 	// Configuración avanzada (opcional)
 	ImageThreshold int                 // Umbral para conversión B/N (0-255)
 	Dithering      graphics.DitherMode // Tipo de dithering por defecto
+	MaxBandHeight  int                 // MaxBandHeight splits large raster bitmaps into horizontal bands (0 = no split)
 
 	// Debug info
 	DebugLog bool // Habilitar logs de depuración
@@ -52,6 +53,7 @@ func CreatePt210() *Escpos {
 	p.CodeTable = character.PC850
 	p.QRMaxSize = 19 // Máxima versión QR soportada
 	p.HasQR = true   // Soporta QR nativo
+	p.MaxBandHeight = 256
 	return p
 }
 
@@ -61,6 +63,7 @@ func CreateGP58N() *Escpos {
 	p.Model = "58mm GP-58N"
 
 	p.CodeTable = character.PC850
+	p.MaxBandHeight = 256
 	return p
 }
 
@@ -83,6 +86,7 @@ func CreateProfile58mm() *Escpos {
 		CodeTable: character.PC850,
 
 		ImageThreshold: 128,
+		MaxBandHeight:  256,
 	}
 }
 
