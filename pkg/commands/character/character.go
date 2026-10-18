@@ -444,6 +444,9 @@ type Capability interface {
 	SelectCharacterSize(sizeConfig Size) []byte
 	SetWhiteBlackReverseMode(mode ReverseMode) []byte
 	SetSmoothingMode(mode SmoothingMode) []byte
+	EffectsCmds() EffectsCapability
+	CodeConversionCmds() CodeConversionCapability
+	UserDefinedCmds() UserDefinedCapability
 }
 
 // ============================================================================
@@ -466,6 +469,21 @@ func NewCommands() *Commands {
 		CodeConversion: &CodeConversionCommands{},
 		UserDefined:    &UserDefinedCommands{},
 	}
+}
+
+// EffectsCmds returns the effects capability.
+func (c *Commands) EffectsCmds() EffectsCapability {
+	return c.Effects
+}
+
+// CodeConversionCmds returns the code conversion capability.
+func (c *Commands) CodeConversionCmds() CodeConversionCapability {
+	return c.CodeConversion
+}
+
+// UserDefinedCmds returns the user-defined character capability.
+func (c *Commands) UserDefinedCmds() UserDefinedCapability {
+	return c.UserDefined
 }
 
 // ============================================================================

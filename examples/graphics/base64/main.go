@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/adcondev/poster/internal/load"
 	"github.com/adcondev/poster/pkg/composer"
 	"github.com/adcondev/poster/pkg/connection"
 	"github.com/adcondev/poster/pkg/graphics"
@@ -50,7 +49,7 @@ func main() {
 
 	// Load the image
 	log.Print("Loading image from Base64")
-	img, _, err := load.ImgFromBase64(Data)
+	img, _, err := graphics.LoadImageFromBase64(Data)
 	if err != nil {
 		log.Panicf("Failed to load image: %v", err)
 	}

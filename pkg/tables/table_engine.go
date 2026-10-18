@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/adcondev/poster/pkg/commands/print"
-	"github.com/adcondev/poster/pkg/composer"
 )
 
 // Paper width constants (in characters)
@@ -43,6 +42,13 @@ func DefaultOptions() *Options {
 	}
 }
 
+// RenderedTable holds structured header and body lines without embedded ESC/POS control bytes.
+type RenderedTable struct {
+	HeaderLines []string
+	BodyLines   []string
+	HeaderBold  bool
+}
+
 // TabEngine handles table rendering
 type TabEngine struct {
 	definition *Definition
@@ -64,74 +70,78 @@ func NewEngine(def *Definition, opts *Options) *TabEngine {
 	}
 }
 
-// Render renders the table data to the writer
-func (te *TabEngine) Render(w io.Writer, data *Data) error {
+// RenderStructured produces structured pure text lines for headers and body without ESC/POS control bytes.
+func (te *TabEngine) RenderStructured(data *Data) (*RenderedTable, error) {
 	if data == nil {
-		return fmt.Errorf("table data cannot be nil")
+		return nil, fmt.Errorf("table data cannot be nil")
 	}
 	if err := data.Validate(); err != nil {
-		return fmt.Errorf("invalid table data: %w", err)
+		return nil, fmt.Errorf("invalid table data: %w", err)
 	}
 
 	def := te.definition
 	if len(data.Definition.Columns) > 0 {
 		def = &data.Definition
 	}
+	if def == nil || len(def.Columns) == 0 {
+		return nil, fmt.Errorf("table must have at least one column")
+	}
 
-	// Headers
+	var headerLines []string
 	if te.options.ShowHeaders || data.ShowHeaders {
-		headerLine := te.formatHeaderRow(te.makeHeaderRow(def), def)
-		if _, err := w.Write([]byte(headerLine + string(print.LF))); err != nil {
-			return err
+		headerRow := te.makeHeaderRow(def)
+		if te.options.WordWrap {
+			wrapped := te.wrapRow(headerRow, def)
+			for _, wr := range wrapped {
+				headerLines = append(headerLines, te.formatRow(wr, def))
+			}
+		} else {
+			headerLines = append(headerLines, te.formatRow(headerRow, def))
 		}
 	}
 
-	// Data rows (without blank lines between them)
+	var bodyLines []string
 	for _, row := range data.Rows {
 		if te.options.WordWrap {
 			wrapped := te.wrapRow(row, def)
 			for _, wr := range wrapped {
-				line := te.formatRow(wr, def)
-				if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
-					return err
-				}
+				bodyLines = append(bodyLines, te.formatRow(wr, def))
 			}
 		} else {
-			line := te.formatRow(row, def)
-			if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
-				return err
-			}
+			bodyLines = append(bodyLines, te.formatRow(row, def))
+		}
+	}
+
+	return &RenderedTable{
+		HeaderLines: headerLines,
+		BodyLines:   bodyLines,
+		HeaderBold:  te.options.HeaderStyle.Bold,
+	}, nil
+}
+
+// Render renders the table data to the writer as pure text lines.
+func (te *TabEngine) Render(w io.Writer, data *Data) error {
+	rendered, err := te.RenderStructured(data)
+	if err != nil {
+		return err
+	}
+
+	for _, line := range rendered.HeaderLines {
+		if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
+			return err
+		}
+	}
+
+	for _, line := range rendered.BodyLines {
+		if _, err := w.Write([]byte(line + string(print.LF))); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-// formatHeaderRow formats a header row with bold styling
-func (te *TabEngine) formatHeaderRow(cells []string, def *Definition) string {
-	var result strings.Builder
-
-	cmds := composer.NewEscpos()
-
-	// Apply bold command at the beginning if enabled
-	if te.options.HeaderStyle.Bold {
-		result.WriteString(string(cmds.EnableBold())) // ESC E 1 (Bold ON)
-	}
-
-	// Format header cells
-	result.WriteString(te.formatRow(cells, def))
-
-	// Reset bold at the end if it was enabled
-	if te.options.HeaderStyle.Bold {
-		result.WriteString(string(cmds.DisableBold())) // ESC E 0 (Bold OFF)
-	}
-
-	return result.String()
-}
-
-// TODO: Consider row styles in the future
-
-// formatRow formats a regular data row without styling
+// formatRow formats a row into a single aligned line
 func (te *TabEngine) formatRow(cells []string, def *Definition) string {
 	var result strings.Builder
 

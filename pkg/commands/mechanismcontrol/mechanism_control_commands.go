@@ -432,3 +432,50 @@ func (c *Commands) FeedCutAndReturnPaper(m FeedCutReturn, n byte) ([]byte, error
 	}
 	return []byte{shared.GS, 'V', byte(m), n}, nil
 }
+
+// Pulse generates the ESC p command to open a cash drawer connected to pin 2 or pin 5.
+//
+// Format:
+//
+//	ASCII:   ESC p m t1 t2
+//	Hex:     0x1B 0x70 m t1 t2
+//	Decimal: 27 112 m t1 t2
+//
+// Range:
+//
+//	m = 0, 1
+//	t1 = 0–255 (on-time = t1 * 2ms)
+//	t2 = 0–255 (off-time = t2 * 2ms)
+//
+// Errors:
+//
+//	Returns ErrInvalidDrawerPin if pin > 1.
+func (c *Commands) Pulse(pin byte, onTime byte, offTime byte) ([]byte, error) {
+	if pin > 1 {
+		return nil, ErrInvalidDrawerPin
+	}
+	return []byte{shared.ESC, 0x70, pin, onTime, offTime}, nil
+}
+
+// Beep generates the ESC B command to emit a buzzer sound.
+//
+// Format:
+//
+//	ASCII:   ESC B n t
+//	Hex:     0x1B 0x42 n t
+//	Decimal: 27 66 n t
+//
+// Range:
+//
+//	n >= 1 (number of times)
+//	t >= 1 (time lapse)
+//
+// Errors:
+//
+//	Returns ErrInvalidBeepParams if times == 0 or lapse == 0.
+func (c *Commands) Beep(times byte, lapse byte) ([]byte, error) {
+	if times == 0 || lapse == 0 {
+		return nil, ErrInvalidBeepParams
+	}
+	return []byte{shared.ESC, 0x42, times, lapse}, nil
+}

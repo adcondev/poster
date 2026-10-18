@@ -141,6 +141,9 @@ type Capability interface {
 	PrintDownloadedBitImage(mode PrintMode) ([]byte, error)
 	PrintVariableVerticalSizeBitImage(mode PrintMode, width, height uint16, data []byte) ([]byte, error) // Variable size bit image commands (deprecated)
 	PrintRasterBitImage(mode PrintMode, width, height uint16, data []byte) ([]byte, error)
+	GraphicsCmds() GraphicsCapability
+	NVGraphicsCmds() NVGraphicsCapability
+	DownloadGraphicsCmds() DownloadGraphicsCapability
 }
 
 // ============================================================================
@@ -161,6 +164,21 @@ func NewCommands() *Commands {
 		NvGraphics:       &NvGraphicsCommands{},
 		DownloadGraphics: &DownloadGraphicsCommands{},
 	}
+}
+
+// GraphicsCmds returns the graphics capability.
+func (c *Commands) GraphicsCmds() GraphicsCapability {
+	return c.Graphics
+}
+
+// NVGraphicsCmds returns the NV graphics capability.
+func (c *Commands) NVGraphicsCmds() NVGraphicsCapability {
+	return c.NvGraphics
+}
+
+// DownloadGraphicsCmds returns the download graphics capability.
+func (c *Commands) DownloadGraphicsCmds() DownloadGraphicsCapability {
+	return c.DownloadGraphics
 }
 
 // ============================================================================

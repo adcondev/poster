@@ -42,6 +42,52 @@ func NewPrinter(proto *composer.EscposProtocol, prof *profile.Escpos, conn conne
 	}, nil
 }
 
+// PrinterOption configures a Printer instance.
+type PrinterOption func(*Printer) error
+
+// WithProfile sets a custom printer profile.
+func WithProfile(prof *profile.Escpos) PrinterOption {
+	return func(p *Printer) error {
+		if prof == nil {
+			return fmt.Errorf("profile cannot be nil")
+		}
+		p.Profile = *prof
+		return nil
+	}
+}
+
+// WithProtocol sets a custom ESC/POS protocol.
+func WithProtocol(proto *composer.EscposProtocol) PrinterOption {
+	return func(p *Printer) error {
+		if proto == nil {
+			return fmt.Errorf("protocol cannot be nil")
+		}
+		p.Protocol = *proto
+		return nil
+	}
+}
+
+// NewPrinterWithOptions creates a new Printer instance with optional configuration.
+func NewPrinterWithOptions(conn connection.Connector, opts ...PrinterOption) (*Printer, error) {
+	if conn == nil {
+		return nil, fmt.Errorf("connection cannot be nil")
+	}
+
+	p := &Printer{
+		Profile:    *profile.CreateProfile80mm(),
+		Connection: conn,
+		Protocol:   *composer.NewEscpos(),
+	}
+
+	for _, opt := range opts {
+		if err := opt(p); err != nil {
+			return nil, err
+		}
+	}
+
+	return p, nil
+}
+
 // ============================================================================
 // Basic Control Methods
 // ============================================================================
@@ -260,6 +306,36 @@ func (p *Printer) PartialFeedAndCut(lines byte) error {
 	if err != nil {
 		return fmt.Errorf("feed and cut paper: %w", err)
 	}
+	return p.Write(cmd)
+}
+
+// Pulse generates a cash drawer pulse on pin 2 or pin 5
+func (p *Printer) Pulse(pin, onTime, offTime byte) error {
+	cmd, err := p.Protocol.Pulse(pin, onTime, offTime)
+	if err != nil {
+		return fmt.Errorf("pulse command: %w", err)
+	}
+	return p.Write(cmd)
+}
+
+// Beep triggers the printer buzzer
+func (p *Printer) Beep(times, lapse byte) error {
+	cmd, err := p.Protocol.Beep(times, lapse)
+	if err != nil {
+		return fmt.Errorf("beep command: %w", err)
+	}
+	return p.Write(cmd)
+}
+
+// SetLineSpacing sets the line spacing to the specified number of dots
+func (p *Printer) SetLineSpacing(dots byte) error {
+	cmd := p.Protocol.SetLineSpacing(dots)
+	return p.Write(cmd)
+}
+
+// SelectDefaultLineSpacing resets line spacing to the printer default
+func (p *Printer) SelectDefaultLineSpacing() error {
+	cmd := p.Protocol.SelectDefaultLineSpacing()
 	return p.Write(cmd)
 }
 

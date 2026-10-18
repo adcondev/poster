@@ -361,3 +361,28 @@ func (m *MockPrinter) SetCodeTable(codeTable character.CodeTable) error {
 	m.record("SetCodeTable", codeTable)
 	return m.checkError("SetCodeTable")
 }
+
+// Pulse simulates cash drawer kick-out pulse
+func (m *MockPrinter) Pulse(pin, onTime, offTime byte) error {
+	m.record("Pulse", pin, onTime, offTime)
+	return m.checkError("Pulse")
+}
+
+// Beep simulates buzzer sound
+func (m *MockPrinter) Beep(times, lapse byte) error {
+	m.record("Beep", times, lapse)
+	return m.checkError("Beep")
+}
+
+// SetLineSpacing simulates setting line spacing
+func (m *MockPrinter) SetLineSpacing(dots byte) error {
+	m.record("SetLineSpacing", dots)
+	return m.checkError("SetLineSpacing")
+}
+
+// SelectDefaultLineSpacing simulates resetting line spacing to default
+func (m *MockPrinter) SelectDefaultLineSpacing() error {
+	m.record("SelectDefaultLineSpacing")
+	return m.checkError("SelectDefaultLineSpacing")
+}
+

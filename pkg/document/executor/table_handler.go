@@ -3,11 +3,11 @@ package executor
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
 	"github.com/adcondev/poster/pkg/service"
-	"github.com/adcondev/poster/pkg/tables"
 )
 
 type (
@@ -38,107 +38,34 @@ func (e *Executor) handleTable(printer service.PrinterActions, data json.RawMess
 		return fmt.Errorf("invalid table definition: %w", err)
 	}
 
-	prof := printer.GetProfile()
-	var dotsPerLine int
-	var paperWidth float64
-	var dpi int
-	if prof != nil {
-		dotsPerLine = prof.DotsPerLine
-		paperWidth = prof.PaperWidth
-		dpi = prof.DPI
-	}
-
-	maxChars := constants.MaxCharsForPaperFontA(dotsPerLine)
-	if maxChars == 0 {
-		if paperWidth >= 80 {
-			maxChars = tables.Width80mm203dpi
-		} else {
-			maxChars = tables.Width58mm203dpi
-		}
-	}
+	isFontB := cmd.Options != nil && strings.EqualFold(cmd.Options.Font, "B")
+	maxChars, paperWidth, dpi := calculateMaxChars(printer.GetProfile(), isFontB)
 
 	spacing := constants.DefaultTableColumnSpacing
 	if cmd.Options != nil && cmd.Options.ColumnSpacing != nil {
 		spacing = *cmd.Options.ColumnSpacing
 	}
 
-	numberOfGaps := len(cmd.Definition.Columns) - 1
-	if numberOfGaps < 0 {
-		numberOfGaps = 0
+	if err := fitTableColumns(&cmd, totalColumnWidth, maxChars, spacing, isFontB, paperWidth, dpi); err != nil {
+		return err
 	}
 
-	totalGapWidth := numberOfGaps * spacing
-	totalRequiredWidth := totalColumnWidth + totalGapWidth
+	opts := resolveTableOptions(&cmd, maxChars, spacing)
 
-	if totalRequiredWidth > maxChars {
-		shouldReduce := constants.DefaultTableAutoReduce
-		if cmd.Options != nil && cmd.Options.AutoReduce != nil {
-			shouldReduce = *cmd.Options.AutoReduce
+	if isFontB {
+		if err := printer.FontB(); err != nil {
+			return fmt.Errorf("failed to set Font B for table: %w", err)
 		}
-
-		if shouldReduce {
-			result, err := tables.ReduceToFit(
-				cmd.Definition.Columns,
-				maxChars,
-				spacing,
-				constants.MinTableColumnWidth,
-			)
-
-			if err == nil && result.Success {
-				cmd.Definition.Columns = result.Columns
-			} else {
-				return fmt.Errorf(
-					"table overflow: required %d chars > max %d; auto-reduction failed: %w",
-					totalRequiredWidth, maxChars, err,
-				)
-			}
-		} else {
-			return fmt.Errorf(
-				"table overflow: columns (%d) + gaps (%d) = %d chars, exceeds max %d chars "+
-					"(%.0fmm paper @ %d DPI, Font A)",
-				totalColumnWidth,
-				totalGapWidth,
-				totalRequiredWidth,
-				maxChars,
-				paperWidth,
-				dpi,
-			)
+		defer func() {
+			_ = printer.FontA()
+		}()
+	} else {
+		if err := printer.FontA(); err != nil {
+			return fmt.Errorf("failed to set Font A for table: %w", err)
 		}
 	}
 
-	showHeaders := constants.DefaultTableShowHeaders
-	if cmd.ShowHeaders != nil {
-		showHeaders = *cmd.ShowHeaders
-	}
-
-	wordWrap := constants.DefaultTableWordWrap
-	headerBold := constants.DefaultTableHeaderBold
-	if cmd.Options != nil {
-		if cmd.Options.WordWrap != nil {
-			wordWrap = *cmd.Options.WordWrap
-		}
-		if cmd.Options.HeaderBold != nil {
-			headerBold = *cmd.Options.HeaderBold
-		}
-	}
-
-	opts := &tables.Options{
-		PaperWidth:    maxChars,
-		ShowHeaders:   showHeaders,
-		WordWrap:      wordWrap,
-		ColumnSpacing: spacing,
-		HeaderStyle:   tables.Style{Bold: headerBold},
-	}
-
-	if err := printer.FontA(); err != nil {
-		return fmt.Errorf("failed to set Font A for table: %w", err)
-	}
-
-	if cmd.Definition.PaperWidth > 0 {
-		opts.PaperWidth = cmd.Definition.PaperWidth
-	}
-
-	finalTable, err := RenderTable(&cmd, opts)
+	rendered, err := RenderTableStructured(&cmd, opts)
 	if err != nil {
 		return fmt.Errorf("failed to render table: %w", err)
 	}
@@ -152,7 +79,7 @@ func (e *Executor) handleTable(printer service.PrinterActions, data json.RawMess
 		return err
 	}
 
-	if err := printer.Print(finalTable); err != nil {
+	if err := printRenderedTable(printer, rendered); err != nil {
 		return err
 	}
 

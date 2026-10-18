@@ -326,3 +326,23 @@ func (c *EscposProtocol) GenerateBarcode(cfg graphics.BarcodeConfig, data []byte
 
 	return buffer.Bytes(), nil
 }
+
+// Pulse generates the ESC p command to open a cash drawer.
+func (c *EscposProtocol) Pulse(pin, onTime, offTime byte) ([]byte, error) {
+	return c.MechanismControl.Pulse(pin, onTime, offTime)
+}
+
+// Beep generates the ESC B command to emit a buzzer sound.
+func (c *EscposProtocol) Beep(times, lapse byte) ([]byte, error) {
+	return c.MechanismControl.Beep(times, lapse)
+}
+
+// SetLineSpacing sets the line spacing to n dots (ESC 3 n).
+func (c *EscposProtocol) SetLineSpacing(dots byte) []byte {
+	return c.LineSpacing.SetLineSpacing(linespacing.Spacing(dots))
+}
+
+// SelectDefaultLineSpacing resets line spacing to the default 1/6 inch (ESC 2).
+func (c *EscposProtocol) SelectDefaultLineSpacing() []byte {
+	return c.LineSpacing.SelectDefaultLineSpacing()
+}

@@ -129,8 +129,7 @@ func (e *Executor) handlePulse(printer service.PrinterActions, data json.RawMess
 		cmd.OffTime = 510
 	}
 
-	bytes := []byte{0x1B, 0x70, byte(cmd.Pin), byte(cmd.OnTime / 2), byte(cmd.OffTime / 2)} //nolint:gosec // bounded above
-	return printer.Write(bytes)
+	return printer.Pulse(byte(cmd.Pin), byte(cmd.OnTime/2), byte(cmd.OffTime/2)) //nolint:gosec // bounded above
 }
 
 // handleBeep manages beep sound commands
@@ -151,6 +150,5 @@ func (e *Executor) handleBeep(printer service.PrinterActions, data json.RawMessa
 		cmd.Lapse = 255
 	}
 
-	bytes := []byte{0x1B, 0x42, byte(cmd.Times), byte(cmd.Lapse)} //nolint:gosec // bounded to [1, 255]
-	return printer.Write(bytes)
+	return printer.Beep(byte(cmd.Times), byte(cmd.Lapse)) //nolint:gosec // bounded to [1, 255]
 }

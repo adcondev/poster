@@ -102,6 +102,10 @@ var (
 	ErrPositionCutMode = errors.New("invalid position cut mode (try 97 or 98)")
 	// ErrFeedCutReturnMode indicates an invalid feed, cut and return mode
 	ErrFeedCutReturnMode = errors.New("invalid feed, cut and return mode (try 103 or 104)")
+	// ErrInvalidDrawerPin indicates an invalid drawer pin
+	ErrInvalidDrawerPin = errors.New("invalid drawer pin (must be 0 or 1)")
+	// ErrInvalidBeepParams indicates invalid beep parameters
+	ErrInvalidBeepParams = errors.New("invalid beep parameters (times and lapse must be >= 1)")
 )
 
 // ============================================================================
@@ -124,6 +128,8 @@ type Capability interface {
 	FeedAndCutPaper(mode FeedCut, feedAmount byte) ([]byte, error)
 	SetCutPosition(mode PositionCut, position byte) ([]byte, error)
 	FeedCutAndReturnPaper(mode FeedCutReturn, feedAmount byte) ([]byte, error)
+	Pulse(pin byte, onTime byte, offTime byte) ([]byte, error)
+	Beep(times byte, lapse byte) ([]byte, error)
 }
 
 // ============================================================================
