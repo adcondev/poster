@@ -14,13 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-<<<<<<< HEAD
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-=======
-        uses: actions/checkout@v7
->>>>>>> origin/dependabot/github_actions/actions/checkout-7
 
       - name: Validate SemVer Tag & Lineage
         run: |
