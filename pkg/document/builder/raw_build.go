@@ -2,7 +2,11 @@ package builder
 
 import (
 	"encoding/hex"
+
+	"github.com/adcondev/poster/pkg/document/schema"
 )
+
+type rawCommand = schema.RawCommand
 
 // RawBuilder constructs raw ESC/POS commands
 type RawBuilder struct {
@@ -11,13 +15,6 @@ type RawBuilder struct {
 	format   string
 	comment  string
 	safeMode bool
-}
-
-type rawCommand struct {
-	Hex      string `json:"hex"`
-	Format   string `json:"format,omitempty"`
-	Comment  string `json:"comment,omitempty"`
-	SafeMode bool   `json:"safe_mode,omitempty"`
 }
 
 func newRawBuilder(parent *DocumentBuilder, hexData string) *RawBuilder {

@@ -1,38 +1,20 @@
 package builder
 
+import "github.com/adcondev/poster/pkg/document/schema"
+
+type (
+	textContent = schema.Content
+	textLabel   = schema.Label
+	textStyle   = schema.TextStyle
+	textCommand = schema.TextCommand
+)
+
 // TextBuilder constructs text commands with styling
 type TextBuilder struct {
 	parent  *DocumentBuilder
 	content textContent
 	label   *textLabel
 	newLine *bool
-}
-
-type textContent struct {
-	Text  string     `json:"text"`
-	Style *textStyle `json:"content_style,omitempty"`
-	Align *string    `json:"align,omitempty"`
-}
-
-type textLabel struct {
-	Text      string     `json:"text,omitempty"`
-	Style     *textStyle `json:"label_style,omitempty"`
-	Separator *string    `json:"separator,omitempty"`
-	Align     *string    `json:"align,omitempty"`
-}
-
-type textStyle struct {
-	Bold      *bool   `json:"bold,omitempty"`
-	Size      *string `json:"size,omitempty"`
-	Underline *string `json:"underline,omitempty"`
-	Inverse   *bool   `json:"inverse,omitempty"`
-	Font      *string `json:"font,omitempty"`
-}
-
-type textCommand struct {
-	Content textContent `json:"content"`
-	Label   *textLabel  `json:"label,omitempty"`
-	NewLine *bool       `json:"new_line,omitempty"`
 }
 
 func newTextBuilder(parent *DocumentBuilder, content string) *TextBuilder {

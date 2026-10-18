@@ -2,7 +2,10 @@ package builder
 
 import (
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
+
+type barcodeCommand = schema.BarcodeCommand
 
 // BarcodeBuilder constructs barcode commands
 type BarcodeBuilder struct {
@@ -14,16 +17,6 @@ type BarcodeBuilder struct {
 	hriPosition *string
 	hriFont     *string
 	align       *string
-}
-
-type barcodeCommand struct {
-	Symbology   string  `json:"symbology"`
-	Data        string  `json:"data"`
-	Width       *int    `json:"width,omitempty"`
-	Height      *int    `json:"height,omitempty"`
-	HRIPosition *string `json:"hri_position,omitempty"`
-	HRIFont     *string `json:"hri_font,omitempty"`
-	Align       *string `json:"align,omitempty"`
 }
 
 func newBarcodeBuilder(parent *DocumentBuilder, symbology, data string) *BarcodeBuilder {

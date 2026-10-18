@@ -2,7 +2,10 @@ package builder
 
 import (
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
+
+type imageCommand = schema.ImageCommand
 
 // ImageBuilder constructs image commands
 type ImageBuilder struct {
@@ -13,15 +16,6 @@ type ImageBuilder struct {
 	threshold  int
 	dithering  string
 	scaling    string
-}
-
-type imageCommand struct {
-	Code       string `json:"code"`
-	PixelWidth int    `json:"pixel_width,omitempty"`
-	Align      string `json:"align,omitempty"`
-	Threshold  int    `json:"threshold,omitempty"`
-	Dithering  string `json:"dithering,omitempty"`
-	Scaling    string `json:"scaling,omitempty"`
 }
 
 func newImageBuilder(parent *DocumentBuilder, base64Data string) *ImageBuilder {
@@ -86,11 +80,17 @@ func (ib *ImageBuilder) Align(align constants.Alignment) *ImageBuilder {
 
 // End finishes the image command
 func (ib *ImageBuilder) End() *DocumentBuilder {
+	threshold := ib.threshold
+	if threshold < 0 {
+		threshold = 0
+	} else if threshold > 255 {
+		threshold = 255
+	}
 	cmd := imageCommand{
 		Code:       ib.code,
 		PixelWidth: ib.pixelWidth,
 		Align:      ib.align,
-		Threshold:  ib.threshold,
+		Threshold:  byte(threshold),
 		Dithering:  ib.dithering,
 		Scaling:    ib.scaling,
 	}

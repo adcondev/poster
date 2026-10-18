@@ -34,7 +34,7 @@ func TestTableBuilder(t *testing.T) {
 		t.Errorf("Expected column name 'Item', got '%s'", cmd.Definition.Columns[0].Name)
 	}
 
-	if cmd.Definition.Columns[1].Align != string(constants.Right) {
+	if cmd.Definition.Columns[1].Align != constants.Right {
 		t.Errorf("Expected column align 'right', got '%s'", cmd.Definition.Columns[1].Align)
 	}
 
@@ -59,7 +59,7 @@ func TestTableBuilder_Defaults(t *testing.T) {
 	var cmd tableCommand
 	_ = json.Unmarshal(doc.Commands[0].Data, &cmd)
 
-	if cmd.ShowHeaders != true {
+	if cmd.ShowHeaders == nil || *cmd.ShowHeaders != true {
 		t.Error("Expected ShowHeaders to be true by default")
 	}
 
@@ -67,16 +67,16 @@ func TestTableBuilder_Defaults(t *testing.T) {
 		t.Fatal("Expected Options to be set")
 	}
 
-	if cmd.Options.HeaderBold != true {
+	if cmd.Options.HeaderBold == nil || *cmd.Options.HeaderBold != true {
 		t.Error("Expected HeaderBold to be true by default")
 	}
 
-	if cmd.Options.WordWrap != true {
+	if cmd.Options.WordWrap == nil || *cmd.Options.WordWrap != true {
 		t.Error("Expected WordWrap to be true by default")
 	}
 
-	if cmd.Options.ColumnSpacing != 0 {
-		t.Errorf("Expected ColumnSpacing 0, got %d", cmd.Options.ColumnSpacing)
+	if cmd.Options.ColumnSpacing != nil {
+		t.Errorf("Expected ColumnSpacing nil by default, got %v", *cmd.Options.ColumnSpacing)
 	}
 }
 
@@ -107,20 +107,20 @@ func TestTableBuilder_Options(t *testing.T) {
 		t.Errorf("Expected 2 rows, got %d", len(cmd.Rows))
 	}
 
-	if cmd.ShowHeaders != false {
+	if cmd.ShowHeaders == nil || *cmd.ShowHeaders != false {
 		t.Error("Expected ShowHeaders to be false")
 	}
 
-	if cmd.Options.HeaderBold != false {
+	if cmd.Options.HeaderBold == nil || *cmd.Options.HeaderBold != false {
 		t.Error("Expected HeaderBold to be false")
 	}
 
-	if cmd.Options.WordWrap != false {
+	if cmd.Options.WordWrap == nil || *cmd.Options.WordWrap != false {
 		t.Error("Expected WordWrap to be false")
 	}
 
-	if cmd.Options.ColumnSpacing != 2 {
-		t.Errorf("Expected ColumnSpacing 2, got %d", cmd.Options.ColumnSpacing)
+	if cmd.Options.ColumnSpacing == nil || *cmd.Options.ColumnSpacing != 2 {
+		t.Errorf("Expected ColumnSpacing 2, got %v", cmd.Options.ColumnSpacing)
 	}
 
 	if cmd.Options.Align != string(constants.Center) {

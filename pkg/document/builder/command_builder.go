@@ -2,7 +2,6 @@ package builder
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/adcondev/poster/pkg/constants"
 	"github.com/adcondev/poster/pkg/document/schema"
@@ -71,7 +70,6 @@ func (b *DocumentBuilder) ToJSON() ([]byte, error) {
 func (b *DocumentBuilder) addCommand(cmdType string, data interface{}) *DocumentBuilder {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Error marshaling %s command: %v", cmdType, err)
 		return b
 	}
 	b.commands = append(b.commands, schema.Command{

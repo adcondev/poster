@@ -54,7 +54,7 @@ func NewEngine(def *Definition, opts *Options) *TabEngine {
 	if opts == nil {
 		opts = DefaultOptions()
 	}
-	if opts.ColumnSpacing <= 0 {
+	if opts.ColumnSpacing < 0 {
 		opts.ColumnSpacing = 1
 	}
 

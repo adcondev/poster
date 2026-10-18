@@ -2,31 +2,19 @@ package builder
 
 import (
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
 
-type pulseCommand struct {
-	Pin     int `json:"pin,omitempty"`
-	OnTime  int `json:"on_time,omitempty"`
-	OffTime int `json:"off_time,omitempty"`
-}
+type (
+	pulseCommand     = schema.PulseCommand
+	beepCommand      = schema.BeepCommand
+	feedCommand      = schema.FeedCommand
+	cutCommand       = schema.CutCommand
+	separatorCommand = schema.SeparatorCommand
+)
 
-type beepCommand struct {
-	Times int `json:"times,omitempty"`
-	Lapse int `json:"lapse,omitempty"`
-}
-
-type feedCommand struct {
-	Lines int `json:"lines"`
-}
-
-type cutCommand struct {
-	Mode string `json:"mode,omitempty"`
-	Feed int    `json:"feed,omitempty"`
-}
-
-type separatorCommand struct {
-	Char   string `json:"char,omitempty"`
-	Length int    `json:"length,omitempty"`
+func intPtr(v int) *int {
+	return &v
 }
 
 // Feed adds paper feed lines
@@ -36,17 +24,17 @@ func (b *DocumentBuilder) Feed(lines int) *DocumentBuilder {
 
 // Cut adds a paper cut command
 func (b *DocumentBuilder) Cut() *DocumentBuilder {
-	return b.addCommand("cut", cutCommand{Mode: "partial", Feed: 2})
+	return b.addCommand("cut", cutCommand{Mode: "partial", Feed: intPtr(2)})
 }
 
 // FullCut adds a full paper cut
 func (b *DocumentBuilder) FullCut() *DocumentBuilder {
-	return b.addCommand("cut", cutCommand{Mode: "full", Feed: 2})
+	return b.addCommand("cut", cutCommand{Mode: "full", Feed: intPtr(2)})
 }
 
 // CutWithFeed adds a cut with custom feed
 func (b *DocumentBuilder) CutWithFeed(mode string, feed int) *DocumentBuilder {
-	return b.addCommand("cut", cutCommand{Mode: mode, Feed: feed})
+	return b.addCommand("cut", cutCommand{Mode: mode, Feed: intPtr(feed)})
 }
 
 // Separator adds a separator line

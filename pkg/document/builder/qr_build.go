@@ -1,10 +1,11 @@
 package builder
 
 import (
-	"log"
-
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/document/schema"
 )
+
+type qrCommand = schema.QRCommand
 
 // QRBuilder constructs QR code commands
 type QRBuilder struct {
@@ -16,16 +17,6 @@ type QRBuilder struct {
 	align       string
 	logo        string
 	circleShape bool
-}
-
-type qrCommand struct {
-	Data        string `json:"data"`
-	HumanText   string `json:"human_text,omitempty"`
-	PixelWidth  int    `json:"pixel_width,omitempty"`
-	Correction  string `json:"correction,omitempty"`
-	Align       string `json:"align,omitempty"`
-	Logo        string `json:"logo,omitempty"`
-	CircleShape bool   `json:"circle_shape,omitempty"`
 }
 
 func newQRBuilder(parent *DocumentBuilder, data string) *QRBuilder {
@@ -74,9 +65,6 @@ func (qb *QRBuilder) WithText(text string) *QRBuilder {
 	return qb
 }
 
-// TODO: Add WithLogoFile
-// Load logo from image(jpg, png) or txt file with base64 content
-
 // WithLogo adds a logo in the center (base64)
 func (qb *QRBuilder) WithLogo(base64Logo string) *QRBuilder {
 	qb.logo = base64Logo
@@ -85,9 +73,6 @@ func (qb *QRBuilder) WithLogo(base64Logo string) *QRBuilder {
 
 // CircleShape uses circular modules (for large QRs)
 func (qb *QRBuilder) CircleShape() *QRBuilder {
-	if qb.pixelWidth < 256 {
-		log.Printf("Warning: circle_shape can lead to unreadable QR Code (requires pixel_width > 256)")
-	}
 	qb.circleShape = true
 	return qb
 }

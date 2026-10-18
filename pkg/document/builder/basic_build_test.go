@@ -33,6 +33,7 @@ func TestBasicCutCommands(t *testing.T) {
 		{"PartialCut", func(b *DocumentBuilder) *DocumentBuilder { return b.Cut() }, "partial", 2},
 		{"FullCut", func(b *DocumentBuilder) *DocumentBuilder { return b.FullCut() }, "full", 2},
 		{"CutWithFeed", func(b *DocumentBuilder) *DocumentBuilder { return b.CutWithFeed("full", 10) }, "full", 10},
+		{"CutWithZeroFeed", func(b *DocumentBuilder) *DocumentBuilder { return b.CutWithFeed("partial", 0) }, "partial", 0},
 	}
 
 	for _, tt := range tests {
@@ -52,8 +53,8 @@ func TestBasicCutCommands(t *testing.T) {
 				t.Errorf("Expected mode '%s', got '%s'", tt.expectedMode, cmd.Mode)
 			}
 
-			if cmd.Feed != tt.expectedFeed {
-				t.Errorf("Expected feed %d, got %d", tt.expectedFeed, cmd.Feed)
+			if cmd.Feed == nil || *cmd.Feed != tt.expectedFeed {
+				t.Errorf("Expected feed %d, got %v", tt.expectedFeed, cmd.Feed)
 			}
 		})
 	}
