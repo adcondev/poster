@@ -9,8 +9,6 @@ import (
 	"github.com/adcondev/poster/pkg/constants"
 )
 
-// TODO: Define all_mayus y all_bold options for commands
-
 // Document representa un documento de impresión completo
 type Document struct {
 	Version  string        `json:"version"`             // Requerido: >1.0
@@ -32,8 +30,6 @@ type ProfileConfig struct {
 	DPI        int    `json:"dpi,omitempty"`         // Default: 203
 	HasQR      bool   `json:"has_qr,omitempty"`      // Default: false
 }
-
-// TODO: Define an order field for reordering or grouping commands. Check if it's worth it.
 
 // Command represents a single command in the document
 type Command struct {
@@ -102,7 +98,6 @@ func ParseDocument(data []byte) (*Document, error) {
 
 	// Validación básica
 	if doc.Version == "" {
-		// TODO: Review an smart way to handle versioning
 		doc.Version = constants.DefaultVersion
 	}
 

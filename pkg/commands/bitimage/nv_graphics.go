@@ -109,8 +109,6 @@ func NewNVGraphicsCommands() *NvGraphicsCommands {
 // Helper Functions
 // ============================================================================
 
-// TODO: Check if is better to have them in composer package
-
 // calculateNVRasterDataSize calculates the data size for NV raster format graphics
 func calculateNVRasterDataSize(width, height uint16) int {
 	widthBytes := (int(width) + 7) / 8

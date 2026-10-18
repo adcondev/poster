@@ -46,9 +46,6 @@ func NewEngine(config Config) (*Engine, error) {
 	// Create canvas
 	canvas := NewDynamicCanvas(config.PaperPxWidth)
 
-	// TODO: Remove later - for debugging font embedding issues
-	// emfonts.DiagnoseEmbedding()
-
 	// Create font manager and load fonts
 	fonts := NewFontManager()
 

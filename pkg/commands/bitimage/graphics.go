@@ -161,8 +161,6 @@ func NewGraphicsCommands() *GraphicsCommands {
 // Helper Functions
 // ============================================================================
 
-// TODO: Check if is better to have them in composer package
-
 // calculateRasterDataSize calculates the data size for raster format graphics
 func calculateRasterDataSize(width, height uint16) int {
 	widthBytes := (int(width) + 7) / 8

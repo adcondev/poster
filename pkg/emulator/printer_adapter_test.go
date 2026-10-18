@@ -378,3 +378,226 @@ func TestPrinter_RenderPNGAndSavePNG(t *testing.T) {
 		t.Error("saved file bytes do not match RenderPNG bytes")
 	}
 }
+
+func TestPrinter_CustomSizes(t *testing.T) {
+	p, err := NewPrinter(nil)
+	if err != nil {
+		t.Fatalf("NewPrinter failed: %v", err)
+	}
+
+	// CustomSize normal
+	if err := p.CustomSize(3, 5); err != nil {
+		t.Errorf("CustomSize(3, 5) error = %v", err)
+	}
+	if st := p.Engine().State(); st.ScaleW != 3.0 || st.ScaleH != 5.0 {
+		t.Errorf("CustomSize scale = (%v, %v), want (3.0, 5.0)", st.ScaleW, st.ScaleH)
+	}
+
+	// CustomSize clamping below 1
+	if err := p.CustomSize(0, 0); err != nil {
+		t.Errorf("CustomSize(0, 0) error = %v", err)
+	}
+	if st := p.Engine().State(); st.ScaleW != 1.0 || st.ScaleH != 1.0 {
+		t.Errorf("CustomSize(0, 0) scale = (%v, %v), want (1.0, 1.0)", st.ScaleW, st.ScaleH)
+	}
+
+	// CustomSize clamping above 8
+	if err := p.CustomSize(12, 12); err != nil {
+		t.Errorf("CustomSize(12, 12) error = %v", err)
+	}
+	if st := p.Engine().State(); st.ScaleW != 8.0 || st.ScaleH != 8.0 {
+		t.Errorf("CustomSize(12, 12) scale = (%v, %v), want (8.0, 8.0)", st.ScaleW, st.ScaleH)
+	}
+}
+
+func TestPrinter_UnderlineAndInverse(t *testing.T) {
+	p, err := NewPrinter(nil)
+	if err != nil {
+		t.Fatalf("NewPrinter failed: %v", err)
+	}
+
+	if err := p.OneDot(); err != nil {
+		t.Errorf("OneDot() error = %v", err)
+	}
+	if p.Engine().State().IsUnderline != 1 {
+		t.Errorf("IsUnderline = %d, want 1", p.Engine().State().IsUnderline)
+	}
+
+	if err := p.TwoDot(); err != nil {
+		t.Errorf("TwoDot() error = %v", err)
+	}
+	if p.Engine().State().IsUnderline != 2 {
+		t.Errorf("IsUnderline = %d, want 2", p.Engine().State().IsUnderline)
+	}
+
+	if err := p.NoDot(); err != nil {
+		t.Errorf("NoDot() error = %v", err)
+	}
+	if p.Engine().State().IsUnderline != 0 {
+		t.Errorf("IsUnderline = %d, want 0", p.Engine().State().IsUnderline)
+	}
+
+	if err := p.InverseOn(); err != nil {
+		t.Errorf("InverseOn() error = %v", err)
+	}
+	if !p.Engine().State().IsInverse {
+		t.Error("IsInverse = false, want true")
+	}
+
+	if err := p.InverseOff(); err != nil {
+		t.Errorf("InverseOff() error = %v", err)
+	}
+	if p.Engine().State().IsInverse {
+		t.Error("IsInverse = true, want false")
+	}
+}
+
+func TestPrinter_AlignmentAndCuts(t *testing.T) {
+	p, err := NewPrinter(nil)
+	if err != nil {
+		t.Fatalf("NewPrinter failed: %v", err)
+	}
+
+	alignments := []struct {
+		input string
+		want  string
+	}{
+		{"left", "left"},
+		{"center", "center"},
+		{"right", "right"},
+		{" CENTER ", "center"},
+	}
+	for _, tt := range alignments {
+		if err := p.SetAlignment(tt.input); err != nil {
+			t.Errorf("SetAlignment(%q) error = %v", tt.input, err)
+		}
+		if got := p.Engine().State().Align; got != tt.want {
+			t.Errorf("Align = %q, want %q", got, tt.want)
+		}
+	}
+	if err := p.SetAlignment("unknown"); err == nil {
+		t.Error("SetAlignment(\"unknown\") expected error, got nil")
+	}
+
+	if err := p.PartialFeedAndCut(2); err != nil {
+		t.Errorf("PartialFeedAndCut(2) error = %v", err)
+	}
+	if err := p.PartialFeedAndCut(0); err != nil {
+		t.Errorf("PartialFeedAndCut(0) error = %v", err)
+	}
+	if err := p.FullFeedAndCut(0); err != nil {
+		t.Errorf("FullFeedAndCut(0) error = %v", err)
+	}
+}
+
+func TestPrinter_MiscAndProfile(t *testing.T) {
+	prof := &profile.Escpos{
+		DotsPerLine: 0, // tests default fallback
+		DPI:         0, // tests default fallback
+	}
+	p, err := NewPrinter(prof)
+	if err != nil {
+		t.Fatalf("NewPrinter(prof) error = %v", err)
+	}
+
+	if p.Engine() == nil {
+		t.Fatal("p.Engine() returned nil")
+	}
+	if p.GetProfile() == nil {
+		t.Fatal("p.GetProfile() returned nil")
+	}
+
+	if err := p.Pulse(0, 0, 0); err != nil {
+		t.Errorf("Pulse() error = %v", err)
+	}
+	if err := p.Beep(0, 0); err != nil {
+		t.Errorf("Beep() error = %v", err)
+	}
+	if err := p.SetLineSpacing(30); err != nil {
+		t.Errorf("SetLineSpacing() error = %v", err)
+	}
+	if err := p.SelectDefaultLineSpacing(); err != nil {
+		t.Errorf("SelectDefaultLineSpacing() error = %v", err)
+	}
+
+	if err := p.SetCodeTable(character.WPC1252); err != nil {
+		t.Errorf("SetCodeTable() error = %v", err)
+	}
+	if p.GetProfile().CodeTable != character.WPC1252 {
+		t.Errorf("CodeTable = %v, want WPC1252", p.GetProfile().CodeTable)
+	}
+}
+
+func TestPrinter_GraphicsAndErrors(t *testing.T) {
+	p, err := NewPrinter(nil)
+	if err != nil {
+		t.Fatalf("NewPrinter failed: %v", err)
+	}
+
+	// PrintBitmap success
+	bmp := graphics.NewMonochromeBitmap(16, 16)
+	if err := p.PrintBitmap(bmp); err != nil {
+		t.Errorf("PrintBitmap() error = %v", err)
+	}
+
+	// PrintBitmap nil error
+	if err := p.PrintBitmap(nil); err == nil {
+		t.Error("PrintBitmap(nil) expected error, got nil")
+	}
+
+	// PrintBarcode empty error
+	if err := p.PrintBarcode(graphics.BarcodeConfig{}, nil); err == nil {
+		t.Error("PrintBarcode(nil) expected error, got nil")
+	}
+
+	// PrintQR success
+	if err := p.PrintQR("https://example.com", nil); err != nil {
+		t.Errorf("PrintQR() error = %v", err)
+	}
+}
+
+func TestEngine_AdditionalCoverage(t *testing.T) {
+	eng, err := NewDefaultEngine()
+	if err != nil {
+		t.Fatalf("NewDefaultEngine failed: %v", err)
+	}
+
+	// PrintWrapped
+	eng.PrintWrapped("Short line")
+	eng.PrintWrapped("This is a much longer line of text designed to wrap across lines on the receipt paper width.")
+	eng.PrintWrapped("")
+
+	// HorizontalLine
+	eng.HorizontalLine(2)
+
+	// EnableDebug
+	eng.EnableDebug()
+
+	// DefaultTextStyle
+	style := DefaultTextStyle()
+	if style.ScaleW != 1.0 || style.ScaleH != 1.0 {
+		t.Errorf("DefaultTextStyle Scale = (%v, %v), want (1.0, 1.0)", style.ScaleW, style.ScaleH)
+	}
+
+	// DynamicCanvas methods
+	if w := eng.canvas.Width(); w <= 0 {
+		t.Errorf("canvas.Width() = %d, want > 0", w)
+	}
+
+	// State methods
+	if w := eng.state.GetCharWidth(12.0); w <= 0 {
+		t.Errorf("GetCharWidth(12.0) = %v, want > 0", w)
+	}
+	if h := eng.state.GetCharHeight(24.0); h <= 0 {
+		t.Errorf("GetCharHeight(24.0) = %v, want > 0", h)
+	}
+	if cpl := eng.state.CharsPerLine(0); cpl != 0 {
+		t.Errorf("CharsPerLine(0) = %d, want 0", cpl)
+	}
+
+	// State NewLine
+	eng.state.NewLine(FontMetrics{LineHeight: 24})
+
+	// TextRenderer Feed
+	eng.textRenderer.Feed(2)
+}

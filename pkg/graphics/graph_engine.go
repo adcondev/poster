@@ -117,8 +117,6 @@ func (p *Pipeline) Process(img image.Image) (*MonochromeBitmap, error) {
 	return mono, nil
 }
 
-// TODO: Consider supporting other scaling algorithms (e.g., NN, Lanczos, Catmull-Rom) for even better quality or performance tuning.
-
 // resize scales (up or down) the image to target width maintaining aspect ratio
 func (p *Pipeline) resize(img image.Image) image.Image {
 	maxWidth := p.opts.MaxWidth

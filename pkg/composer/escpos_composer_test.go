@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/adcondev/poster/pkg/commands/barcode"
+	"github.com/adcondev/poster/pkg/commands/character"
+	"github.com/adcondev/poster/pkg/commands/printposition"
 	"github.com/adcondev/poster/pkg/commands/shared"
 	"github.com/adcondev/poster/pkg/graphics"
 )
@@ -319,3 +321,116 @@ func TestGenerateBarcode(t *testing.T) {
 		})
 	}
 }
+
+func TestEscposProtocol_InitializePrinter(t *testing.T) {
+	c := NewEscpos()
+	require.NotNil(t, c)
+	assert.Equal(t, []byte{shared.ESC, '@'}, c.InitializePrinter())
+}
+
+func TestEscposProtocol_MarginsAndWidth(t *testing.T) {
+	c := NewEscpos()
+
+	marginCmd := c.LeftMargin(16)
+	expectedMargin := []byte{shared.GS, 'L', 16, 0}
+	assert.Equal(t, expectedMargin, marginCmd)
+
+	widthCmd := c.PrintWidth(384)
+	expectedWidth := []byte{shared.GS, 'W', byte(384 & 0xFF), byte(384 >> 8)}
+	assert.Equal(t, expectedWidth, widthCmd)
+}
+
+func TestEscposProtocol_Alignment(t *testing.T) {
+	c := NewEscpos()
+
+	t.Run("SetAlign valid", func(t *testing.T) {
+		cmd, err := c.SetAlign(printposition.Center)
+		require.NoError(t, err)
+		assert.Equal(t, []byte{shared.ESC, 'a', byte(printposition.Center)}, cmd)
+	})
+
+	t.Run("SetAlign invalid", func(t *testing.T) {
+		cmd, err := c.SetAlign(printposition.Justification(99))
+		require.Error(t, err)
+		assert.Nil(t, cmd)
+	})
+
+	t.Run("LeftAlign", func(t *testing.T) {
+		assert.Equal(t, []byte{shared.ESC, 'a', byte(printposition.Left)}, c.LeftAlign())
+	})
+
+	t.Run("CenterAlign", func(t *testing.T) {
+		assert.Equal(t, []byte{shared.ESC, 'a', byte(printposition.Center)}, c.CenterAlign())
+	})
+
+	t.Run("RightAlign", func(t *testing.T) {
+		assert.Equal(t, []byte{shared.ESC, 'a', byte(printposition.Right)}, c.RightAlign())
+	})
+}
+
+func TestEscposProtocol_TextStyling(t *testing.T) {
+	c := NewEscpos()
+
+	assert.Equal(t, []byte{shared.ESC, 'E', 1}, c.EnableBold())
+	assert.Equal(t, []byte{shared.ESC, 'E', 0}, c.DisableBold())
+
+	assert.Equal(t, []byte{shared.ESC, '-', 1}, c.OneDotUnderline())
+	assert.Equal(t, []byte{shared.ESC, '-', 2}, c.TwoDotUnderline())
+	assert.Equal(t, []byte{shared.ESC, '-', 0}, c.DisableUnderline())
+
+	assert.Equal(t, []byte{shared.GS, 'B', 1}, c.EnableReverseMode())
+	assert.Equal(t, []byte{shared.GS, 'B', 0}, c.DisableReverseMode())
+
+	assert.Equal(t, []byte{shared.ESC, 'M', byte(character.FontA)}, c.SetFontA())
+	assert.Equal(t, []byte{shared.ESC, 'M', byte(character.FontB)}, c.SetFontB())
+}
+
+func TestEscposProtocol_TextSizing(t *testing.T) {
+	c := NewEscpos()
+
+	assert.Equal(t, []byte{shared.GS, '!', 0x00}, c.SingleSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x11}, c.DoubleSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x22}, c.TripleSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x33}, c.QuadraSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x44}, c.PentaSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x55}, c.HexaSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x66}, c.HeptaSizeText())
+	assert.Equal(t, []byte{shared.GS, '!', 0x77}, c.OctaSizeText())
+}
+
+func TestEscposProtocol_CustomSizeText(t *testing.T) {
+	c := NewEscpos()
+
+	t.Run("clamped below 1", func(t *testing.T) {
+		assert.Equal(t, c.SingleSizeText(), c.CustomSizeText(0, 0))
+	})
+
+	t.Run("clamped above 8", func(t *testing.T) {
+		assert.Equal(t, c.OctaSizeText(), c.CustomSizeText(9, 10))
+	})
+
+	t.Run("custom valid size", func(t *testing.T) {
+		expected := []byte{shared.GS, '!', byte((2-1)<<4 | (4 - 1))}
+		assert.Equal(t, expected, c.CustomSizeText(2, 4))
+	})
+}
+
+func TestEscposProtocol_LineSpacing(t *testing.T) {
+	c := NewEscpos()
+
+	assert.Equal(t, []byte{shared.ESC, '3', 30}, c.SetLineSpacing(30))
+	assert.Equal(t, []byte{shared.ESC, '2'}, c.SelectDefaultLineSpacing())
+}
+
+func TestEscposProtocol_MechanismControl(t *testing.T) {
+	c := NewEscpos()
+
+	pulseCmd, err := c.Pulse(0, 10, 10)
+	require.NoError(t, err)
+	assert.NotEmpty(t, pulseCmd)
+
+	beepCmd, err := c.Beep(2, 5)
+	require.NoError(t, err)
+	assert.NotEmpty(t, beepCmd)
+}
+

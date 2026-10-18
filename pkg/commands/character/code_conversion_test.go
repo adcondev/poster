@@ -10,11 +10,6 @@ import (
 	"github.com/adcondev/poster/pkg/commands/shared"
 )
 
-// TODO: Swap out hardcoded bytes and values with constants from the character package
-// TODO: Swap boilerplate assertion code with calls to utils/testutils/assertions.go
-// TODO: Define prefix bytes for commands to reduce repetition
-// TODO: Swap for specific type, the convert to byte. This simulates real usage better.
-
 // ============================================================================
 // Code Conversion Commands Tests
 // ============================================================================

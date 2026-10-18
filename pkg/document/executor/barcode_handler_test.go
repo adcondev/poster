@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // ============================================================================
@@ -168,4 +169,85 @@ func TestBarcodeCommand_Validation(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ============================================================================
+// Direct Handler Execution Tests
+// ============================================================================
+
+func TestHandleBarcode_Execution(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	t.Run("missing symbology returns error", func(t *testing.T) {
+		err := exec.handleBarcode(mock, json.RawMessage(`{"data": "123"}`))
+		if err == nil {
+			t.Error("expected error for missing symbology")
+		}
+	})
+
+	t.Run("missing data returns error", func(t *testing.T) {
+		err := exec.handleBarcode(mock, json.RawMessage(`{"symbology": "code128"}`))
+		if err == nil {
+			t.Error("expected error for missing data")
+		}
+	})
+
+	t.Run("invalid json returns error", func(t *testing.T) {
+		err := exec.handleBarcode(mock, json.RawMessage(`{bad-json`))
+		if err == nil {
+			t.Error("expected error for invalid json")
+		}
+	})
+
+	t.Run("valid barcode with all options and even numeric Set C", func(t *testing.T) {
+		mock.Reset()
+		jsonStr := `{
+			"symbology": "code128",
+			"data": "123456",
+			"width": 3,
+			"height": 100,
+			"hri_position": "below",
+			"hri_font": "B",
+			"align": "center"
+		}`
+		err := exec.handleBarcode(mock, json.RawMessage(jsonStr))
+		if err != nil {
+			t.Fatalf("handleBarcode failed: %v", err)
+		}
+		if mock.CallCount("PrintBarcode") != 1 {
+			t.Errorf("expected 1 PrintBarcode call, got %d", mock.CallCount("PrintBarcode"))
+		}
+		if mock.CallCount("AlignCenter") != 1 {
+			t.Errorf("expected 1 AlignCenter call, got %d", mock.CallCount("AlignCenter"))
+		}
+	})
+
+	t.Run("clamped width and height boundaries", func(t *testing.T) {
+		mock.Reset()
+		jsonLow := `{"symbology": "ean13", "data": "1234567890128", "width": 1, "height": 0, "align": "left"}`
+		if err := exec.handleBarcode(mock, json.RawMessage(jsonLow)); err != nil {
+			t.Fatalf("handleBarcode with low bounds failed: %v", err)
+		}
+
+		mock.Reset()
+		jsonHigh := `{"symbology": "ean13", "data": "1234567890128", "width": 10, "height": 300, "align": "right"}`
+		if err := exec.handleBarcode(mock, json.RawMessage(jsonHigh)); err != nil {
+			t.Fatalf("handleBarcode with high bounds failed: %v", err)
+		}
+	})
+
+	t.Run("various HRI positions and fonts", func(t *testing.T) {
+		positions := []string{"none", "above", "below", "both", "unknown"}
+		fonts := []string{"A", "B", "unknown"}
+		for _, pos := range positions {
+			for _, font := range fonts {
+				mock.Reset()
+				payload := `{"symbology": "code39", "data": "TEST", "hri_position": "` + pos + `", "hri_font": "` + font + `"}`
+				if err := exec.handleBarcode(mock, json.RawMessage(payload)); err != nil {
+					t.Errorf("handleBarcode failed for pos=%s font=%s: %v", pos, font, err)
+				}
+			}
+		}
+	})
 }

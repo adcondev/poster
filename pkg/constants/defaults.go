@@ -2,8 +2,6 @@
 // All packages should reference these constants to ensure consistency.
 package constants
 
-// TODO: Add MustCompile validation for some constants (Text Size, etc.)
-
 // ============================================================================
 // Defaults
 // ============================================================================

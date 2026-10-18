@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // ============================================================================
@@ -130,4 +131,74 @@ func TestQRCommand_Validation(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ============================================================================
+// Direct Handler Execution Tests
+// ============================================================================
+
+func TestHandleQR_Execution(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	t.Run("empty data returns error", func(t *testing.T) {
+		err := exec.handleQR(mock, json.RawMessage(`{"data": ""}`))
+		if err == nil {
+			t.Error("expected error for empty QR data")
+		}
+	})
+
+	t.Run("invalid json returns error", func(t *testing.T) {
+		err := exec.handleQR(mock, json.RawMessage(`{bad-json`))
+		if err == nil {
+			t.Error("expected error for invalid json")
+		}
+	})
+
+	t.Run("invalid correction level returns error", func(t *testing.T) {
+		err := exec.handleQR(mock, json.RawMessage(`{"data": "test", "correction": "X"}`))
+		if err == nil {
+			t.Error("expected error for invalid correction level")
+		}
+	})
+
+	t.Run("valid QR with all options, human text, circle shape, logo", func(t *testing.T) {
+		mock.Reset()
+		jsonStr := `{
+			"data": "https://example.com",
+			"human_text": "Scan me",
+			"pixel_width": 300,
+			"correction": "H",
+			"align": "right",
+			"logo": "dGVzdA==",
+			"circle_shape": true
+		}`
+		err := exec.handleQR(mock, json.RawMessage(jsonStr))
+		if err != nil {
+			t.Fatalf("handleQR failed: %v", err)
+		}
+		if mock.CallCount("PrintQR") != 1 {
+			t.Errorf("expected 1 PrintQR call, got %d", mock.CallCount("PrintQR"))
+		}
+		if mock.CallCount("PrintLine") != 1 {
+			t.Errorf("expected 1 PrintLine call for human text, got %d", mock.CallCount("PrintLine"))
+		}
+		if mock.CallCount("AlignRight") != 1 {
+			t.Errorf("expected 1 AlignRight call, got %d", mock.CallCount("AlignRight"))
+		}
+	})
+
+	t.Run("various correction levels and alignments", func(t *testing.T) {
+		corrections := []string{"L", "M", "Q", "H"}
+		alignments := []string{"left", "center", "right", "default"}
+		for _, corr := range corrections {
+			for _, align := range alignments {
+				mock.Reset()
+				payload := `{"data": "test", "correction": "` + corr + `", "align": "` + align + `", "pixel_width": 50}`
+				if err := exec.handleQR(mock, json.RawMessage(payload)); err != nil {
+					t.Errorf("handleQR failed for corr=%s align=%s: %v", corr, align, err)
+				}
+			}
+		}
+	})
 }

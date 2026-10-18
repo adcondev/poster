@@ -424,3 +424,189 @@ func TestValidateRasterImageDimensions(t *testing.T) {
 		})
 	}
 }
+
+func TestCommands_SubCapabilities(t *testing.T) {
+	c := bitimage.NewCommands()
+	if c.GraphicsCmds() == nil {
+		t.Error("GraphicsCmds() returned nil")
+	}
+	if c.NVGraphicsCmds() == nil {
+		t.Error("NVGraphicsCmds() returned nil")
+	}
+	if c.DownloadGraphicsCmds() == nil {
+		t.Error("DownloadGraphicsCmds() returned nil")
+	}
+}
+
+func TestHelperFunctions(t *testing.T) {
+	if got := bitimage.CalculateDataLength(bitimage.Mode(99), 10); got != 0 {
+		t.Errorf("CalculateDataLength(invalid) = %d, want 0", got)
+	}
+	if got := bitimage.CalculateRasterDataLength(10, 20); got != 200 {
+		t.Errorf("CalculateRasterDataLength(10, 20) = %d, want 200", got)
+	}
+	if got := bitimage.CalculateColumnDataLength(15, 4); got != 60 {
+		t.Errorf("CalculateColumnDataLength(15, 4) = %d, want 60", got)
+	}
+}
+
+func TestCommands_PrintNVBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	// Valid
+	cmd, err := c.PrintNVBitImage(1, bitimage.Normal)
+	if err != nil {
+		t.Fatalf("PrintNVBitImage() error = %v", err)
+	}
+	want := []byte{shared.FS, 'p', 1, 0}
+	testutils.AssertBytes(t, cmd, want)
+
+	// Invalid n
+	if _, err := c.PrintNVBitImage(0, bitimage.Normal); err == nil {
+		t.Error("PrintNVBitImage(0) expected error, got nil")
+	}
+
+	// Invalid mode
+	if _, err := c.PrintNVBitImage(1, bitimage.PrintMode(99)); err == nil {
+		t.Error("PrintNVBitImage(invalid mode) expected error, got nil")
+	}
+}
+
+func TestCommands_DefineNVBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	imgs := []bitimage.NVBitImageData{
+		{Width: 1, Height: 1, Data: make([]byte, 8)},
+	}
+
+	// Valid
+	cmd, err := c.DefineNVBitImage(1, imgs)
+	if err != nil {
+		t.Fatalf("DefineNVBitImage() error = %v", err)
+	}
+	if len(cmd) == 0 {
+		t.Fatal("DefineNVBitImage() returned empty bytes")
+	}
+
+	// Invalid count 0
+	if _, err := c.DefineNVBitImage(0, imgs); err == nil {
+		t.Error("DefineNVBitImage(0) expected error, got nil")
+	}
+
+	// Count mismatch
+	if _, err := c.DefineNVBitImage(2, imgs); err == nil {
+		t.Error("DefineNVBitImage(count mismatch) expected error, got nil")
+	}
+
+	// Invalid dimensions
+	badDims := []bitimage.NVBitImageData{
+		{Width: 0, Height: 1, Data: make([]byte, 8)},
+	}
+	if _, err := c.DefineNVBitImage(1, badDims); err == nil {
+		t.Error("DefineNVBitImage(bad dims) expected error, got nil")
+	}
+
+	// Data length mismatch
+	badData := []bitimage.NVBitImageData{
+		{Width: 1, Height: 1, Data: make([]byte, 4)},
+	}
+	if _, err := c.DefineNVBitImage(1, badData); err == nil {
+		t.Error("DefineNVBitImage(bad data length) expected error, got nil")
+	}
+}
+
+func TestCommands_DefineDownloadedBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	// Valid
+	cmd, err := c.DefineDownloadedBitImage(1, 1, make([]byte, 8))
+	if err != nil {
+		t.Fatalf("DefineDownloadedBitImage() error = %v", err)
+	}
+	if len(cmd) == 0 {
+		t.Fatal("DefineDownloadedBitImage() returned empty bytes")
+	}
+
+	// Invalid dimensions
+	if _, err := c.DefineDownloadedBitImage(0, 1, make([]byte, 8)); err == nil {
+		t.Error("DefineDownloadedBitImage(0, 1) expected error, got nil")
+	}
+
+	// Data length mismatch
+	if _, err := c.DefineDownloadedBitImage(1, 1, make([]byte, 4)); err == nil {
+		t.Error("DefineDownloadedBitImage(mismatched data) expected error, got nil")
+	}
+}
+
+func TestCommands_PrintDownloadedBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	// Valid
+	cmd, err := c.PrintDownloadedBitImage(bitimage.Normal)
+	if err != nil {
+		t.Fatalf("PrintDownloadedBitImage() error = %v", err)
+	}
+	want := []byte{shared.GS, '/', 0}
+	testutils.AssertBytes(t, cmd, want)
+
+	// Invalid mode
+	if _, err := c.PrintDownloadedBitImage(bitimage.PrintMode(99)); err == nil {
+		t.Error("PrintDownloadedBitImage(invalid mode) expected error, got nil")
+	}
+}
+
+func TestCommands_PrintVariableVerticalSizeBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	// Valid
+	cmd, err := c.PrintVariableVerticalSizeBitImage(bitimage.Normal, 2, 2, make([]byte, 4))
+	if err != nil {
+		t.Fatalf("PrintVariableVerticalSizeBitImage() error = %v", err)
+	}
+	if len(cmd) == 0 {
+		t.Fatal("PrintVariableVerticalSizeBitImage() returned empty bytes")
+	}
+
+	// Invalid mode
+	if _, err := c.PrintVariableVerticalSizeBitImage(bitimage.PrintMode(99), 2, 2, make([]byte, 4)); err == nil {
+		t.Error("PrintVariableVerticalSizeBitImage(invalid mode) expected error, got nil")
+	}
+
+	// Invalid dimensions
+	if _, err := c.PrintVariableVerticalSizeBitImage(bitimage.Normal, 0, 2, make([]byte, 4)); err == nil {
+		t.Error("PrintVariableVerticalSizeBitImage(0 width) expected error, got nil")
+	}
+
+	// Data length mismatch
+	if _, err := c.PrintVariableVerticalSizeBitImage(bitimage.Normal, 2, 2, make([]byte, 2)); err == nil {
+		t.Error("PrintVariableVerticalSizeBitImage(mismatched length) expected error, got nil")
+	}
+}
+
+func TestCommands_PrintRasterBitImage(t *testing.T) {
+	c := bitimage.NewCommands()
+
+	// Valid
+	cmd, err := c.PrintRasterBitImage(bitimage.Normal, 2, 2, make([]byte, 4))
+	if err != nil {
+		t.Fatalf("PrintRasterBitImage() error = %v", err)
+	}
+	if len(cmd) == 0 {
+		t.Fatal("PrintRasterBitImage() returned empty bytes")
+	}
+
+	// Invalid mode
+	if _, err := c.PrintRasterBitImage(bitimage.PrintMode(99), 2, 2, make([]byte, 4)); err == nil {
+		t.Error("PrintRasterBitImage(invalid mode) expected error, got nil")
+	}
+
+	// Invalid dimensions
+	if _, err := c.PrintRasterBitImage(bitimage.Normal, 0, 2, make([]byte, 4)); err == nil {
+		t.Error("PrintRasterBitImage(0 width) expected error, got nil")
+	}
+
+	// Data length mismatch
+	if _, err := c.PrintRasterBitImage(bitimage.Normal, 2, 2, make([]byte, 2)); err == nil {
+		t.Error("PrintRasterBitImage(mismatched length) expected error, got nil")
+	}
+}
