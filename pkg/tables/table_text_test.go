@@ -401,7 +401,6 @@ func TestData_Validate(t *testing.T) {
 	}
 }
 
-// TODO: Use string.Contains from strings package when available
 func Contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && len(substr) > 0 && SearchSubstring(s, substr)))

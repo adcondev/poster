@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/adcondev/poster/pkg/constants"
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // ============================================================================
@@ -112,4 +113,78 @@ func TestImageCommand_Validation(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ============================================================================
+// Direct Handler Execution Tests
+// ============================================================================
+
+func TestHandleImage_Execution(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	// Valid 1x1 transparent PNG in base64
+	const validPNG1x1 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+
+	t.Run("invalid json returns error", func(t *testing.T) {
+		err := exec.handleImage(mock, json.RawMessage(`{bad-json`))
+		if err == nil {
+			t.Error("expected error for invalid json")
+		}
+	})
+
+	t.Run("invalid base64 image data returns error", func(t *testing.T) {
+		err := exec.handleImage(mock, json.RawMessage(`{"code": "not-valid-base64-image"}`))
+		if err == nil {
+			t.Error("expected error for invalid image data")
+		}
+	})
+
+	t.Run("valid image with defaults", func(t *testing.T) {
+		mock.Reset()
+		payload := `{"code": "` + validPNG1x1 + `"}`
+		err := exec.handleImage(mock, json.RawMessage(payload))
+		if err != nil {
+			t.Fatalf("handleImage failed: %v", err)
+		}
+		if mock.CallCount("PrintBitmap") != 1 {
+			t.Errorf("expected 1 PrintBitmap call, got %d", mock.CallCount("PrintBitmap"))
+		}
+	})
+
+	t.Run("dithering modes, scaling, and alignments", func(t *testing.T) {
+		ditherings := []string{"atkinson", "threshold", "floyd_steinberg", "ordered", "bayer", "unknown_default"}
+		scalings := []string{"nns", "nearest_neighbor", "bilinear", "unknown_default"}
+		alignments := []string{"left", "center", "right", "default"}
+
+		for _, dither := range ditherings {
+			for _, scale := range scalings {
+				for _, align := range alignments {
+					mock.Reset()
+					payload := `{
+						"code": "` + validPNG1x1 + `",
+						"pixel_width": 64,
+						"threshold": 100,
+						"dithering": "` + dither + `",
+						"scaling": "` + scale + `",
+						"align": "` + align + `"
+					}`
+					err := exec.handleImage(mock, json.RawMessage(payload))
+					if err != nil {
+						t.Errorf("handleImage failed for dither=%s scale=%s align=%s: %v", dither, scale, align, err)
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("pixel width clamped to profile dots per line", func(t *testing.T) {
+		mock.Reset()
+		mock.GetProfile().DotsPerLine = 384
+		payload := `{"code": "` + validPNG1x1 + `", "pixel_width": 1000}`
+		err := exec.handleImage(mock, json.RawMessage(payload))
+		if err != nil {
+			t.Fatalf("handleImage failed: %v", err)
+		}
+	})
 }

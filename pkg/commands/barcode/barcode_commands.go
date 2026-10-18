@@ -233,8 +233,6 @@ func (c *Commands) PrintBarcode(symbology Symbology, data []byte) ([]byte, error
 		return nil, ErrDataTooShort
 	}
 
-	// TODO: Check if builders are better in composer package
-
 	// Select construction based on symbology
 	if symbology <= CODABAR {
 		// Function A (NUL-terminated)

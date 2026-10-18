@@ -68,7 +68,6 @@ const (
 	PrintASCII BeginLine = '1'
 )
 
-// TODO: Check if better to be var and configurable from profile
 // Tab position limits
 const (
 	MaxTabPositions = 32

@@ -48,8 +48,6 @@ const (
 // Error Definitions
 // ============================================================================
 
-// TODO: refine error definitions
-
 // Error variables
 var (
 	// ErrInvalidDLFunctionCode indicates an invalid download function code
@@ -100,8 +98,6 @@ func NewDownloadGraphicsCommands() *DownloadGraphicsCommands {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-// TODO: Check if better move them to composer package
 
 // calculateDLRasterDataSize calculates the data size for download raster format graphics
 func calculateDLRasterDataSize(width, height uint16) int {

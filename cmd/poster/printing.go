@@ -97,7 +97,6 @@ func createConnection(config *Config) (connection.Connector, error) {
 		if config.SerialPort == "" {
 			return nil, fmt.Errorf("serial port required")
 		}
-		// TODO: Implement when available in library
 		return nil, fmt.Errorf("serial connection not yet implemented")
 
 	case "file":

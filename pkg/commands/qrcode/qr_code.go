@@ -115,8 +115,6 @@ func NewCommands() *Commands {
 // Helper Functions
 // ============================================================================
 
-// TODO: Check if it's better to move them to composer package or removed
-
 // IsNumericData checks if data can be encoded in Numeric mode
 func IsNumericData(data []byte) bool {
 	for _, b := range data {

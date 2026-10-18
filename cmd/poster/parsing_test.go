@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"net"
 	"os"
 	"path/filepath"
@@ -358,4 +359,201 @@ func TestExecutePrint_TCP(t *testing.T) {
 		t.Fatal("timed out waiting for tcp transmission")
 	}
 }
+
+func parseFlags(args []string) *Config {
+	origCommandLine := flag.CommandLine
+	origArgs := os.Args
+	defer func() {
+		flag.CommandLine = origCommandLine
+		os.Args = origArgs
+	}()
+
+	flag.CommandLine = flag.NewFlagSet(args[0], flag.ContinueOnError)
+	os.Args = args
+	return parseArgs()
+}
+
+func previewDocument(docPath, previewPath string) error {
+	return executePrint(&Config{
+		JSONFile:    docPath,
+		PreviewPath: previewPath,
+	})
+}
+
+func printToFile(docPath, outputPath string) error {
+	return executePrint(&Config{
+		JSONFile:       docPath,
+		ConnectionType: "file",
+		OutputFile:     outputPath,
+	})
+}
+
+func TestParseFlags(t *testing.T) {
+	t.Run("flags with shorthand and options", func(t *testing.T) {
+		args := []string{
+			"poster",
+			"-f", "test.json",
+			"-p", "ThermalPrinter",
+			"-t", "network",
+			"-network", "192.168.1.50:9100",
+			"-o", "output.bin",
+			"-preview", "preview.png",
+			"--dry-run",
+			"--debug",
+		}
+		cfg := parseFlags(args)
+		if cfg.JSONFile != "test.json" {
+			t.Errorf("expected JSONFile 'test.json', got %q", cfg.JSONFile)
+		}
+		if cfg.PrinterName != "ThermalPrinter" {
+			t.Errorf("expected PrinterName 'ThermalPrinter', got %q", cfg.PrinterName)
+		}
+		if cfg.ConnectionType != "network" {
+			t.Errorf("expected ConnectionType 'network', got %q", cfg.ConnectionType)
+		}
+		if cfg.NetworkAddr != "192.168.1.50:9100" {
+			t.Errorf("expected NetworkAddr '192.168.1.50:9100', got %q", cfg.NetworkAddr)
+		}
+		if cfg.OutputFile != "output.bin" {
+			t.Errorf("expected OutputFile 'output.bin', got %q", cfg.OutputFile)
+		}
+		if cfg.PreviewPath != "preview.png" {
+			t.Errorf("expected PreviewPath 'preview.png', got %q", cfg.PreviewPath)
+		}
+		if !cfg.DryRun {
+			t.Error("expected DryRun true")
+		}
+		if !cfg.Debug {
+			t.Error("expected Debug true")
+		}
+	})
+
+	t.Run("positional args fallback", func(t *testing.T) {
+		args := []string{"poster", "positional.json", "PositionalPrinter"}
+		cfg := parseFlags(args)
+		if cfg.JSONFile != "positional.json" {
+			t.Errorf("expected JSONFile 'positional.json', got %q", cfg.JSONFile)
+		}
+		if cfg.PrinterName != "PositionalPrinter" {
+			t.Errorf("expected PrinterName 'PositionalPrinter', got %q", cfg.PrinterName)
+		}
+	})
+}
+
+func TestCreateProfile(t *testing.T) {
+	t.Run("preset model", func(t *testing.T) {
+		doc := &schema.Document{
+			Profile: schema.ProfileConfig{
+				Model: "TM-T88VI",
+			},
+		}
+		prof := createProfile(doc)
+		if prof == nil {
+			t.Fatal("expected non-nil profile")
+		}
+		if prof.Model != "TM-T88VI" {
+			t.Errorf("expected model TM-T88VI, got %s", prof.Model)
+		}
+	})
+
+	t.Run("58mm fallback profile", func(t *testing.T) {
+		doc := &schema.Document{
+			Profile: schema.ProfileConfig{
+				Model:      "Unknown58",
+				PaperWidth: 58,
+				DPI:        203,
+				CodeTable:  "PC850",
+				HasQR:      true,
+			},
+		}
+		prof := createProfile(doc)
+		if prof == nil {
+			t.Fatal("expected non-nil profile")
+		}
+		if prof.PaperWidth != 58 {
+			t.Errorf("expected PaperWidth 58, got %v", prof.PaperWidth)
+		}
+		if prof.DPI != 203 {
+			t.Errorf("expected DPI 203, got %d", prof.DPI)
+		}
+		if !prof.HasQR {
+			t.Error("expected HasQR true")
+		}
+	})
+
+	t.Run("80mm fallback profile", func(t *testing.T) {
+		doc := &schema.Document{
+			Profile: schema.ProfileConfig{
+				Model:      "Unknown80",
+				PaperWidth: 80,
+			},
+		}
+		prof := createProfile(doc)
+		if prof == nil {
+			t.Fatal("expected non-nil profile")
+		}
+		if prof.PaperWidth != 80 {
+			t.Errorf("expected PaperWidth 80, got %v", prof.PaperWidth)
+		}
+	})
+}
+
+func TestPreviewDocument(t *testing.T) {
+	tempDir := t.TempDir()
+	jsonPath := filepath.Join(tempDir, "preview_ticket.json")
+	if err := os.WriteFile(jsonPath, []byte(validTicketJSON), 0600); err != nil {
+		t.Fatalf("Failed to write ticket json: %v", err)
+	}
+
+	previewPath := filepath.Join(tempDir, "output_preview.png")
+	if err := previewDocument(jsonPath, previewPath); err != nil {
+		t.Fatalf("previewDocument failed: %v", err)
+	}
+
+	fi, err := os.Stat(previewPath)
+	if err != nil {
+		t.Fatalf("failed to stat preview png: %v", err)
+	}
+	if fi.Size() == 0 {
+		t.Error("expected non-empty preview file")
+	}
+
+	data, err := os.ReadFile(filepath.Clean(previewPath))
+	if err != nil {
+		t.Fatalf("failed to read preview png: %v", err)
+	}
+	if len(data) < 8 || string(data[:8]) != "\x89PNG\r\n\x1a\n" {
+		t.Errorf("preview file does not have valid PNG header")
+	}
+}
+
+func TestPrintToFile(t *testing.T) {
+	tempDir := t.TempDir()
+	jsonPath := filepath.Join(tempDir, "file_ticket.json")
+	if err := os.WriteFile(jsonPath, []byte(validTicketJSON), 0600); err != nil {
+		t.Fatalf("Failed to write ticket json: %v", err)
+	}
+
+	outPath := filepath.Join(tempDir, "output_receipt.bin")
+	if err := printToFile(jsonPath, outPath); err != nil {
+		t.Fatalf("printToFile failed: %v", err)
+	}
+
+	fi, err := os.Stat(outPath)
+	if err != nil {
+		t.Fatalf("failed to stat output bin: %v", err)
+	}
+	if fi.Size() == 0 {
+		t.Error("expected non-empty bin output file")
+	}
+
+	data, err := os.ReadFile(filepath.Clean(outPath))
+	if err != nil {
+		t.Fatalf("failed to read bin output: %v", err)
+	}
+	if !strings.Contains(string(data), "Receipt Header") {
+		t.Errorf("expected bin output to contain 'Receipt Header', got %q", string(data))
+	}
+}
+
 

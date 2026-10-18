@@ -28,22 +28,6 @@ type EscposProtocol struct {
 	Print            print.Capability
 	PrintPosition    printposition.Capability
 	QRCode           qrcode.Capability
-	// TODO: Implement other capabilities
-	// PrintingPaper    printingpaper.Capability
-	// PaperSensor      papersensor.Capability
-	// PanelButton      panelbutton.Capability
-	// Status           status.Capability
-	// MacroFunctions   macrofunctions.Capability
-	// Kanji 		    kanji.Capability
-	// Miscellaneous 	miscellaneous.Capability
-	// Customize 	    customize.Capability
-	// CounterPrinting  counterprinting.Capability
-	// PDF417           pdf417.Capability
-	// MaxiCode         maxicode.Capability
-	// DataBar          databar.Capability
-	// CompositeSym     compositesym.Capability
-	// AztecCode        azteccode.Capability
-	// DataMatrix       datamatrix.Capability
 }
 
 // NewEscpos creates a new instance of the ESC/POS protocol
@@ -59,8 +43,6 @@ func NewEscpos() *EscposProtocol {
 		QRCode:           qrcode.NewCommands(),
 	}
 }
-
-// TODO: Implement other methods to access capabilities related to initialization and state management (miscellaneous)
 
 // InitializePrinter provides a reset of the printer to its power-on state for RAM settings.
 //

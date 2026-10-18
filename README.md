@@ -1,7 +1,7 @@
 # Poster: Thermal Printer Driver & ESC/POS Utility
 
 ![Go Version](https://img.shields.io/badge/go-1.24+-00ADD8?style=flat&logo=go)
-![Platform](https://img.shields.io/badge/platform-windows-blue?style=flat&logo=windows)
+![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20macos-blue?style=flat)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![CI](https://github.com/adcondev/poster/actions/workflows/ci.yml/badge.svg)](https://github.com/adcondev/poster/actions/workflows/ci.yml)
 
@@ -24,20 +24,24 @@ A professional, production-ready Go library and command-line utility for control
 ## 🚀 Key Features
 
 - **JSON Document Protocol**: Define print jobs using a clean, versioned JSON schema (`v1.0`). Decouples business logic from hardware commands with full schema validation.
-- **Native Windows Integration**: Prints directly via the Windows Print Spooler API (`winspool.drv`), supporting USB, Serial, and Network printers installed in Windows.
+- **Pluggable Transports (`io.WriteCloser`)**: Native Windows Print Spooler (`winspool.drv`), pure-Go cross-platform raw TCP (`:9100`), file/device output (`.bin` files, `/dev/usb/lp*`), and in-memory buffers.
 - **Advanced Graphics Engine**:
-    - High-quality monochrome rasterization with **Atkinson** and **Threshold** dithering.
-    - Configurable image scaling (`bilinear` and `nns` / `nearest_neighbor`).
+    - Monochrome rasterization with **Atkinson**, **Floyd-Steinberg**, **Ordered (4x4 Bayer)**, and **Threshold** dithering.
+    - Configurable image scaling (`bilinear` and `nns` / `nearest_neighbor`), profile-aware max width, and automatic horizontal **band chunking** (`MaxBandHeight`) for small-buffer printers.
     - Supports PNG, JPEG, and BMP formats (file paths or Base64).
-- **Smart QR & Native Barcodes**:
+- **Smart QR, PDF417 & Native Barcodes**:
     - **QR Codes**: Automatically selects between native printer firmware commands (`GS ( k`) and software bitmap rendering (`pkg/graphics`) when custom **logo overlays**, **circular modules** (`circle_shape`), or non-QR profiles are used.
-    - **1D Barcodes**: Fast native ESC/POS (`GS k`) generation supporting `CODE128` (auto Set A/B/C), `EAN13`, `EAN8`, `UPCA`, `UPCE`, `CODE39`, `ITF`, and `CODABAR`.
-- **Dynamic Table Layout**: Built-in engine for generating aligned receipts with UTF-8 word wrapping, multi-column support, configurable column spacing (`0+`), **automatic overflow detection**, and **smart widest-column-first auto-reduction** (`ReduceToFit`).
-- **Visual Emulator**: Standalone 2D receipt preview engine (`pkg/emulator`) with embedded TrueType fonts (`JetBrainsMono`, `Ticketing`) and 5x7 ASCII fallback that renders print jobs to PNG images without physical hardware.
-- **Hardware Profiles & Encodings**: Built-in profiles for standard 80mm (`576` dots), 58mm (`384` dots), PT-210, GP-58N, and EC-PM-80250 printers with 23 single-byte and Shift-JIS character code tables.
+    - **PDF417**: Native `GS ( k` (`cn=48`) with columns, rows, module width, row height, and error-correction level.
+    - **1D Barcodes**: Native ESC/POS (`GS k`) supporting `CODE128` (auto Set B/C), `CODE128_AUTO`, `GS1-128`, `CODE93`, `EAN13`, `EAN8`, `UPCA`, `UPCE`, `CODE39`, `ITF`, and `CODABAR`.
+- **Dynamic Table Layout**: Pure-text engine (`pkg/tables`, no ESC/POS coupling) with UTF-8 word wrapping, multi-column support, Font B, configurable column spacing, overflow detection, and widest-column-first `ReduceToFit`.
+- **Visual Emulator & Reverse Parser**:
+    - `emulator.Printer` implements `service.PrinterActions`, so any `schema.Document` can be rendered to PNG via the same `executor` (`poster -preview out.png`).
+    - `emulator.RenderBytesToPNG` parses **raw ESC/POS byte streams** (text, styles, alignment, cuts, `GS v 0` rasters) back into a PNG preview.
+- **International Encoding ("Magic Encode")**: 25 code tables, smart-typography normalization (curly quotes, dashes, ellipsis, NBSP), optional mid-string `ESC t n` auto-switching across fallback code pages, and `'?'` replacement (or `StrictEncoding`) for unmappable runes.
+- **Hardware Profiles**: Generic 80mm (`576` dots) / 58mm (`384` dots), PT-210, GP-58N, EC-PM-80250, Epson TM-T20III / TM-T88VI, Star TSP100, Bixolon SRP-350III, and Xprinter XP-58 / XP-80 presets resolvable by model name (`profile.ProfileFromModel`).
 - **Smart Printer Discovery**: Enumerates and filters physical vs. virtual thermal/POS printers installed in the Windows Print Spooler.
-- **11 Document Command Types**: `text`, `image`, `barcode`, `qr`, `table`, `separator`, `feed`, `cut`, `raw`, `pulse`, `beep`.
-- **Raw Command Support**: Send raw hex ESC/POS byte sequences with safety checks against bidirectional lockups.
+- **12 Document Command Types**: `text`, `image`, `barcode`, `qr`, `pdf417`, `table`, `separator`, `feed`, `cut`, `raw`, `pulse`, `beep`.
+- **Raw Command Support**: Send raw hex/base64 ESC/POS byte sequences with optional safety checks against bidirectional lockups.
 
 ## 🏗️ Architecture
 
@@ -73,9 +77,14 @@ flowchart TD
 
     subgraph "Transport & Preview"
         Service --> Connector["Connector (io.WriteCloser)<br/>(pkg/connection)"]
-        Connector --> WinAPI["Windows Spooler API<br/>(winspool.drv)"]
+        Connector --> WinAPI["Windows Spooler<br/>(winspool.drv)"]
+        Connector --> TCP["TCPConnector<br/>(:9100)"]
+        Connector --> File["FileConnector / BufferConnector"]
         WinAPI --> Device["Physical Thermal Printer"]
-        Emulator["Visual Emulator<br/>(pkg/emulator)"] --> PNG["PNG Receipt Preview"]
+        TCP --> Device
+        Actions --> EmuPrinter["emulator.Printer<br/>(pkg/emulator)"]
+        EmuPrinter --> PNG["PNG Receipt Preview"]
+        RawBytes["Raw ESC/POS bytes"] --> Parser["emulator.ParseESC"] --> PNG
     end
 ```
 
@@ -84,20 +93,20 @@ flowchart TD
 | Package | Description |
 |---|---|
 | `api/v1` | Canonical JSON Schema (`ticket_document.schema.json`) and protocol specification (`TICKET_DOCUMENT_V1.md`) |
-| `cmd/poster` | CLI utility for printer discovery, JSON validation (`--dry-run`), and Windows Spooler printing |
+| `cmd/poster` | CLI for printer discovery, JSON validation (`--dry-run`), PNG preview (`-preview`), and printing via Windows Spooler, TCP, or file |
 | `internal/calculate` | Millimeter, DPI, and dot-per-line math utilities |
 | `internal/load` | Path-traversal-safe file loader and PNG/JPEG/BMP image decoding (file & Base64) |
 | `internal/testutils` | Shared unit test assertions, byte slice validators, and mock helpers |
-| `pkg/commands` | Pure, stateless ESC/POS command builders (`barcode`, `bitimage`, `character`, `linespacing`, `mechanismcontrol`, `print`, `printposition`, `qrcode`, `shared`) |
+| `pkg/commands` | Pure, stateless ESC/POS command builders (`barcode`, `bitimage`, `character`, `linespacing`, `mechanismcontrol`, `print`, `printposition`, `qrcode` incl. PDF417, `shared`) |
 | `pkg/composer` | High-level ESC/POS protocol facade (`EscposProtocol`) |
-| `pkg/connection` | Transport interfaces (`Connector`, `PrinterService`) and Windows Spooler (`winspool.drv`) implementation |
+| `pkg/connection` | `Connector` interface plus `WindowsPrintConnector`, `TCPConnector`, `FileConnector`, `BufferConnector`, and printer discovery/filtering |
 | `pkg/constants` | Shared typed enums, standard paper/dot geometry (`576` / `384` dots), and schema-aligned defaults |
 | `pkg/document` | JSON document AST & validator (`schema`), fluent Go DSL (`builder`), and command runner (`executor`) |
-| `pkg/emulator` | Standalone 2D visual receipt emulator rendering PNG images with embedded TTF fonts |
-| `pkg/graphics` | Image scaling, Atkinson/Threshold dithering, 1-bit bitmaps, and QR image rendering |
-| `pkg/profile` | Hardware capability profiles (`80mm`, `58mm`, `PT-210`, `GP-58N`, `EC-PM-80250`) and character code tables |
-| `pkg/service` | Stateful printer service (`Printer`), `PrinterActions` interface, and `MockPrinter` |
-| `pkg/tables` | Multi-column table engine with UTF-8 word wrapping, header styling, and `ReduceToFit` auto-balancing |
+| `pkg/emulator` | 2D receipt renderer, `PrinterActions` adapter (`emulator.Printer`), and raw ESC/POS byte parser (`ParseESC`, `RenderBytesToPNG`) |
+| `pkg/graphics` | Image loading/scaling, Atkinson/Floyd-Steinberg/Ordered/Threshold dithering, 1-bit bitmaps with band slicing, QR rendering, barcode mapping |
+| `pkg/profile` | Hardware profiles & model presets, 25 code tables, typography normalization, and multi-codepage `EncodeBytesSafe` |
+| `pkg/service` | Stateful printer service (`Printer`, functional options), `PrinterActions` interface, and `MockPrinter` |
+| `pkg/tables` | Pure-text multi-column table engine with UTF-8 word wrapping, `RenderStructured`, and `ReduceToFit` auto-balancing |
 
 ## 📦 Installation
 
@@ -130,14 +139,21 @@ task build
 
 ### Command Line Interface (CLI)
 
-The `poster` CLI validates and prints JSON ticket documents via the Windows Print Spooler:
+The `poster` CLI validates, previews, and prints JSON ticket documents:
 
 ```bash
-# Print a JSON document to a specific Windows printer
+# Print via the Windows Print Spooler (default transport, Windows only)
 poster -file receipt.json -printer "EPSON TM-T88V"
 
-# Auto-detect the default/first thermal printer and print
-poster -file receipt.json
+# Print to a network printer over raw TCP (any OS)
+poster -file receipt.json -t tcp -network 192.168.1.100:9100
+
+# Write raw ESC/POS bytes to a file or device (any OS)
+poster -file receipt.json -t file -o receipt.bin
+poster -file receipt.json -t file -o /dev/usb/lp0
+
+# Render a PNG preview without hardware (any OS)
+poster -file receipt.json -preview receipt.png
 
 # Dry-run (validate JSON schema and commands without touching hardware)
 poster -file receipt.json --dry-run
@@ -247,36 +263,29 @@ import (
 )
 
 func main() {
-	doc, err := builder.NewDocument().
-		SetProfile("Generic 80mm", 80).
-		AddText(func(tb *builder.TextBuilder) {
-			tb.Text("STORE NAME").Center().Bold().Size("2x2")
-		}).
-		Separator().
-		AddQR(func(qb *builder.QRBuilder) {
-			qb.Data("https://example.com").Center().PixelWidth(256)
-		}).
-		PartialCut().
+	doc := builder.NewDocument().
+		SetProfile("Epson TM-T88VI", 80, "PC858").
+		Text("STORE NAME").Center().Bold().Size("2x2").End().
+		Separator("-").
+		QR("https://example.com").Center().Size(256).End().
+		PDF417("INV-0001|42.50").Center().End().
+		Cut().
 		Build()
+
+	// Any connection.Connector works: TCP, file, buffer, or Windows Spooler.
+	conn, err := connection.NewTCPConnector("192.168.1.100:9100")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	conn, err := connection.NewWindowsPrintConnector("POS-80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() { _ = conn.Close() }()
-
-	prof := profile.CreateProfile80mm()
-	printer, err := service.NewPrinter(composer.NewEscpos(), &prof, conn)
+	prof, _ := profile.ProfileFromModel("Epson TM-T88VI")
+	printer, err := service.NewPrinter(composer.NewEscpos(), prof, conn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() { _ = printer.Close() }()
 
-	exec := executor.NewExecutor(printer)
-	if err := exec.Execute(doc); err != nil {
+	if err := executor.NewExecutor(printer).Execute(doc); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -298,24 +307,35 @@ import (
 
 func main() {
 	prof := profile.CreateProfile80mm()
+	prof.AutoSwitchCodePage = true // mid-string ESC t n switching for mixed scripts
 
-	conn, err := connection.NewWindowsPrintConnector("POS-80")
+	conn, err := connection.NewFileConnector("receipt.bin") // or /dev/usb/lp0
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() { _ = conn.Close() }()
 
-	proto := composer.NewEscpos()
-	printer, err := service.NewPrinter(proto, &prof, conn)
+	printer, err := service.NewPrinter(composer.NewEscpos(), prof, conn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() { _ = printer.Close() }()
 
 	_ = printer.Initialize()
-	_ = printer.PrintLine("Hello World!")
+	_ = printer.PrintLine("“Café” — 5 € / Привет")
 	_ = printer.FullFeedAndCut(2)
 }
+```
+
+#### 3. Preview Without Hardware
+
+```go
+// Render a schema.Document to PNG through the same executor.
+emu, _ := emulator.NewPrinter(profile.CreateProfile58mm())
+_ = executor.NewExecutor(emu).Execute(doc)
+_ = emu.SavePNG("preview.png")
+
+// Or reverse-render any captured raw ESC/POS byte stream.
+pngBytes, _ := emulator.RenderBytesToPNG(rawEscPos)
 ```
 
 ## 📋 Supported Document Commands
@@ -323,9 +343,10 @@ func main() {
 | Command | Description |
 |---|---|
 | `text` | Formatted text with optional key-value `label`, alignment, bold, underline (`1dot`/`2dot`), inverse, font (`A`/`B`), and scaling (`1x1`..`8x8`) |
-| `image` | Base64 PNG/JPEG/BMP raster printing with `atkinson` or `threshold` dithering and `bilinear` or `nns` scaling |
-| `barcode` | Native ESC/POS 1D barcodes (`CODE128`, `EAN13`, `EAN8`, `UPCA`, `UPCE`, `CODE39`, `ITF`, `CODABAR`) with HRI text options |
+| `image` | Base64 PNG/JPEG/BMP raster printing with `atkinson`, `floyd_steinberg`, `ordered`, or `threshold` dithering and `bilinear` or `nns` scaling |
+| `barcode` | Native ESC/POS 1D barcodes (`code128`, `code128_auto`, `gs1_128`, `code93`, `ean13`, `ean8`, `upca`, `upce`, `code39`, `itf`, `codabar`) with HRI text options |
 | `qr` | Native or software-rendered QR codes with optional center `logo` and `circle_shape` modules |
+| `pdf417` | Native PDF417 2D barcode with `columns`, `rows`, `module_width`, `row_height`, `error_correction` (0–8) |
 | `table` | Multi-column tables with column alignment, UTF-8 word wrapping, bold headers, and `auto_reduce` |
 | `separator` | Horizontal character repeat separator lines |
 | `feed` | Paper advance (`1`–`255` lines) |
@@ -342,18 +363,30 @@ For complete protocol documentation and JSON schema definitions, see [`api/v1/TI
 
 | Target | Status | Description |
 |---|---|---|
-| `WindowsPrintConnector` | ✅ Implemented | Native Windows Print Spooler (`winspool.drv`) supporting USB, Serial, and Network printers installed in Windows |
-| `MockPrinter` / `io.WriteCloser` | ✅ Implemented | In-memory mock and custom `io.WriteCloser` streams for unit testing and byte inspection |
+| `WindowsPrintConnector` | ✅ Implemented | Native Windows Print Spooler (`winspool.drv`) for printers installed in Windows (CLI `-t windows`, default) |
+| `TCPConnector` | ✅ Implemented | Pure-Go raw TCP (`host:9100`) with dial/write timeouts, cross-platform (CLI `-t tcp` / `-t network`) |
+| `FileConnector` | ✅ Implemented | Writes raw bytes to a `.bin` file or a device node such as `/dev/usb/lp0` (CLI `-t file -o <path>`) |
+| `BufferConnector` | ✅ Implemented | In-memory `io.WriteCloser` for tests, byte inspection, and piping into `emulator.RenderBytesToPNG` |
+| `emulator.Printer` | ✅ Implemented | `service.PrinterActions` adapter rendering documents to PNG (CLI `-preview <file.png>`) |
+| `MockPrinter` | ✅ Implemented | Call-recording `PrinterActions` mock for unit testing |
+
+> Serial COM, Bluetooth, and bidirectional status (`DLE EOT` / ASB) are **not yet implemented**.
 
 ### Built-in Printer Profiles (`pkg/profile`)
 
 | Profile | Paper Width | Printable Width (203 DPI) | Description |
 |---|---|---|---|
-| `CreateProfile80mm()` | 80mm | 576 dots (48 chars Font A) | Standard 80mm ESC/POS (Epson TM-T88 series, etc.) |
-| `CreateProfile58mm()` | 58mm | 384 dots (32 chars Font A) | Generic 58mm thermal printers |
-| `CreatePt210()` | 58mm | 384 dots (32 chars Font A) | GOOJPRT PT-210 portable printer with QR support |
-| `CreateGP58N()` | 58mm | 384 dots (32 chars Font A) | Gainscha GP-58N 58mm thermal printer |
-| `CreateECPM80250()` | 80mm | 576 dots (48 chars Font A) | EC Line EC-PM-80250 80mm thermal printer |
+| `CreateProfile80mm()` | 80mm | 576 dots (48 chars Font A) | Generic 80mm ESC/POS |
+| `CreateProfile58mm()` | 58mm | 384 dots (32 chars Font A) | Generic 58mm (`MaxBandHeight: 256`) |
+| `CreatePt210()` | 58mm | 384 dots | GOOJPRT PT-210 portable printer with QR support |
+| `CreateGP58N()` | 58mm | 384 dots | Gainscha GP-58N |
+| `CreateECPM80250()` | 80mm | 576 dots | EC Line EC-PM-80250 |
+| `CreateEpsonTMT20III()` / `CreateEpsonTMT88VI()` | 80mm | 576 dots | Epson TM-T20III / TM-T88VI (PC858, native QR, auto code-page switching) |
+| `CreateStarTSP100()` | 80mm | 576 dots | Star TSP100 (ESC/POS mode) |
+| `CreateBixolonSRP350III()` | 80mm | 576 dots | Bixolon SRP-350III |
+| `CreateXprinterXP58()` / `CreateXprinterXP80()` | 58mm / 80mm | 384 / 576 dots | Xprinter XP-58 / XP-80 |
+
+Use `profile.ProfileFromModel("tm-t88")` to resolve presets by (case-insensitive) model name; the executor and CLI apply this automatically from `profile.model`.
 
 ## 🎨 Visual Emulator
 

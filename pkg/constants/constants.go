@@ -89,7 +89,6 @@ const (
 	Bilinear Scaling = "bilinear"
 	// Bicubic uses Bicubic Scaling
 	Bicubic Scaling = "bicubic"
-	// TODO: Add more scaling algorithms if needed
 )
 
 // ============================================================================

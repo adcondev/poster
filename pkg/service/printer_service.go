@@ -94,7 +94,6 @@ func NewPrinterWithOptions(conn connection.Connector, opts ...PrinterOption) (*P
 
 // Initialize resets the printer to default settings
 func (p *Printer) Initialize() error {
-	// TODO: Add profile-specific initialization if needed
 	var ct []byte
 	var err error
 	if p.Profile.IsSupported(p.Profile.CodeTable) {
@@ -107,11 +106,6 @@ func (p *Printer) Initialize() error {
 	}
 
 	init := append(p.Protocol.InitializePrinter(), ct...)
-	// TODO: Make beep configurable in composer, not hardcoded here
-	// Add beep to library
-	// IMPORTANT: The idea is to notify the user that the printer is ready
-	// but it can be annoying for my other dev colleagues :)
-	// FIXME: init = append(init, []byte{0x1B, 0x42, 0x01, 0x05}...) // Beep!
 	return p.Write(init)
 }
 
@@ -145,11 +139,11 @@ func (p *Printer) Print(text string) error {
 
 // PrintLine sends text with line feed
 func (p *Printer) PrintLine(text string) error {
-	encText, err := p.Profile.EncodeString(text)
+	encoded, err := p.Profile.EncodeBytesSafe(text)
 	if err != nil {
-		return err
+		return fmt.Errorf("encode text: %w", err)
 	}
-	cmd, err := p.Protocol.PrintLn(encText)
+	cmd, err := p.Protocol.PrintLn(string(encoded))
 	if err != nil {
 		return err
 	}

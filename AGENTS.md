@@ -4,12 +4,12 @@ Operational context, architectural invariants, and strict guardrails for AI agen
 
 ## 1. Project Overview & Tech Stack
 
-Poster is a Go library and CLI utility for controlling ESC/POS thermal receipt printers via a versioned JSON document protocol (`v1.0`), programmatic Go builders, native Windows Print Spooler integration (`winspool.drv`), an Atkinson/Threshold dithering graphics pipeline, an auto-balancing table layout engine, and a standalone 2D visual PNG emulator.
+Poster is a Go library and CLI utility for controlling ESC/POS thermal receipt printers via a versioned JSON document protocol (`v1.0`), programmatic Go builders, pluggable `io.WriteCloser` transports (Windows Spooler, raw TCP, file/device, in-memory buffer), a multi-algorithm dithering graphics pipeline, an auto-balancing pure-text table engine, multi-codepage text encoding, and a 2D PNG emulator that can render both documents (via `PrinterActions`) and raw ESC/POS byte streams.
 
 - **Language / Runtime**: Go `1.24.6+` (`module github.com/adcondev/poster`)
 - **Target Platforms**:
-  - **Windows (`//go:build windows`)**: Full native hardware printing and printer discovery via `winspool.drv`.
-  - **Cross-Platform (`linux`, `darwin`, `windows`)**: Pure Go compilation and test execution for all ESC/POS command builders, composer, JSON schema/builder/executor, graphics, tables, profiles, emulator, and non-Windows connection stubs (`//go:build !windows`).
+  - **Windows (`//go:build windows`)**: Native Spooler printing and printer discovery via `winspool.drv`.
+  - **Cross-Platform (`linux`, `darwin`, `windows`)**: Everything else — command builders, composer, schema/builder/executor, graphics, tables, profiles, emulator, and `TCPConnector` / `FileConnector` / `BufferConnector`.
 - **Release & Commit Tooling**: Node.js (`standard-version`, `@commitlint/cli`, `prettier`), Go `Taskfile.yml`, `golangci-lint` v2, and GitHub Actions.
 
 ---
@@ -19,22 +19,22 @@ Poster is a Go library and CLI utility for controlling ESC/POS thermal receipt p
 | Path | Responsibility |
 |---|---|
 | `api/v1/` | **Canonical Contract**: `ticket_document.schema.json` (JSON Schema Draft-07) and `TICKET_DOCUMENT_V1.md`. |
-| `cmd/poster/` | CLI binary (`main.go`, `parsing.go`, `printing.go` [`windows`], `printing_stub.go` [`!windows`]). Version injected via `-ldflags "-X main.AppVersion=..."`. |
+| `cmd/poster/` | CLI binary (`main.go`, `parsing.go`, `printing.go` [`windows`], `printing_stub.go` [`!windows`]). Flags: `-t windows\|tcp\|network\|file`, `-network`, `-o/-output`, `-preview`, `--dry-run`, `--list*`. Version injected via `-ldflags "-X main.AppVersion=..."`. |
 | `internal/calculate/` | Pure math conversions between millimeters, DPI, and dots (`DotsPerLine`, `MmToDots`, `DotsToMm`). |
 | `internal/load/` | Path-traversal-safe file loader (`SecureFilepath`) and image decoder (`PNG`, `JPEG`, `BMP` via `golang.org/x/image/bmp`). |
 | `internal/testutils/` | Shared test assertions, byte slice validators, and fake/mock helpers. |
-| `pkg/commands/*` | Stateless, pure ESC/POS byte generators (`barcode`, `bitimage`, `character`, `linespacing`, `mechanismcontrol`, `print`, `printposition`, `qrcode`, `shared`). Each subpackage exposes a `Capability` interface and `NewCommands()`. |
+| `pkg/commands/*` | Stateless, pure ESC/POS byte generators (`barcode`, `bitimage`, `character`, `linespacing`, `mechanismcontrol`, `print`, `printposition`, `qrcode` [QR + PDF417], `shared`). Each subpackage exposes a `Capability` interface and `NewCommands()`. |
 | `pkg/composer/` | High-level protocol facade (`EscposProtocol`) aggregating all `pkg/commands/*` capabilities into atomic ESC/POS sequences. |
-| `pkg/connection/` | Transport abstraction (`Connector` implementing `io.WriteCloser`, `PrinterService`) and Windows Spooler (`winspool.drv`) implementation + printer enumeration. |
-| `pkg/constants/` | Centralized typed string enums, paper/dot geometry constants (`576` dots for 80mm, `384` dots for 58mm), and schema-aligned defaults. |
-| `pkg/document/schema/` | Top-level JSON AST (`Document`, `ProfileConfig`, `Command`), `ParseDocument`, and structural/version validation (`Validate`). |
+| `pkg/connection/` | `Connector` (`io.WriteCloser`) implementations: `WindowsPrintConnector` (`winspool.drv`), `TCPConnector`, `FileConnector`, `BufferConnector`; cross-platform printer filtering + Windows enumeration. |
+| `pkg/constants/` | Centralized typed string enums, paper/dot geometry constants (`576` dots for 80mm, `384` dots for 58mm), size limits (`MaxJSONSize`), and schema-aligned defaults. |
+| `pkg/document/schema/` | Top-level JSON AST (`Document`, `ProfileConfig`, `Command`, per-command structs), `ParseDocument`, and structural/version validation (`Validate`). |
 | `pkg/document/builder/` | Fluent Go DSL (`DocumentBuilder`) for programmatic construction of `schema.Document` payloads. |
-| `pkg/document/executor/` | Document execution engine (`Executor`, `CommandHandler` registry) translating `schema.Document` commands into `service.PrinterActions` calls. |
-| `pkg/emulator/` | Standalone 2D visual receipt renderer (`Engine`, `DynamicCanvas`, embedded `JetBrainsMono`/`Ticketing` TTF fonts + 5x7 ASCII fallback) outputting PNG previews. |
-| `pkg/graphics/` | Image scaling (`BiLinear`, `NearestNeighbor`), `Atkinson`/`Threshold` dithering into 1-bit `MonochromeBitmap`, QR image generation (`yeqown/go-qrcode/v2`), and barcode config mapping. |
-| `pkg/profile/` | Hardware profiles (`80mm`, `58mm`, `PT-210`, `GP-58N`, `EC-PM-80250`) and UTF-8 to 1-byte code page encoding (`charmap`, `ShiftJIS`). |
-| `pkg/service/` | Stateful printer orchestrator (`Printer`), `PrinterActions` interface (including `Close() error`), and `MockPrinter`. |
-| `pkg/tables/` | Multi-column receipt layout engine (`TabEngine`), UTF-8 rune word-wrapping, alignment padding, and widest-column-first `ReduceToFit`. |
+| `pkg/document/executor/` | Document execution engine (`Executor`, `CommandHandler` registry, `RegisterHandler`) translating `schema.Document` commands into `service.PrinterActions` calls. |
+| `pkg/emulator/` | 2D receipt renderer (`Engine`, `DynamicCanvas`, embedded TTF fonts), `emulator.Printer` (`service.PrinterActions` adapter), and raw byte parser (`Engine.ParseESC`, `RenderBytesToPNG`). |
+| `pkg/graphics/` | Image loading/scaling, `Atkinson`/`FloydSteinberg`/`Ordered`/`Threshold` dithering into 1-bit `MonochromeBitmap` (+ `SubBand`), QR image generation (`yeqown/go-qrcode/v2`), and barcode symbology mapping. |
+| `pkg/profile/` | Hardware profiles + model presets (`ProfileFromModel`), 25 code tables (`ParseCodeTable`), `NormalizeTypography`, and `EncodeBytesSafe` (multi-codepage `ESC t n` switching, `'?'` fallback, `StrictEncoding`). |
+| `pkg/service/` | Stateful printer orchestrator (`Printer`, `NewPrinterWithOptions`), `PrinterActions` interface (including `Close() error`), and `MockPrinter`. |
+| `pkg/tables/` | Pure-text multi-column layout engine (`TabEngine`, `Render`, `RenderStructured`) — no ESC/POS bytes; UTF-8 rune word-wrapping, alignment padding, widest-column-first `ReduceToFit`. |
 
 ---
 
@@ -52,15 +52,21 @@ Poster is a Go library and CLI utility for controlling ESC/POS thermal receipt p
    - `executor.Execute` MUST fail fast (return an error) on unsupported `doc.Version`, unknown command types, invalid command payloads, or profile configuration errors.
 3. **Hardware, Service & Emulator Boundaries**:
    - `executor.Executor` and all `CommandHandler` implementations MUST depend on the `service.PrinterActions` interface (including `Close() error`), never the concrete `*service.Printer` struct.
-   - `pkg/emulator` is an independent 2D canvas preview engine, not a `connection.Connector`.
-   - `pkg/connection` is scoped strictly to Windows Print Spooler (`winspool.drv`) and `io.WriteCloser` mocks/files. OS-specific files (`//go:build windows` vs `//go:build !windows`) MUST export identical struct field types and signatures so cross-platform builds and tests never diverge.
+   - `pkg/emulator` is a preview engine, not a `connection.Connector`. It integrates via `emulator.Printer` (implements `service.PrinterActions`) and `ParseESC` / `RenderBytesToPNG` (consumes raw bytes). `ParseESC` MUST never panic or index out of bounds on truncated/malformed input.
+   - `pkg/connection` transports are `io.WriteCloser` only (Windows Spooler, TCP, file/device, buffer). OS-specific files (`//go:build windows` vs `//go:build !windows`) MUST export identical struct field types and signatures so cross-platform builds and tests never diverge.
+   - `pkg/tables` MUST remain pure text (no `pkg/composer` import, no raw ESC/POS bytes). Styling (e.g., bold headers) is applied by callers via `RenderStructured` + `PrinterActions`.
 4. **Standard Paper & Dot Geometry (203 DPI / 8 dpmm)**:
    - **80mm paper** (`72mm` printable width): `576` dots per line (`48` Font A chars, `64` Font B chars).
    - **58mm paper** (`48mm` printable width): `384` dots per line (`32` Font A chars, `42` Font B chars).
-   - All packages (`pkg/constants`, `pkg/profile`, `pkg/commands/shared`, `pkg/document/executor`, `internal/calculate`) MUST resolve to these exact standard dot widths.
-5. **QR & Barcode Rendering Policy**:
+   - All packages (`pkg/constants`, `pkg/profile`, `pkg/commands/shared`, `pkg/document/executor`, `internal/calculate`) MUST resolve to these exact standard dot widths. Image/QR max widths MUST derive from `Profile.DotsPerLine`, never a hardcoded 80mm constant.
+5. **QR, PDF417 & Barcode Rendering Policy**:
    - **QR Codes (`service.PrintQR`)**: Use native ESC/POS (`GS ( k`) only when `Profile.HasQR == true` AND neither `logo` nor `circle_shape` is enabled. Whenever `logo` or `circle_shape` is requested (or `Profile.HasQR == false`), automatically render via the software bitmap pipeline (`pkg/graphics`).
-   - **1D Barcodes (`service.PrintBarcode`)**: Use native ESC/POS (`GS k`) hardware commands. Do not claim software rasterization for 1D barcodes unless implemented in `pkg/graphics`.
+   - **PDF417**: Native `GS ( k` (`cn=48`) only; no software fallback yet.
+   - **1D Barcodes (`service.PrintBarcode`)**: Use native ESC/POS (`GS k`) hardware commands. Do not claim software rasterization for 1D barcodes on hardware unless implemented in `pkg/graphics` (the emulator renders them in software for previews only).
+6. **Text Encoding Policy**:
+   - `service.Printer.Print` / `PrintLine` MUST encode via `Profile.EncodeBytesSafe` (typography normalization → active code table → optional `ESC t n` auto-switch → `'?'` fallback, or error when `StrictEncoding`).
+   - New code tables MUST be added to `profile.ParseCodeTable` and `constants.ValidCodeTables` together.
+7. **Resource Limits**: JSON input ≤ `constants.MaxJSONSize` (10MB); image height ≤ `graphics.MaxImagePixelHeight` (32000); tall bitmaps are band-split when `Profile.MaxBandHeight > 0`.
 
 ---
 
@@ -101,4 +107,5 @@ All commits and PR titles MUST follow Conventional Commits:
 1. **Token Economy**: NEVER `cat` or read binary files, images (`assets/images/poster.png`), large base64/text dumps (`assets/images/imagen.txt`, `assets/images/logo.txt`), or full `CHANGELOG.md` (use `head -n 40 CHANGELOG.md`). Prefer `go doc`, `grep -E "^(type|func) "`, and targeted line ranges.
 2. **No Unsafe Slice Indexing**: Never index `&data[0]` or slice `s[:n-1]` without explicit length/bounds checks (`len(data) == 0`).
 3. **No Hardcoded Local Paths or Versions**: Never commit machine-specific paths in `Taskfile.yml` or hardcoded version strings in `cmd/poster/main.go`.
-4. **No Unimplemented Transport Claims**: Do not document ZPL, Scale protocols, raw TCP/9100, Serial COM, or Bluetooth as active features until implemented and tested.
+4. **No Unimplemented Transport Claims**: Do not document ZPL, Scale protocols, Serial COM, Bluetooth, USB-native (libusb), or bidirectional status (`DLE EOT` / ASB) as active features until implemented and tested. (Raw TCP/9100 and file/device output ARE implemented.)
+5. **Coverage Floor**: Do not merge changes that drop any library package below ~85% statement coverage without an explicit, documented reason.

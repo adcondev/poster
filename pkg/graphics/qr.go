@@ -28,11 +28,7 @@ const (
 	maxSizeMulti = 5
 )
 
-// TODO: Check if /internals fits better for custom WriteCloser
-
 // WriteCloser wraps bytes.Buffer to implement io.WriteCloser
-// FIXME: /internals fits better for custom WriteCloser?
-// TODO: Consider naming this BufferWriteCloser or similar for clarity.
 type WriteCloser struct {
 	buffer *bytes.Buffer
 }
@@ -54,7 +50,6 @@ func (wc *WriteCloser) Close() error {
 	// NO hacer Reset() aquí porque perdemos los datos antes de leerlos
 	// El defer en ProcessQRImage llama a Close() DESPUÉS de usar Save()
 	// pero ANTES de leer los bytes con Bytes()
-	// FIXME: Empty Close method might indicate a design smell or need for better abstraction.
 	return nil
 }
 
@@ -134,8 +129,6 @@ func (qo *QrOptions) GetModuleSize() posqr.ModuleSize {
 }
 
 // GenerateQR calcula y establece el tamaño del módulo basado en PixelWidth y el tamaño de la cuadrícula del QR
-// TODO: GenerateQR modifies QrOptions struct (side effects). Consider returning a result struct or modified copy.
-// TODO: Break down complex methods further if possible.
 func (qo *QrOptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 	if data == "" {
 		return nil, fmt.Errorf("QR data cannot be empty")
@@ -145,9 +138,6 @@ func (qo *QrOptions) GenerateQR(data string) (*qrcode.QRCode, error) {
 			len(data), posqr.MaxDataLength)
 	}
 
-	// FIXME: === Check if encoding affects QR Code whether is printed as image or natively ===
-
-	// TODO: Validate/clamp PixelWidth explicitly returning errors instead of silent adjustment?
 	qo.validateAndAdjustPixelWidth()
 
 	if qo.ErrorCorrection < posqr.LevelL || qo.ErrorCorrection > posqr.LevelH {
@@ -246,8 +236,6 @@ func (qo *QrOptions) calculateFinalDimensions() {
 func (qo *QrOptions) loadLogo() {
 	if qo.LogoData != "" {
 		// Load images if base64 strings are provided
-		// FIXME: Define a single place where to load images from base64
-		// TODO: Optimize Base64 handling? Decoding images here might be slow if repeated.
 		logoImg, format, err := load.ImgFromBase64(qo.LogoData)
 		if err != nil {
 			qo.LogoData = ""
@@ -275,7 +263,6 @@ func ProcessQRImage(data string, opts *QrOptions) (image.Image, error) {
 	// grande que el solicitado, preferir generado y no escalar hacia abajo.
 
 	// Generar QR y calcular tamaño del módulo
-	// TODO: Error Handling: GenerateQR modifies opts. If it fails partially, opts might be inconsistent.
 	qrc, err := opts.GenerateQR(data)
 	if err != nil {
 		return nil, fmt.Errorf("set module size: %w", err)
@@ -309,7 +296,6 @@ func ProcessQRImage(data string, opts *QrOptions) (image.Image, error) {
 }
 
 // mapLogoSize calcula el tamaño óptimo del Logo basado en corrección
-// TODO: Avoid magic numbers (7, 6, 5, 4). Define constants for these ratios.
 func mapLogoSize(errorCorrection posqr.ErrorCorrection) int {
 	switch errorCorrection {
 	case posqr.LevelL:
@@ -423,13 +409,3 @@ func ScaleImageToWidth(img image.Image, targetWidth int) image.Image {
 	return dst
 }
 
-/*
-var ecMap = map[string]posqr.ErrorCorrection{
-	constants.L.String(): posqr.LevelL,
-	constants.M.String(): posqr.LevelM,
-	constants.Q.String(): posqr.LevelQ,
-	constants.H.String(): posqr.LevelH,
-}
-*/
-
-// TODO: Add error correction mapping

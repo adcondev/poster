@@ -148,7 +148,6 @@ func TestCommands_SetHorizontalTabPositions(t *testing.T) {
 				}
 				return tabs
 			}(),
-			// FIXME: change anonymous func to utils helpers
 			want: func() []byte {
 				cmd := []byte{shared.ESC, 'D'}
 				for i := 1; i <= 32; i++ {
@@ -161,7 +160,6 @@ func TestCommands_SetHorizontalTabPositions(t *testing.T) {
 		},
 		{
 			name: "too many tabs",
-			// FIXME: change anonymous func to utils helpers
 			positions: func() []byte {
 				tabs := make([]byte, 33)
 				for i := range tabs {

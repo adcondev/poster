@@ -98,11 +98,6 @@ func (tr *TextRenderer) RenderLine(text string) {
 	tr.NewLine()
 }
 
-// FIXME: The NewLine method now directly manipulates cursor position instead of delegating to PrinterState.NewLine(metrics).
-// This duplicates line height calculation logic.
-// Consider whether the PrinterState.NewLine method should also be updated to use GetScaledMetrics,
-// or if this logic should remain centralized in one place.
-
 // NewLine moves to the beginning of the next line
 func (tr *TextRenderer) NewLine() {
 	metrics := tr.fonts.GetScaledMetrics(tr.state.FontName, tr.state.ScaleW, tr.state.ScaleH)
@@ -189,8 +184,6 @@ func (tr *TextRenderer) drawChar(char rune, x, y float64, col color.Color) {
 		col,
 	)
 }
-
-// FIXME: The WrapText method now calculates charsPerLine directly instead of using state.CharsPerLine(charWidth).
 
 // WrapText wraps text to fit within paper width and renders each line
 func (tr *TextRenderer) WrapText(text string) {
