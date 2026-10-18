@@ -2,7 +2,10 @@ package executor
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
+
+	"github.com/adcondev/poster/pkg/service"
 )
 
 // ============================================================================
@@ -243,3 +246,183 @@ func TestTableCommand_Validation(t *testing.T) {
 		})
 	}
 }
+
+// ============================================================================
+// Table Command Execution Tests
+// ============================================================================
+
+func TestHandleTable_DefaultFontAAndBoldHeaders(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	tableJSON := []byte(`{
+		"definition": {
+			"columns": [
+				{"name": "Item", "width": 10},
+				{"name": "Price", "width": 8}
+			]
+		},
+		"rows": [
+			["Burger", "$5.99"],
+			["Fries", "$2.49"]
+		]
+	}`)
+
+	err := exec.handleTable(mock, tableJSON)
+	if err != nil {
+		t.Fatalf("handleTable failed: %v", err)
+	}
+
+	if mock.CallCount("FontA") < 1 {
+		t.Errorf("Expected FontA to be called, got %d calls", mock.CallCount("FontA"))
+	}
+	if mock.CallCount("EnableBold") != 1 {
+		t.Errorf("Expected EnableBold to be called 1 time, got %d", mock.CallCount("EnableBold"))
+	}
+	if mock.CallCount("DisableBold") != 1 {
+		t.Errorf("Expected DisableBold to be called 1 time, got %d", mock.CallCount("DisableBold"))
+	}
+
+	allOutput := strings.Join(mock.PrintedText, "")
+	if !strings.Contains(allOutput, "Item") || !strings.Contains(allOutput, "Burger") {
+		t.Errorf("Expected table output to contain headers and body, got: %q", allOutput)
+	}
+}
+
+func TestHandleTable_FontB(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	tableJSON := []byte(`{
+		"definition": {
+			"columns": [
+				{"name": "Item", "width": 15},
+				{"name": "Qty", "width": 5}
+			]
+		},
+		"options": {
+			"font": "B"
+		},
+		"rows": [
+			["Coffee", "2"]
+		]
+	}`)
+
+	err := exec.handleTable(mock, tableJSON)
+	if err != nil {
+		t.Fatalf("handleTable failed: %v", err)
+	}
+
+	if mock.CallCount("FontB") != 1 {
+		t.Errorf("Expected FontB to be called 1 time, got %d", mock.CallCount("FontB"))
+	}
+	// FontA should be restored deferred
+	if mock.CallCount("FontA") < 1 {
+		t.Errorf("Expected FontA to be restored, got %d calls", mock.CallCount("FontA"))
+	}
+}
+
+func TestHandleTable_NoHeaders(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	tableJSON := []byte(`{
+		"definition": {
+			"columns": [
+				{"name": "Col1", "width": 10}
+			]
+		},
+		"show_headers": false,
+		"rows": [
+			["Value1"]
+		]
+	}`)
+
+	err := exec.handleTable(mock, tableJSON)
+	if err != nil {
+		t.Fatalf("handleTable failed: %v", err)
+	}
+
+	if mock.CallCount("EnableBold") != 0 {
+		t.Errorf("Expected 0 calls to EnableBold when ShowHeaders is false, got %d", mock.CallCount("EnableBold"))
+	}
+	allOutput := strings.Join(mock.PrintedText, "")
+	if strings.Contains(allOutput, "Col1") {
+		t.Errorf("Expected output not to contain header 'Col1', got: %q", allOutput)
+	}
+	if !strings.Contains(allOutput, "Value1") {
+		t.Errorf("Expected output to contain 'Value1', got: %q", allOutput)
+	}
+}
+
+func TestHandleTable_Align(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	tableJSON := []byte(`{
+		"definition": {
+			"columns": [
+				{"name": "Name", "width": 8}
+			]
+		},
+		"options": {
+			"align": "center"
+		},
+		"rows": [
+			["Alice"]
+		]
+	}`)
+
+	err := exec.handleTable(mock, tableJSON)
+	if err != nil {
+		t.Fatalf("handleTable failed: %v", err)
+	}
+
+	if mock.CallCount("AlignCenter") != 1 {
+		t.Errorf("Expected AlignCenter to be called 1 time, got %d", mock.CallCount("AlignCenter"))
+	}
+	if mock.CallCount("AlignLeft") < 1 {
+		t.Errorf("Expected AlignLeft to be restored at end, got %d", mock.CallCount("AlignLeft"))
+	}
+}
+
+func TestHandleTable_ValidationErrors(t *testing.T) {
+	mock := service.NewMockPrinter()
+	exec := NewExecutor(mock)
+
+	t.Run("empty columns", func(t *testing.T) {
+		err := exec.handleTable(mock, []byte(`{"definition": {"columns": []}, "rows": []}`))
+		if err == nil {
+			t.Fatal("Expected error for empty columns, got nil")
+		}
+	})
+
+	t.Run("invalid column width", func(t *testing.T) {
+		err := exec.handleTable(mock, []byte(`{"definition": {"columns": [{"name": "A", "width": 0}]}, "rows": []}`))
+		if err == nil {
+			t.Fatal("Expected error for zero width column, got nil")
+		}
+	})
+
+	t.Run("table overflow auto-reduce false", func(t *testing.T) {
+		// Mock profile paper width is 80mm, dotsPerLine 576. Font A maxChars is 48.
+		// Two columns of 30 chars each + 1 gap = 61 > 48.
+		overflowJSON := []byte(`{
+			"definition": {
+				"columns": [
+					{"name": "Col1", "width": 30},
+					{"name": "Col2", "width": 30}
+				]
+			},
+			"options": {
+				"auto_reduce": false
+			},
+			"rows": [["a", "b"]]
+		}`)
+		err := exec.handleTable(mock, overflowJSON)
+		if err == nil {
+			t.Fatal("Expected error for table overflow without auto-reduce, got nil")
+		}
+	})
+}
+

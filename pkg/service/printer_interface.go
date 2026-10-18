@@ -55,6 +55,14 @@ type PrinterActions interface {
 	FullFeedAndCut(lines byte) error
 	PartialFeedAndCut(lines byte) error
 
+	// Device control
+	Pulse(pin, onTime, offTime byte) error
+	Beep(times, lapse byte) error
+
+	// Line spacing
+	SetLineSpacing(dots byte) error
+	SelectDefaultLineSpacing() error
+
 	// Graphics
 	PrintBitmap(bitmap *graphics.MonochromeBitmap) error
 	PrintQR(data string, opts *graphics.QrOptions) error

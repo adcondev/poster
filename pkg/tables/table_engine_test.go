@@ -42,10 +42,12 @@ func TestRender(t *testing.T) {
 			},
 			opts: DefaultOptions(),
 			expected: []string{
-				"\x1bE\x01",                 // Enable Bold
 				"Item        Qty     Price", // Header row
-				"\x1bE\x00",                 // Disable Bold
 				"Apple       10       1.50", // Data row
+			},
+			unexpected: []string{
+				"\x1bE\x01",
+				"\x1bE\x00",
 			},
 			expectError: false,
 		},
@@ -176,3 +178,37 @@ func TestRender(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderStructured(t *testing.T) {
+	def := Definition{
+		Columns: []Column{
+			{Name: "Item", Width: 10, Align: constants.Left},
+			{Name: "Qty", Width: 5, Align: constants.Center},
+			{Name: "Price", Width: 8, Align: constants.Right},
+		},
+	}
+
+	data := &Data{
+		Definition:  def,
+		ShowHeaders: true,
+		Rows: []Row{
+			{"Apple", "10", "1.50"},
+			{"Banana", "5", "0.99"},
+		},
+	}
+
+	opts := DefaultOptions()
+	engine := NewEngine(&def, opts)
+
+	rendered, err := engine.RenderStructured(data)
+	require.NoError(t, err)
+	require.NotNil(t, rendered)
+
+	assert.True(t, rendered.HeaderBold)
+	require.Len(t, rendered.HeaderLines, 1)
+	assert.Equal(t, "Item        Qty     Price", rendered.HeaderLines[0])
+	require.Len(t, rendered.BodyLines, 2)
+	assert.Equal(t, "Apple       10       1.50", rendered.BodyLines[0])
+	assert.Equal(t, "Banana       5       0.99", rendered.BodyLines[1])
+}
+

@@ -274,3 +274,62 @@ func TestPrintQR_NativeVsFallback(t *testing.T) {
 		assert.True(t, bytes.Contains(buf, nativeQRHeader), "expected native QR commands for nil options with HasQR")
 	})
 }
+
+func TestNewPrinterWithOptions(t *testing.T) {
+	conn := &mockConnector{}
+	prof := profile.CreateProfile58mm()
+	proto := composer.NewEscpos()
+
+	p, err := NewPrinterWithOptions(conn, WithProfile(prof), WithProtocol(proto))
+	require.NoError(t, err)
+	require.NotNil(t, p)
+	assert.Equal(t, float64(58), p.Profile.PaperWidth)
+
+	// Test nil connection error
+	_, err = NewPrinterWithOptions(nil)
+	assert.Error(t, err)
+
+	// Test nil profile error
+	_, err = NewPrinterWithOptions(conn, WithProfile(nil))
+	assert.Error(t, err)
+
+	// Test nil protocol error
+	_, err = NewPrinterWithOptions(conn, WithProtocol(nil))
+	assert.Error(t, err)
+}
+
+func TestPrinter_DeviceControlAndLineSpacing(t *testing.T) {
+	conn := &mockConnector{}
+	p, err := NewPrinterWithOptions(conn)
+	require.NoError(t, err)
+
+	err = p.Pulse(0, 10, 10)
+	assert.NoError(t, err)
+
+	err = p.Beep(2, 5)
+	assert.NoError(t, err)
+
+	err = p.SetLineSpacing(30)
+	assert.NoError(t, err)
+
+	err = p.SelectDefaultLineSpacing()
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, conn.buffer.Bytes())
+}
+
+func TestMockPrinter_DeviceControlAndLineSpacing(t *testing.T) {
+	mock := NewMockPrinter()
+
+	require.NoError(t, mock.Pulse(0, 10, 10))
+	require.NoError(t, mock.Beep(2, 5))
+	require.NoError(t, mock.SetLineSpacing(30))
+	require.NoError(t, mock.SelectDefaultLineSpacing())
+
+	assert.Len(t, mock.Calls, 4)
+	assert.Equal(t, "Pulse", mock.Calls[0].Method)
+	assert.Equal(t, "Beep", mock.Calls[1].Method)
+	assert.Equal(t, "SetLineSpacing", mock.Calls[2].Method)
+	assert.Equal(t, "SelectDefaultLineSpacing", mock.Calls[3].Method)
+}
+
