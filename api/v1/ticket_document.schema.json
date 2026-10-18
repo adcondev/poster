@@ -95,6 +95,7 @@
             "feed",
             "cut",
             "qr",
+            "pdf417",
             "table",
             "barcode",
             "raw",
@@ -123,6 +124,9 @@
             },
             {
               "$ref": "#/definitions/QRCommand"
+            },
+            {
+              "$ref": "#/definitions/PDF417Command"
             },
             {
               "$ref": "#/definitions/TableCommand"
@@ -295,7 +299,9 @@
           "type": "string",
           "enum": [
             "threshold",
-            "atkinson"
+            "atkinson",
+            "floyd_steinberg",
+            "ordered"
           ],
           "default": "atkinson"
         },
@@ -410,6 +416,63 @@
         }
       }
     },
+    "PDF417Command": {
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "string",
+          "description": "PDF417 barcode data to encode"
+        },
+        "columns": {
+          "type": "integer",
+          "description": "Number of columns (0-30, 0 = auto)",
+          "minimum": 0,
+          "maximum": 30,
+          "default": 0
+        },
+        "rows": {
+          "type": "integer",
+          "description": "Number of rows (0 or 3-90, 0 = auto)",
+          "minimum": 0,
+          "maximum": 90,
+          "default": 0
+        },
+        "module_width": {
+          "type": "integer",
+          "description": "Module width in dots (2-8)",
+          "minimum": 2,
+          "maximum": 8,
+          "default": 3
+        },
+        "row_height": {
+          "type": "integer",
+          "description": "Row height multiplier (2-8)",
+          "minimum": 2,
+          "maximum": 8,
+          "default": 3
+        },
+        "error_correction": {
+          "type": "integer",
+          "description": "Error correction level (0-8)",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 2
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "description": "PDF417 barcode alignment",
+          "default": "center"
+        }
+      }
+    },
     "BarcodeCommand": {
       "type": "object",
       "required": [
@@ -427,7 +490,10 @@
             "code39",
             "code128",
             "itf",
-            "codabar"
+            "codabar",
+            "code93",
+            "gs1_128",
+            "code128_auto"
           ],
           "description": "Barcode symbology type",
           "default": "code128"

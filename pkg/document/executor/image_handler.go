@@ -49,12 +49,9 @@ func (e *Executor) handleImage(printer service.PrinterActions, data json.RawMess
 		opts.Threshold = constants.DefaultImageThreshold
 	}
 
-	switch strings.ToLower(cmd.Dithering) {
-	case constants.Atkinson.String():
-		opts.Dithering = graphics.Atkinson
-	case constants.Threshold.String():
-		opts.Dithering = graphics.Threshold
-	default:
+	if ditherMode, ok := graphics.DitherMap[strings.ToLower(strings.TrimSpace(cmd.Dithering))]; ok {
+		opts.Dithering = ditherMode
+	} else {
 		opts.Dithering = graphics.DitherMap[constants.DefaultImageDithering.String()]
 	}
 

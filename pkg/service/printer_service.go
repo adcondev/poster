@@ -367,6 +367,30 @@ func (p *Printer) PrintBitmap(bitmap *graphics.MonochromeBitmap) error {
 		return fmt.Errorf("bitmap height %d exceeds uint16 max %d", height, maxUint16)
 	}
 
+	if p.Profile.MaxBandHeight > 0 && bitmap.Height > p.Profile.MaxBandHeight {
+		for y := 0; y < bitmap.Height; y += p.Profile.MaxBandHeight {
+			band := bitmap.SubBand(y, p.Profile.MaxBandHeight)
+			bandWidth := band.GetWidthBytes()
+			bandHeight := band.Height
+			if bandWidth < 0 || bandWidth > maxUint16 || bandHeight < 0 || bandHeight > maxUint16 {
+				return fmt.Errorf("band dimensions out of range at y=%d: %dx%d", y, bandWidth, bandHeight)
+			}
+			cmd, err := p.Protocol.BitImage.PrintRasterBitImage(
+				0, // normal mode
+				uint16(bandWidth),
+				uint16(bandHeight),
+				band.GetRasterData(),
+			)
+			if err != nil {
+				return fmt.Errorf("generate raster band at y=%d: %w", y, err)
+			}
+			if err := p.Write(cmd); err != nil {
+				return fmt.Errorf("write raster band at y=%d: %w", y, err)
+			}
+		}
+		return nil
+	}
+
 	cmd, err := p.Protocol.BitImage.PrintRasterBitImage(
 		0, // normal mode
 		uint16(width),

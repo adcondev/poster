@@ -10,25 +10,24 @@ import (
 // DitherMode defines how images are converted to monochrome
 type DitherMode int
 
-// TODO: Implement Floyd-Steinberg and Ordered dithering methods in future
-
 const (
 	// Threshold applies simple threshold conversion
 	Threshold DitherMode = iota
 	// Atkinson applies Atkinson dithering algorithm
 	Atkinson
-	// FloydSteinberg applies Floyd-Steinberg dithering (future)
-	// FloydSteinberg
-	// Ordered applies ordered dithering with Bayer matrix (future)
-	// Ordered
+	// FloydSteinberg applies Floyd-Steinberg dithering algorithm
+	FloydSteinberg
+	// Ordered applies ordered dithering with a 4x4 Bayer matrix
+	Ordered
 )
 
 // DitherMap maps constants to DitherMode
 var DitherMap = map[string]DitherMode{
-	constants.Threshold.String(): Threshold,
-	constants.Atkinson.String():  Atkinson,
-	// constants.DitheringFloydSteinberg: FloydSteinberg,
-	// constants.DitheringOrdered:        Ordered,
+	constants.Threshold.String():      Threshold,
+	constants.Atkinson.String():       Atkinson,
+	constants.FloydSteinberg.String(): FloydSteinberg,
+	constants.Ordered.String():        Ordered,
+	"bayer":                           Ordered,
 }
 
 // ScaleMode defines the scaling algorithm
@@ -105,6 +104,10 @@ func (p *Pipeline) Process(img image.Image) (*MonochromeBitmap, error) {
 	switch p.opts.Dithering {
 	case Atkinson:
 		mono = p.applyAtkinson(gray)
+	case FloydSteinberg:
+		mono = p.applyFloydSteinberg(gray)
+	case Ordered:
+		mono = p.applyOrdered(gray)
 	case Threshold:
 		fallthrough
 	default:
@@ -204,8 +207,6 @@ func (p *Pipeline) applyThreshold(gray *image.Gray) *MonochromeBitmap {
 	return mono
 }
 
-// TODO: Implement Floyd-Steinberg and Ordered dithering methods in future
-
 // applyAtkinson implements Atkinson dithering algorithm
 func (p *Pipeline) applyAtkinson(gray *image.Gray) *MonochromeBitmap {
 	bounds := gray.Bounds()
@@ -273,4 +274,102 @@ func (p *Pipeline) applyAtkinson(gray *image.Gray) *MonochromeBitmap {
 	}
 
 	return mono
+}
+
+// applyFloydSteinberg implements Floyd-Steinberg error diffusion dithering.
+func (p *Pipeline) applyFloydSteinberg(gray *image.Gray) *MonochromeBitmap {
+	bounds := gray.Bounds()
+	width, height := bounds.Dx(), bounds.Dy()
+	mono := NewMonochromeBitmap(width, height)
+	if width <= 0 || height <= 0 {
+		return mono
+	}
+
+	work := make([]int, width*height)
+	for y := 0; y < height; y++ {
+		rowOffset := y * width
+		for x := 0; x < width; x++ {
+			work[rowOffset+x] = int(gray.GrayAt(bounds.Min.X+x, bounds.Min.Y+y).Y)
+		}
+	}
+
+	threshold := int(p.opts.Threshold)
+
+	for y := 0; y < height; y++ {
+		rowOffset := y * width
+		nextRowOffset := (y + 1) * width
+
+		for x := 0; x < width; x++ {
+			idx := rowOffset + x
+			oldPixel := work[idx]
+			newPixel := 0
+			if oldPixel > threshold {
+				newPixel = 255
+			}
+
+			mono.SetPixel(x, y, newPixel == 0)
+
+			err := oldPixel - newPixel
+
+			if x+1 < width {
+				work[idx+1] += err * 7 / 16
+			}
+			if y+1 < height {
+				if x-1 >= 0 {
+					work[nextRowOffset+(x-1)] += err * 3 / 16
+				}
+				work[nextRowOffset+x] += err * 5 / 16
+				if x+1 < width {
+					work[nextRowOffset+(x+1)] += err * 1 / 16
+				}
+			}
+		}
+	}
+
+	return mono
+}
+
+// applyOrdered implements ordered dithering using a 4x4 Bayer matrix.
+func (p *Pipeline) applyOrdered(gray *image.Gray) *MonochromeBitmap {
+	bounds := gray.Bounds()
+	width, height := bounds.Dx(), bounds.Dy()
+	mono := NewMonochromeBitmap(width, height)
+	if width <= 0 || height <= 0 {
+		return mono
+	}
+
+	bayer4x4 := [4][4]int{
+		{0, 8, 2, 10},
+		{12, 4, 14, 6},
+		{3, 11, 1, 9},
+		{15, 7, 13, 5},
+	}
+
+	baseThreshold := int(p.opts.Threshold)
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			bayerVal := (bayer4x4[y%4][x%4]*16 + 8) - 128
+			localThreshold := baseThreshold + bayerVal/2
+			val := int(gray.GrayAt(bounds.Min.X+x, bounds.Min.Y+y).Y)
+			if val < localThreshold {
+				mono.SetPixel(x, y, true)
+			}
+		}
+	}
+
+	return mono
+}
+
+// SubBand extracts a horizontal band of the monochrome bitmap from startY with bandHeight.
+func (m *MonochromeBitmap) SubBand(startY, bandHeight int) *MonochromeBitmap {
+	if m == nil || startY < 0 || startY >= m.Height || bandHeight <= 0 {
+		return NewMonochromeBitmap(0, 0)
+	}
+	if startY+bandHeight > m.Height {
+		bandHeight = m.Height - startY
+	}
+	sub := NewMonochromeBitmap(m.Width, bandHeight)
+	copy(sub.data, m.data[startY*m.bytesPerRow:(startY+bandHeight)*m.bytesPerRow])
+	return sub
 }

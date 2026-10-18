@@ -64,7 +64,8 @@ const (
 	Atkinson Dithering = "atkinson"
 	// FloydSteinberg uses Floyd-Steinberg dithering algorithm
 	FloydSteinberg Dithering = "floyd_steinberg"
-	// TODO: Add more dithering algorithms if needed
+	// Ordered uses ordered dithering algorithm
+	Ordered Dithering = "ordered"
 )
 
 // ============================================================================
@@ -339,6 +340,12 @@ const (
 	JAN13 Symbology = "jan13"
 	// JAN8 symbology (alias for EAN8)
 	JAN8 Symbology = "jan8"
+	// CODE93 symbology
+	CODE93 Symbology = "code93"
+	// GS1128 symbology (GS1-128 / UCC/EAN-128)
+	GS1128 Symbology = "gs1_128"
+	// CODE128Auto symbology
+	CODE128Auto Symbology = "code128_auto"
 )
 
 // ============================================================================

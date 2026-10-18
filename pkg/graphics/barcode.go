@@ -9,8 +9,6 @@ import (
 )
 
 var (
-	// TODO: Agregar soporte para más simbologías si el paquete barcode lo permite
-
 	// symMap mapea nombres de simbologías a constantes del paquete barcode
 	symMap = map[string]barcode.Symbology{
 		constants.UPCA.String():    barcode.UPCA,
@@ -24,6 +22,11 @@ var (
 		// Agregar soporte para sinónimos comunes
 		constants.JAN13.String(): barcode.EAN13, // JAN13 es equivalente a EAN13
 		constants.JAN8.String():  barcode.EAN8,  // JAN8 es equivalente a EAN8
+		"code93":                 barcode.CODE93,
+		"gs1128":                 barcode.GS1128,
+		"gs1_128":                barcode.GS1128,
+		"code128auto":            barcode.CODE128Auto,
+		"code128_auto":           barcode.CODE128Auto,
 	}
 
 	// hriPosMap mapea posiciones HRI a constantes del paquete barcode
@@ -44,12 +47,12 @@ var (
 // MapSymbology mapea los nombres del schema a las constantes del paquete barcode
 func MapSymbology(sym string) (barcode.Symbology, error) {
 	// Normalizar el input
-	normalized := strings.ToLower(strings.ReplaceAll(sym, "-", ""))
+	normalized := strings.NewReplacer("-", "", "_", "").Replace(strings.ToLower(strings.TrimSpace(sym)))
 
 	symbology, ok := symMap[normalized]
 	if !ok {
 		// Listar simbologías soportadas en el error
-		return 0, fmt.Errorf("unsupported barcode symbology: %s (supported: UPC-A, UPC-E, EAN13, EAN8, CODE39, CODE128, ITF, CODABAR)", sym)
+		return 0, fmt.Errorf("unsupported barcode symbology: %s (supported: UPC-A, UPC-E, EAN13, EAN8, CODE39, CODE128, ITF, CODABAR, CODE93, GS1-128, CODE128_AUTO)", sym)
 	}
 
 	return symbology, nil
@@ -108,8 +111,7 @@ type BarcodeConfig struct {
 	Height      barcode.Height      // Altura en dots
 	HRIPosition barcode.HRIPosition // Posición del texto
 	HRIFont     barcode.HRIFont     // Fuente del texto
-	// TODO: Check CodeSet only applies to CODE128 and do it automatically
-	CodeSet barcode.Code128Set // Opcional: Específico para CODE128 manual
+	CodeSet     barcode.Code128Set  // Opcional: Específico para CODE128 manual
 }
 
 // DefaultBarcodeConfig devuelve una configuración segura
