@@ -52,6 +52,7 @@ var ScaleMap = map[constants.Scaling]ScaleMode{
 // ImgOptions configures the graphics processing pipeline
 type ImgOptions struct {
 	PixelWidth     int        // Target width in pixels
+	MaxWidth       int        // Maximum width in pixels
 	Threshold      uint8      // Threshold for black/white (0-255)
 	Dithering      DitherMode // Processing algorithm
 	Scaling        ScaleMode  // Up/Down Scale algorithm
@@ -63,6 +64,7 @@ type ImgOptions struct {
 func DefaultOptions() *ImgOptions {
 	return &ImgOptions{
 		PixelWidth:     constants.DefaultImagePixelWidth,
+		MaxWidth:       constants.PaperPxWidth80mm,
 		Threshold:      constants.DefaultImageThreshold,
 		Dithering:      DitherMap[constants.Atkinson.String()],
 		Scaling:        ScaleMap[constants.Bilinear],
@@ -116,8 +118,10 @@ func (p *Pipeline) Process(img image.Image) (*MonochromeBitmap, error) {
 
 // resize scales (up or down) the image to target width maintaining aspect ratio
 func (p *Pipeline) resize(img image.Image) image.Image {
-	// TODO: ImgOption should have a MaxWidth to cap resizing based on ticket size.
-	maxWidth := constants.PaperPxWidth80mm
+	maxWidth := p.opts.MaxWidth
+	if maxWidth <= 0 {
+		maxWidth = constants.PaperPxWidth80mm
+	}
 	if p.opts.PixelWidth > maxWidth {
 		p.opts.PixelWidth = maxWidth
 	}
@@ -140,14 +144,60 @@ func (p *Pipeline) applyThreshold(gray *image.Gray) *MonochromeBitmap {
 	bounds := gray.Bounds()
 	width, height := bounds.Dx(), bounds.Dy()
 	mono := NewMonochromeBitmap(width, height)
+	if width <= 0 || height <= 0 {
+		return mono
+	}
+
+	threshold := p.opts.Threshold
+	bytesPerRow := mono.bytesPerRow
+	fullBytes := width / 8
+	remBits := width % 8
+
+	bitMasks := [8]byte{0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}
 
 	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			pixel := gray.GrayAt(x, y).Y
-			// Set pixel to black (true) if below threshold
-			if pixel < p.opts.Threshold {
-				mono.SetPixel(x, y, true)
+		srcRowOffset := gray.PixOffset(bounds.Min.X, bounds.Min.Y+y)
+		dstRowOffset := y * bytesPerRow
+
+		for byteIdx := 0; byteIdx < fullBytes; byteIdx++ {
+			var b byte
+			srcX := srcRowOffset + byteIdx*8
+			if gray.Pix[srcX] < threshold {
+				b |= 0x80
 			}
+			if gray.Pix[srcX+1] < threshold {
+				b |= 0x40
+			}
+			if gray.Pix[srcX+2] < threshold {
+				b |= 0x20
+			}
+			if gray.Pix[srcX+3] < threshold {
+				b |= 0x10
+			}
+			if gray.Pix[srcX+4] < threshold {
+				b |= 0x08
+			}
+			if gray.Pix[srcX+5] < threshold {
+				b |= 0x04
+			}
+			if gray.Pix[srcX+6] < threshold {
+				b |= 0x02
+			}
+			if gray.Pix[srcX+7] < threshold {
+				b |= 0x01
+			}
+			mono.data[dstRowOffset+byteIdx] = b
+		}
+
+		if remBits > 0 {
+			var b byte
+			srcX := srcRowOffset + fullBytes*8
+			for bit := 0; bit < remBits; bit++ {
+				if gray.Pix[srcX+bit] < threshold {
+					b |= bitMasks[bit]
+				}
+			}
+			mono.data[dstRowOffset+fullBytes] = b
 		}
 	}
 

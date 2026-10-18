@@ -32,6 +32,7 @@ func (m *MonochromeBitmap) SetPixel(x, y int, black bool) {
 	}
 
 	byteIndex := y*m.bytesPerRow + x/8
+	// Safe: x is non-negative (checked above) so x%8 is [0,7], result is positive.
 	bitIndex := uint(7 - (x % 8))
 
 	if black {
@@ -48,6 +49,7 @@ func (m *MonochromeBitmap) GetPixel(x, y int) bool {
 	}
 
 	byteIndex := y*m.bytesPerRow + x/8
+	// Safe: x is non-negative (checked above) so x%8 is [0,7], result is positive.
 	bitIndex := uint(7 - (x % 8))
 
 	return (m.data[byteIndex] & (1 << bitIndex)) != 0
