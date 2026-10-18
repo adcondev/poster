@@ -3,7 +3,6 @@
 package connection
 
 import (
-	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -14,18 +13,6 @@ const (
 	PrinterEnumConnections = 0x00000004
 )
 
-// Printer status flags (from winspool.h)
-const (
-	PrinterStatusPaused     = 0x00000001
-	PrinterStatusError      = 0x00000002
-	PrinterStatusPaperJam   = 0x00000008
-	PrinterStatusPaperOut   = 0x00000010
-	PrinterStatusOffline    = 0x00000080
-	PrinterStatusBusy       = 0x00000200
-	PrinterStatusPrinting   = 0x00000400
-	PrinterStatusProcessing = 0x00004000
-	PrinterStatusDoorOpen   = 0x00400000
-)
 
 // PRINTER_INFO_2 structure (matches Windows API layout)
 type printerInfo2 struct {
@@ -112,11 +99,11 @@ func ListAvailablePrinters() ([]PrinterDetail, error) {
 			Name:        name,
 			Port:        port,
 			Driver:      driver,
-			Status:      interpretStatus(info.Status),
+			Status:      interpretStatus(info.Status, info.Attributes),
 			StatusRaw:   info.Status,
 			IsDefault:   name == defaultPrinter,
-			IsVirtual:   isVirtualPrinter(name, port),
-			PrinterType: detectPrinterType(name, port, driver),
+			IsVirtual:   isVirtualPrinter(name, driver, port),
+			PrinterType: detectPrinterType(port, driver, name),
 		})
 	}
 
@@ -166,79 +153,12 @@ func utf16PtrToString(p *uint16) string {
 	return syscall.UTF16ToString(s)
 }
 
-func interpretStatus(status uint32) PrinterState {
-	switch {
-	case status == 0:
-		return StateReady
-	case status&PrinterStatusOffline != 0:
-		return StateOffline
-	case status&PrinterStatusPaused != 0:
-		return StatePaused
-	case status&(PrinterStatusError|PrinterStatusPaperJam|PrinterStatusPaperOut|PrinterStatusDoorOpen) != 0:
-		return StateError
-	case status&(PrinterStatusPrinting|PrinterStatusProcessing|PrinterStatusBusy) != 0:
-		return StateReady
-	default:
-		return StateUnknown
+func init() {
+	if len(virtualPrinterPatterns) > 0 {
+		virtualPrinterPatternsList = virtualPrinterPatterns
+	}
+	if len(thermalDriverPatterns) > 0 {
+		thermalDriverPatternsList = thermalDriverPatterns
 	}
 }
 
-func isVirtualPrinter(name, port string) bool {
-	nameLower := strings.ToLower(name)
-	portLower := strings.ToLower(port)
-
-	for _, pattern := range virtualPrinterPatterns {
-		if strings.Contains(nameLower, pattern) {
-			return true
-		}
-	}
-
-	virtualPorts := []string{"file:", "portprompt:", "nul:", "xpsport:"}
-	for _, vp := range virtualPorts {
-		if strings.HasPrefix(portLower, vp) {
-			return true
-		}
-	}
-	return false
-}
-
-func detectPrinterType(name, port, driver string) string {
-	if isVirtualPrinter(name, port) {
-		return "virtual"
-	}
-
-	portLower := strings.ToLower(port)
-	if strings.HasPrefix(portLower, "\\\\") || strings.Contains(portLower, "wsd") {
-		return "network"
-	}
-
-	combined := strings.ToLower(name + " " + driver)
-	for _, pattern := range thermalDriverPatterns {
-		if strings.Contains(combined, pattern) {
-			return "thermal"
-		}
-	}
-	return "unknown"
-}
-
-// FilterThermalPrinters returns only thermal/POS printers
-func FilterThermalPrinters(printers []PrinterDetail) []PrinterDetail {
-	result := make([]PrinterDetail, 0, len(printers)/2)
-	for _, p := range printers {
-		if p.PrinterType == "thermal" {
-			result = append(result, p)
-		}
-	}
-	return result
-}
-
-// FilterPhysicalPrinters returns non-virtual printers
-func FilterPhysicalPrinters(printers []PrinterDetail) []PrinterDetail {
-	result := make([]PrinterDetail, 0, len(printers)/2)
-	for _, p := range printers {
-		if !p.IsVirtual {
-			result = append(result, p)
-		}
-	}
-	return result
-}
