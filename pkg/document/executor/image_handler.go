@@ -38,6 +38,13 @@ func (e *Executor) handleImage(printer service.PrinterActions, data json.RawMess
 		opts.PixelWidth = constants.DefaultImagePixelWidth
 	}
 
+	if prof := printer.GetProfile(); prof != nil && prof.DotsPerLine > 0 {
+		opts.MaxWidth = prof.DotsPerLine
+		if opts.PixelWidth > opts.MaxWidth {
+			opts.PixelWidth = opts.MaxWidth
+		}
+	}
+
 	if opts.Threshold == 0 {
 		opts.Threshold = constants.DefaultImageThreshold
 	}

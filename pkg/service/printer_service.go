@@ -4,6 +4,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/adcondev/poster/internal/calculate"
 	"github.com/adcondev/poster/pkg/commands/character"
 	"github.com/adcondev/poster/pkg/commands/mechanismcontrol"
 	"github.com/adcondev/poster/pkg/composer"
@@ -49,10 +50,14 @@ func NewPrinter(proto *composer.EscposProtocol, prof *profile.Escpos, conn conne
 func (p *Printer) Initialize() error {
 	// TODO: Add profile-specific initialization if needed
 	var ct []byte
+	var err error
 	if p.Profile.IsSupported(p.Profile.CodeTable) {
-		ct, _ = p.Protocol.Character.SelectCharacterCodeTable(p.Profile.CodeTable)
+		ct, err = p.Protocol.Character.SelectCharacterCodeTable(p.Profile.CodeTable)
 	} else {
-		ct, _ = p.Protocol.Character.SelectCharacterCodeTable(character.WPC1252)
+		ct, err = p.Protocol.Character.SelectCharacterCodeTable(character.WPC1252)
+	}
+	if err != nil {
+		return fmt.Errorf("select code table: %w", err)
 	}
 
 	init := append(p.Protocol.InitializePrinter(), ct...)
@@ -242,13 +247,19 @@ func (p *Printer) InverseOff() error {
 
 // FullFeedAndCut performs a full paper cut
 func (p *Printer) FullFeedAndCut(lines byte) error {
-	cmd, _ := p.Protocol.MechanismControl.FeedAndCutPaper(mechanismcontrol.FeedCutFull, lines)
+	cmd, err := p.Protocol.MechanismControl.FeedAndCutPaper(mechanismcontrol.FeedCutFull, lines)
+	if err != nil {
+		return fmt.Errorf("feed and cut paper: %w", err)
+	}
 	return p.Write(cmd)
 }
 
 // PartialFeedAndCut performs a partial paper cut
 func (p *Printer) PartialFeedAndCut(lines byte) error {
-	cmd, _ := p.Protocol.MechanismControl.FeedAndCutPaper(mechanismcontrol.FeedCutPartial, lines)
+	cmd, err := p.Protocol.MechanismControl.FeedAndCutPaper(mechanismcontrol.FeedCutPartial, lines)
+	if err != nil {
+		return fmt.Errorf("feed and cut paper: %w", err)
+	}
 	return p.Write(cmd)
 }
 
@@ -320,21 +331,38 @@ func (p *Printer) SetCodeTable(codeTable character.CodeTable) error {
 // QR Code Printing Methods
 // ============================================================================
 
-// PrintQR imprime un QR con detección automática y fallback
-func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
-	if qropts == nil {
-		// TODO: Automatic options based on profile (DPI and Paper PixelWidth config to calculate Dots Per Line)
-		qropts = graphics.DefaultQROptions()
+// calculateMaxPixelWidth calculates the maximum printable pixel width based on printer profile.
+func (p *Printer) calculateMaxPixelWidth() int {
+	if p.Profile.DotsPerLine > 0 {
+		return p.Profile.DotsPerLine
 	}
 
-	switch p.Profile.PaperWidth {
-	case constants.Paper58mm:
-		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
-	case constants.Paper80mm:
-		qropts.MaxPixelWidth = constants.PaperPxWidth80mm
-	default:
-		qropts.MaxPixelWidth = constants.PaperPxWidth58mm
+	if p.Profile.PrintWidth > 0 && p.Profile.DPI > 0 {
+		return calculate.MmToDots(float64(p.Profile.PrintWidth), p.Profile.DPI)
 	}
+
+	if p.Profile.PaperWidth > 0 && p.Profile.DPI > 0 {
+		var printWidthMm float64
+		if p.Profile.PaperWidth >= 78 { // ~80mm
+			printWidthMm = 72.0
+		} else { // ~58mm or smaller
+			printWidthMm = 48.0
+		}
+		return calculate.MmToDots(printWidthMm, p.Profile.DPI)
+	}
+
+	return constants.PaperPxWidth80mm
+}
+
+// PrintQR imprime un QR con detección automática y fallback
+func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
+	maxWidth := p.calculateMaxPixelWidth()
+	if qropts == nil {
+		qropts = graphics.DefaultQROptions()
+		qropts.MaxPixelWidth = maxWidth
+	}
+
+	qropts.MaxPixelWidth = maxWidth
 
 	// Use native ESC/POS QR only when supported AND neither logo nor circle_shape is requested
 	qropts.Qr = graphics.QrInfo{}
@@ -342,7 +370,8 @@ func (p *Printer) PrintQR(data string, qropts *graphics.QrOptions) error {
 		qropts.Logo = graphics.LogoInfo{}
 	}
 
-	if p.Profile.HasQR && qropts.LogoData == "" && qropts.Logo.Image == nil && !qropts.CircleShape {
+	useNativeQR := p.Profile.HasQR && qropts.LogoData == "" && qropts.Logo.Image == nil && !qropts.CircleShape
+	if useNativeQR {
 		err := p.printQRNative(data, qropts)
 		if err == nil {
 			return nil

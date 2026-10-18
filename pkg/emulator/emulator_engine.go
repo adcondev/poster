@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/png"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/adcondev/poster/pkg/constants"
@@ -54,19 +53,8 @@ func NewEngine(config Config) (*Engine, error) {
 	fonts := NewFontManager()
 
 	// Try to load embedded fonts, fall back to bitmap if not available
-	errA := fonts.LoadFont("A", "JetBrainsMono-ExtraBold.ttf", constants.FontAWidth, constants.FontAHeight)
-	errB := fonts.LoadFont("B", "JetBrainsMono-Bold.ttf", constants.FontBWidth, constants.FontBHeight)
-	if errA != nil {
-		log.Printf("[Emulator] Warning: Font A failed to load:  %v (using fallback)", errA)
-	}
-	if errB != nil {
-		log.Printf("[Emulator] Warning: Font B failed to load: %v (using fallback)", errB)
-	}
-
-	// Log if using fallback
-	if fonts.UseFallback() {
-		log.Printf("[Emulator] Using bitmap fallback renderer")
-	}
+	_ = fonts.LoadFont("A", "JetBrainsMono-ExtraBold.ttf", constants.FontAWidth, constants.FontAHeight)
+	_ = fonts.LoadFont("B", "JetBrainsMono-Bold.ttf", constants.FontBWidth, constants.FontBHeight)
 
 	// Create printer state
 	state := NewPrinterState(config.PaperPxWidth)
@@ -109,9 +97,6 @@ func (e *Engine) Reset() {
 	e.textRenderer = NewTextRenderer(e.canvas, e.fonts, e.state)
 	e.basicRenderer = NewBasicRenderer(e.canvas, e.fonts, e.state)
 	e.imageRenderer = NewImageRenderer(e.canvas, e.state)
-	if e.debug {
-		log.Printf("[Emulator] Engine reset to initial state")
-	}
 }
 
 // ============================================================================
@@ -157,9 +142,6 @@ func (e *Engine) SetAlign(align string) {
 	default:
 		e.state.Align = constants.Left.String()
 	}
-	if e.debug {
-		log.Printf("[Emulator] Alignment set to: %s", e.state.Align)
-	}
 }
 
 // AlignLeft sets left alignment
@@ -180,9 +162,6 @@ func (e *Engine) AlignRight() {
 // SetBold enables or disables bold text
 func (e *Engine) SetBold(enabled bool) {
 	e.state.IsBold = enabled
-	if e.debug {
-		log.Printf("[Emulator] Bold mode set to: %v", enabled)
-	}
 }
 
 // SetUnderline sets underline mode (0=off, 1=single, 2=double)
@@ -194,17 +173,11 @@ func (e *Engine) SetUnderline(mode int) {
 		mode = 2
 	}
 	e.state.IsUnderline = mode
-	if e.debug {
-		log.Printf("[Emulator] Underline mode set to: %d", mode)
-	}
 }
 
 // SetInverse enables or disables inverse mode (white on black)
 func (e *Engine) SetInverse(enabled bool) {
 	e.state.IsInverse = enabled
-	if e.debug {
-		log.Printf("[Emulator] Inverse mode set to: %v", enabled)
-	}
 }
 
 // SetFont sets the current font ("A" or "B")
@@ -218,9 +191,6 @@ func (e *Engine) SetFont(name string) {
 		e.state.FontName = "B"
 	} else {
 		e.state.FontName = "A"
-	}
-	if e.debug {
-		log.Printf("[Emulator] Font set to: %s", e.state.FontName)
 	}
 }
 
@@ -255,14 +225,6 @@ func (e *Engine) SetSize(width, height int) {
 		extraHeight := metrics.GlyphHeight * (e.state.ScaleH - oldScaleH)
 		e.state.CursorY += extraHeight
 		e.canvas.UpdateMaxY(e.state.CursorY)
-
-		if e.debug {
-			log.Printf("[Emulator] Auto-adjusted cursor by %.1f pixels for scale change", extraHeight)
-		}
-	}
-
-	if e.debug {
-		log.Printf("[Emulator] Character size set to:  width=%d, height=%d", width, height)
 	}
 }
 
@@ -289,17 +251,11 @@ func (e *Engine) Separator(char string, length int) {
 // Cut renders a cut line (visual indicator)
 func (e *Engine) Cut(partial bool) {
 	e.basicRenderer.RenderCut(partial)
-	if e.debug {
-		log.Printf("[Emulator] Cut rendered: partial=%v", partial)
-	}
 }
 
 // HorizontalLine renders a solid horizontal line
 func (e *Engine) HorizontalLine(thickness int) {
 	e.basicRenderer.RenderHorizontalLine(thickness)
-	if e.debug {
-		log.Printf("[Emulator] Horizontal line rendered: thickness=%d", thickness)
-	}
 }
 
 // ============================================================================
@@ -349,9 +305,6 @@ func (e *Engine) Render() image.Image {
 func (e *Engine) RenderWithInfo() RenderResult {
 	img := e.canvas.Crop()
 	bounds := img.Bounds()
-	if e.debug {
-		log.Printf("[Emulator] Rendered image size: %dx%d", bounds.Dx(), bounds.Dy())
-	}
 	return RenderResult{
 		Image:  img,
 		Width:  bounds.Dx(),
@@ -362,9 +315,6 @@ func (e *Engine) RenderWithInfo() RenderResult {
 // WritePNG writes the rendered image as PNG to the writer
 func (e *Engine) WritePNG(w io.Writer) error {
 	img := e.Render()
-	if e.debug {
-		log.Printf("[Emulator] Writing PNG output (%dx%d)", img.Bounds().Dx(), img.Bounds().Dy())
-	}
 	return png.Encode(w, img)
 }
 
@@ -380,11 +330,7 @@ func (e *Engine) State() PrinterState {
 // CharsPerLine returns the number of characters that fit on a line with current font
 func (e *Engine) CharsPerLine() int {
 	metrics := e.fonts.GetMetrics(e.state.FontName)
-	chars := e.state.CharsPerLine(metrics.GlyphWidth)
-	if e.debug {
-		log.Printf("[Emulator] CharsPerLine: %d (Font: %s, CharWidth: %.2f)", chars, e.state.FontName, metrics.GlyphWidth)
-	}
-	return chars
+	return e.state.CharsPerLine(metrics.GlyphWidth)
 }
 
 // ===========================================================================

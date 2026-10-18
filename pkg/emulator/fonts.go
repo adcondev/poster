@@ -5,8 +5,8 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"log"
 	"math"
+	"sync"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -34,9 +34,9 @@ type ScaledFont struct {
 
 // FontManager handles font loading and scaling for thermal printer emulation
 type FontManager struct {
-	fonts map[string]*ScaledFont
-	// FIXME: he scaledFaces map is accessed from multiple methods without synchronization.
+	fonts       map[string]*ScaledFont
 	scaledFaces map[string]font.Face // Cache:  "fontName_scaleW_scaleH" -> face
+	mu          sync.RWMutex
 	useFallback bool
 }
 
@@ -53,14 +53,12 @@ func NewFontManager() *FontManager {
 func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight float64) error {
 	ttfData, err := emfonts.LoadFontData(filename)
 	if err != nil {
-		log.Printf("[FontManager] ERROR:  Failed to load font data for '%s': %v", name, err)
 		fm.useFallback = true
 		return fmt.Errorf("loading font data: %w", err)
 	}
 
 	f, err := opentype.Parse(ttfData)
 	if err != nil {
-		log.Printf("[FontManager] ERROR:  Failed to parse TTF for '%s': %v", name, err)
 		fm.useFallback = true
 		return fmt.Errorf("parsing ttf: %w", err)
 	}
@@ -84,6 +82,7 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 		// Use 'M' as reference for width in monospace
 		advance, ok := face.GlyphAdvance('M')
 		if !ok {
+			_ = face.Close()
 			continue
 		}
 
@@ -98,13 +97,17 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 
 		if totalDiff < minDiff {
 			minDiff = totalDiff
+			if bestFace != nil {
+				_ = bestFace.Close()
+			}
 			bestFace = face
+		} else {
+			_ = face.Close()
 		}
 	}
 
 	// Accept if we found ANY face (we'll use target metrics for spacing)
 	if bestFace == nil {
-		log.Printf("[FontManager] ERROR: Could not create any font face for '%s'", name)
 		fm.useFallback = true
 		return fmt.Errorf("could not fit font %s to dimensions %.2fx%.2f", filename, targetWidth, targetHeight)
 	}
@@ -124,7 +127,9 @@ func (fm *FontManager) LoadFont(name, filename string, targetWidth, targetHeight
 
 	// Pre-cache the 1x1 scale for this font
 	cacheKey := fmt.Sprintf("%s_1.0_1.0", name)
+	fm.mu.Lock()
 	fm.scaledFaces[cacheKey] = bestFace
+	fm.mu.Unlock()
 
 	return nil
 }
@@ -179,14 +184,28 @@ func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH flo
 	key := fmt.Sprintf("%s_%.1f_%.1f", fontName, scaleW, scaleH)
 
 	// Check cache first
+	fm.mu.RLock()
 	if face, ok := fm.scaledFaces[key]; ok {
+		fm.mu.RUnlock()
 		return face, nil
 	}
+	fm.mu.RUnlock()
 
 	// Get the base font
 	sf, err := fm.GetFont(fontName)
 	if err != nil {
 		return nil, err
+	}
+
+	if scaleW == 1.0 && scaleH == 1.0 && sf.face != nil {
+		fm.mu.Lock()
+		if face, ok := fm.scaledFaces[key]; ok {
+			fm.mu.Unlock()
+			return face, nil
+		}
+		fm.scaledFaces[key] = sf.face
+		fm.mu.Unlock()
+		return sf.face, nil
 	}
 
 	// Calculate target height for the scaled font
@@ -224,7 +243,12 @@ func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH flo
 		diff := math.Abs(currentHeight - targetHeight)
 		if diff < minDiff {
 			minDiff = diff
+			if bestFace != nil {
+				_ = bestFace.Close()
+			}
 			bestFace = face
+		} else {
+			_ = face.Close()
 		}
 
 		// Early exit if we found a very close match
@@ -238,8 +262,15 @@ func (fm *FontManager) GetOrCreateScaledFace(fontName string, scaleW, scaleH flo
 	}
 
 	// Cache the result
+	fm.mu.Lock()
+	// Double check cache in case another goroutine populated it
+	if face, ok := fm.scaledFaces[key]; ok {
+		fm.mu.Unlock()
+		_ = bestFace.Close()
+		return face, nil
+	}
 	fm.scaledFaces[key] = bestFace
-	log.Printf("[FontManager] Created and cached scaled face:  %s at %.1fx%.1f", fontName, scaleW, scaleH)
+	fm.mu.Unlock()
 
 	return bestFace, nil
 }
@@ -338,10 +369,25 @@ func (fm *FontManager) drawFallbackCharScaled(dst draw.Image, char rune, x, y, w
 	}
 }
 
-// FIXME: ClearScaledFaceCache recreates the map but doesn't close the existing font.Face resources.
-
 // ClearScaledFaceCache clears the cached scaled font faces
 // Useful when resetting the engine or changing fonts
 func (fm *FontManager) ClearScaledFaceCache() {
+	fm.mu.Lock()
+	defer fm.mu.Unlock()
+
+	baseFaces := make(map[font.Face]struct{}, len(fm.fonts))
+	for _, sf := range fm.fonts {
+		if sf != nil && sf.face != nil {
+			baseFaces[sf.face] = struct{}{}
+		}
+	}
+
+	for _, face := range fm.scaledFaces {
+		if face != nil {
+			if _, isBase := baseFaces[face]; !isBase {
+				_ = face.Close()
+			}
+		}
+	}
 	fm.scaledFaces = make(map[string]font.Face)
 }
