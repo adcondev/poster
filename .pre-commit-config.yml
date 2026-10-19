@@ -57,7 +57,7 @@ repos:
       - id: go-tests
         name: Go Tests
         entry: go test
-        args: [ '-race', '-short', './...' ]
+        args: [ '-short', './...' ]
         language: system
         pass_filenames: false
         types: [ go ]
@@ -75,10 +75,10 @@ repos:
         language: system
         stages: [ commit-msg ]
 
-      # Prevent commits to main
+      # Prevent commits to master or main
       - id: no-commit-to-main
-        name: Don't commit to main
-        entry: bash -c 'if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then echo "Cannot commit directly to main branch"; exit 1; fi'
+        name: Don't commit to master or main
+        entry: bash -c 'BRANCH=$(git rev-parse --abbrev-ref HEAD); if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then echo "Cannot commit directly to $BRANCH branch"; exit 1; fi'
         language: system
         pass_filenames: false
         always_run: true

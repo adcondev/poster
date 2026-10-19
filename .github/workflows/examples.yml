@@ -4,29 +4,13 @@ permissions:
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
-  find-examples:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - id: set-matrix
-        run: |
-          EXAMPLES=$(find examples -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=${EXAMPLES}" >> $GITHUB_OUTPUT
-
   test-examples:
-    needs: find-examples
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        example: ${{ fromJson(needs.find-examples.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -36,8 +20,5 @@ jobs:
           go-version: '1.24'
           cache: true
 
-      - name: Test ${{ matrix.example }}
-        run: |
-          cd examples/${{ matrix.example }}
-          go mod download
-          go build -v ./...
+      - name: Test Examples Build
+        run: go build -v ./examples/...

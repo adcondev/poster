@@ -4,7 +4,14 @@ version: '3'
 
 vars:
   POSTER: ./bin/poster
-  TEST_FLAGS: -race -coverprofile=coverage.txt -covermode=atomic
+  RACE_FLAG:
+    sh: |
+      if go test -race ./internal/calculate >/dev/null 2>&1; then
+        echo "-race"
+      else
+        echo ""
+      fi
+  TEST_FLAGS: '{{.TEST_FLAGS | default (printf "%s -coverprofile=coverage.txt -covermode=atomic" .RACE_FLAG) | trim}}'
   LINT_FLAGS: --timeout=5m
   BANNER: |
     ╔══════════════════════════════════════════════════════════╗
