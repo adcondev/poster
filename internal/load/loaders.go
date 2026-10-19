@@ -68,22 +68,25 @@ func SecureFilepath(baseDir, relPath string) (string, error) {
 		return "", fmt.Errorf("invalid base directory: %w", err)
 	}
 
+	// Resolve symlinks on base directory first to canonicalize path
+	if eval, err := filepath.EvalSymlinks(baseAbs); err == nil {
+		baseAbs = eval
+	}
+
 	target := filepath.Join(baseAbs, relPath)
 	targetAbs, err := filepath.Abs(target)
 	if err != nil {
 		return "", fmt.Errorf("invalid target path: %w", err)
 	}
 
-	// Resolve symlinks to prevent escaping
-	if eval, err := filepath.EvalSymlinks(baseAbs); err == nil {
-		baseAbs = eval
-	}
+	// Resolve symlinks on target to prevent escaping via symlinks
 	if eval, err := filepath.EvalSymlinks(targetAbs); err == nil {
 		targetAbs = eval
 	}
 
 	// Ensure target is inside base directory
-	if targetAbs != baseAbs && !strings.HasPrefix(targetAbs, baseAbs+string(os.PathSeparator)) {
+	rel, err := filepath.Rel(baseAbs, targetAbs)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		return "", fmt.Errorf("file %s is outside allowed directory", relPath)
 	}
 
