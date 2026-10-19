@@ -28,6 +28,10 @@ func createSampleImage() image.Image {
 
 func TestSecureFilepath(t *testing.T) {
 	tempDir := t.TempDir()
+	realTempDir, err := filepath.EvalSymlinks(tempDir)
+	if err != nil {
+		realTempDir = tempDir
+	}
 
 	// Valid relative path
 	validRel := "sub/file.png"
@@ -35,7 +39,7 @@ func TestSecureFilepath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SecureFilepath() unexpected error = %v", err)
 	}
-	expected := filepath.Join(tempDir, "sub", "file.png")
+	expected := filepath.Join(realTempDir, "sub", "file.png")
 	if abs != expected {
 		t.Errorf("SecureFilepath() = %q, want %q", abs, expected)
 	}
